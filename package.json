@@ -1,0 +1,25 @@
+{
+  "name": "piet",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "babelify": "^7.3.0",
+    "browserify": "^14.4.0",
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0",
+    "watchify": "^3.9.0"
+  },
+  "devDependencies": {
+    "babel-preset-env": "^1.6.0",
+    "babel-preset-react": "^6.24.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "browserify js/index.js -o ./bundle.js -t babelify",
+    "watch": "watchify js/index.js -o ./bundle.js -t babelify -v"
+  },
+  "keywords": [],
+  "author": "gabriellesc <gabriellesinghcadieux@gmail.com>",
+  "license": "ISC"
+}
