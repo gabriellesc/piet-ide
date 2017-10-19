@@ -49,10 +49,9 @@ const initCommands = [
     'out(char)',
 ];
 
-/* rotateArray([1, 2, 3], 1) => [3, 1, 2] */
-const rotateArray = (array, pivot) => array.slice(-pivot).concat(array.slice(0, -pivot));
-
 const mapCommandsToColours = baseColour => {
+    const rotateArray = (array, pivot) => array.slice(-pivot).concat(array.slice(0, -pivot));
+
     let hShift = baseColour % 6;
     let lShift = Math.floor(baseColour / 6);
 
@@ -157,7 +156,13 @@ const appState = {
                     .map(_ => Array(img.bitmap.width));
 
                 img.scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y) => {
-                    appState.grid[y][x] = colourMap[img.getPixelColor(x, y)];
+                    var colour = img.getPixelColor(x, y);
+                    // treat non-standard colour as white
+                    if (colourMap[colour] == undefined) {
+                        appState.grid[y][x] = 18;
+                    } else {
+                        appState.grid[y][x] = colourMap[colour];
+                    }
                 });
 
                 appState.notify();
