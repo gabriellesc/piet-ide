@@ -6,6 +6,7 @@
   "dependencies": {
     "babelify": "^7.3.0",
     "browserify": "^14.4.0",
+    "jimp": "^0.2.27",
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
     "watchify": "^3.9.0"

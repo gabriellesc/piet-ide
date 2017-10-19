@@ -1,6 +1,18 @@
 import React from 'react';
 
 class Controls extends React.Component {
+    // manually update input values when dims are changed from appState (eg. when image file
+    // is imported)
+    componentWillReceiveProps(newProps) {
+        if (this.props.height != newProps.height) {
+            this.height.value = newProps.height;
+        }
+
+        if (this.props.width != newProps.width) {
+            this.width.value = newProps.width;
+        }
+    }
+
     render() {
         return (
             <div className="row">
@@ -35,7 +47,7 @@ class Controls extends React.Component {
                     </div>
                     <input
                         type="button"
-                        className="btn btn-default"
+                        className="btn btn-warning"
                         value="Resize / Clear"
                         style={{ marginLeft: '1vw' }}
                         onClick={() =>
@@ -44,6 +56,28 @@ class Controls extends React.Component {
                                 width: parseInt(this.width.value),
                             })}
                     />
+
+                    <div className="btn-group" role="group" style={{ marginLeft: '2vw' }}>
+                        <input
+                            type="button"
+                            className="btn btn-primary"
+                            value="Import"
+                            onClick={() => document.getElementById('fileChooser').click()}
+                        />
+                        <input
+                            id="fileChooser"
+                            type="file"
+                            accept="image/png, image/bmp, image/jpeg"
+                            style={{ display: 'none' }}
+                            onChange={event => this.props.importImg(event.target.files[0])}
+                        />
+                        <input
+                            type="button"
+                            className="btn btn-info"
+                            value="Export to PNG"
+                            onClick={() => this.props.exportPng()}
+                        />
+                    </div>
 
                     <div className="form-group" style={{ marginLeft: '3vw' }}>
                         <ColourPicker {...this.props} />
@@ -55,48 +89,50 @@ class Controls extends React.Component {
 }
 
 const ColourPicker = props => (
-    /*    pushpop
-    1 Stepaddsubtractmultiply
-    2 Stepsdividemodnot
-    3 Stepsgreaterpointerswitch
-    4 Stepsduplicaterollin(number)
-    5 Stepsin(char)out(number)out(char)*/
-
     <table>
         <tbody>
-            {[1, 10, 100].map(i => (
+            {[
+                props.colours.slice(0, 6),
+                props.colours.slice(6, 12),
+                props.colours.slice(12, 18),
+            ].map((colourRow, i) => (
                 <tr key={'colour-row-' + i}>
-                    {Array(6)
-                        .fill(0)
-                        .map((_, j) => {
-                            var colour = (j + 1) * i;
-
-                            return (
-                                <td
-                                    key={'colour-col-' + j}
-                                    style={{
-                                        width: '25px',
-                                        height: '25px',
-                                        padding: '5px',
-                                        backgroundColor: props.colourMap[colour],
-                                        border: '1px solid white',
-                                        boxShadow:
-                                            props.selectedColour == colour
-                                                ? 'inset 0 0 1ex black'
-                                                : 'none',
-                                        color: 'white',
-                                        textShadow: '1px 1px 1px black',
-                                        textAlign: 'center',
-                                    }}
-                                    onClick={() => props.selectColour(colour)}>
-                                    {props.mapColourToCommand(props.selectedColour, colour)}
-                                </td>
-                            );
-                        })}
+                    {colourRow.map((colour, j) => (
+                        <ColourCell
+                            key={'colour-cell-' + i + '-' + j}
+                            colSpan="1"
+                            cellColour={i * 6 + j}
+                            {...props}
+                        />
+                    ))}
                 </tr>
             ))}
+
+            <tr>
+                <ColourCell colSpan="3" cellColour={18} {...props} />
+                <ColourCell colSpan="3" cellColour={19} {...props} />
+            </tr>
         </tbody>
     </table>
+);
+
+const ColourCell = props => (
+    <td
+        colSpan={props.colSpan}
+        style={{
+            width: '25px',
+            height: '25px',
+            padding: '5px',
+            backgroundColor: props.colours[props.cellColour],
+            border: '1px solid black',
+            color: 'white',
+            textShadow: '1px 1px 1px black',
+            textAlign: 'center',
+            cursor: 'pointer',
+        }}
+        onClick={() => props.selectColour(props.cellColour)}>
+        {props.commands[props.cellColour]}
+    </td>
 );
 
 export default Controls;

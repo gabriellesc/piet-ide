@@ -4,45 +4,67 @@ import ReactDOM from 'react-dom';
 import Controls from './controls.js';
 import Grid from './grid.js';
 
-const colourMap = {
-    1: '#FFC0C0', // light red
-    2: '#FFFFC0', // light yellow
-    3: '#C0FFC0', // light green
-    4: '#C0FFFF', // light cyan
-    5: '#C0C0FF', // light blue
-    6: '#FFC0FF', // light magenta
-    10: '#FF0000', // red
-    20: '#FFFF00', // yellow
-    30: '#00FF00', // green
-    40: '#00FFFF', // cyan
-    50: '#0000FF', // blue
-    60: '#FF00FF', // magenta
-    100: '#C00000', // dark red
-    200: '#C0C000', // dark yellow
-    300: '#00C000', // dark green
-    400: '#00C0C0', // dark cyan
-    500: '#0000C0', // dark blue
-    600: '#C000C0', // dark magenta
-    0: '#FFFFFF', // white
-    '-1': '#000000', // black
-};
-
-const commandMap = [
-    ['', 'push', 'pop'],
-    ['+', '-', '*'],
-    ['/', 'mod', 'not'],
-    ['>', 'pointer', 'switch'],
-    ['dup', 'roll', 'in(num)'],
-    ['in(char)', 'out(num)', 'out(char)'],
+const colours = [
+    '#FFC0C0', // light red
+    '#FFFFC0', // light yellow
+    '#C0FFC0', // light green
+    '#C0FFFF', // light cyan
+    '#C0C0FF', // light blue
+    '#FFC0FF', // light magenta
+    '#FF0000', // red
+    '#FFFF00', // yellow
+    '#00FF00', // green
+    '#00FFFF', // cyan
+    '#0000FF', // blue
+    '#FF00FF', // magenta
+    '#C00000', // dark red
+    '#C0C000', // dark yellow
+    '#00C000', // dark green
+    '#00C0C0', // dark cyan
+    '#0000C0', // dark blue
+    '#C000C0', // dark magenta
+    '#FFFFFF', // white
+    '#000000', // black
 ];
 
-function mapColourToCommand(baseColour, colour) {
-    let lightChange = ('' + colour).length - ('' + baseColour).length;
+// initial ordering of commands to match colours
+const initCommands = [
+    '',
+    '+',
+    '/',
+    '>',
+    'dup',
+    'in(char)',
+    'push',
+    '-',
+    'mod',
+    'pointer',
+    'roll',
+    'out(num)',
+    'pop',
+    '*',
+    'not',
+    'switch',
+    'in(num)',
+    'out(char)',
+];
 
-    let hueChange = Number(colour).toPrecision(1)[0] - Number(baseColour).toPrecision(1)[0];
+/* rotateArray([1, 2, 3], 1) => [3, 1, 2] */
+const rotateArray = (array, pivot) => array.slice(-pivot).concat(array.slice(0, -pivot));
 
-    return commandMap.slice(hueChange)[0].slice(lightChange)[0];
-}
+const mapCommandsToColours = baseColour => {
+    let hShift = baseColour % 6;
+    let lShift = Math.floor(baseColour / 6);
+
+    let map = [
+        rotateArray(initCommands.slice(0, 6), hShift),
+        rotateArray(initCommands.slice(6, 12), hShift),
+        rotateArray(initCommands.slice(12), hShift),
+    ];
+
+    map = rotateArray(map, lShift);
+    return [...map[0], ...map[1], ...map[2]];
+};
 
 const initHeight = 10,
     initWidth = 10;
@@ -52,35 +74,97 @@ const appState = {
 
     height: initHeight,
     width: initHeight,
+    cellDim: Math.min(30, (window.innerWidth - 40) / initWidth),
 
     grid: Array(initHeight)
         .fill(0)
-        .map(_ => Array(initWidth).fill(0)),
+        .map(_ => Array(initWidth).fill(18)), // fill grid with white initially
 
-    selectedColour: 1,
+    selectedColour: 0,
 
+    commands: initCommands,
+
+    // add listener
     subscribe: (listener => appState.listeners.push(listener)).bind(this),
+    // notify listeners
+    notify: (() => appState.listeners.forEach(listener => listener())).bind(this),
 
     resize: (({ height, width }) => {
         appState.height = height;
         appState.width = width;
+        appState.cellDim = Math.min(30, (window.innerWidth - 40) / width);
 
         appState.grid = Array(height)
             .fill(0)
-            .map(_ => Array(width).fill(0));
+            .map(_ => Array(width).fill(18));
 
-        appState.listeners.forEach(listener => listener()); // notify listeners
+        appState.notify();
     }).bind(this),
 
     selectColour: (colour => {
         appState.selectedColour = colour;
-        appState.listeners.forEach(listener => listener()); // notify listeners
+
+        // reorder commands
+        if (colour == 18 || colour == 19) {
+            // colour is white or black
+            appState.commands = [];
+        } else {
+            appState.commands = mapCommandsToColours(colour);
+        }
+
+        appState.notify();
     }).bind(this),
 
-    colour: ((row, col) => {
+    // colour this cell the currently-selected colour
+    colourCell: ((row, col) => {
         appState.grid[row][col] = appState.selectedColour;
-        appState.listeners.forEach(listener => listener()); // notify listeners
+
+        appState.notify();
     }).bind(this),
+
+    exportPng: (file => {
+        // create a new image
+        let image = new Jimp(appState.width, appState.height);
+
+        // map colour strings to hex values
+        let colourMap = colours.map(colour => +('0x' + colour.slice(1) + 'FF'));
+
+        // set each pixel to its corresponding colour in the grid
+        image.scan(0, 0, appState.width, appState.height, (x, y) => {
+            image.setPixelColour(colourMap[appState.grid[y][x]], x, y);
+        });
+
+        image.getBase64(Jimp.MIME_PNG, (_, uri) => {
+            window.open(uri);
+        });
+    }).bind(this),
+
+    importImg: file => {
+        let reader = new FileReader();
+
+        // map hex values to colour indices
+        let colourMap = {};
+        colours.forEach((colour, i) => (colourMap[+('0x' + colour.slice(1) + 'FF')] = i));
+
+        reader.onload = event => {
+            Jimp.read(Buffer.from(event.target.result), function(err, img) {
+                appState.height = img.bitmap.height;
+                appState.width = img.bitmap.width;
+                appState.cellDim = Math.min(30, (window.innerWidth - 40) / img.bitmap.width);
+
+                appState.grid = Array(img.bitmap.height)
+                    .fill(0)
+                    .map(_ => Array(img.bitmap.width));
+
+                img.scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y) => {
+                    appState.grid[y][x] = colourMap[img.getPixelColor(x, y)];
+                });
+
+                appState.notify();
+            });
+        };
+        reader.readAsArrayBuffer(file);
+    },
 };
 
 class App extends React.Component {
@@ -90,13 +174,8 @@ class App extends React.Component {
 
     render() {
         return [
-            <Controls
-                key="controls"
-                colourMap={colourMap}
-                mapColourToCommand={mapColourToCommand}
-                {...this.props.appState}
-            />,
-            <Grid key="grid" colourMap={colourMap} {...this.props.appState} />,
+            <Controls key="controls" colours={colours} {...this.props.appState} />,
+            <Grid key="grid" colours={colours} {...this.props.appState} />,
         ];
     }
 }

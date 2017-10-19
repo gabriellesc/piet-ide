@@ -2,23 +2,21 @@ import React from 'react';
 
 class Grid extends React.Component {
     render() {
-        let cellDim = Math.min(30, (window.innerWidth - 40) / this.props.width);
-
         return (
             <table style={{ tableLayout: 'fixed' }}>
                 <tbody>
                     {this.props.grid.map((row, i) => (
                         <tr key={'row-' + i}>
-                            {row.map((pix, j) => (
+                            {row.map((cell, j) => (
                                 <td
                                     key={'cell-' + i + '-' + j}
                                     style={{
-                                        height: cellDim + 'px',
-                                        width: cellDim + 'px',
+                                        height: this.props.cellDim + 'px',
+                                        width: this.props.cellDim + 'px',
                                         border: '1px solid black',
-                                        backgroundColor: this.props.colourMap[pix],
+                                        backgroundColor: this.props.colours[cell],
                                     }}
-                                    onClick={() => this.props.colour(i, j)}
+                                    onClick={() => this.props.colourCell(i, j)}
                                 />
                             ))}
                         </tr>
