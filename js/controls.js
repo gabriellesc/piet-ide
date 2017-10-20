@@ -18,7 +18,7 @@ class Controls extends React.Component {
             <div className="row">
                 <form className="form-inline col-md-12">
                     <div className="form-group">
-                        <label className="control-label" htmlFor="grid-height">
+                        <label className="control-label" htmlFor="height">
                             Height
                         </label>
                         <input
@@ -32,7 +32,7 @@ class Controls extends React.Component {
                         />
                     </div>
                     <div className="form-group" style={{ marginLeft: '1vw' }}>
-                        <label className="control-label" htmlFor="grid-width">
+                        <label className="control-label" htmlFor="width">
                             Width
                         </label>
                         <input
@@ -57,29 +57,10 @@ class Controls extends React.Component {
                             })}
                     />
 
-                    <div className="btn-group" role="group" style={{ marginLeft: '2vw' }}>
-                        <input
-                            type="button"
-                            className="btn btn-primary"
-                            value="Import"
-                            onClick={() => document.getElementById('fileChooser').click()}
-                        />
-                        <input
-                            id="fileChooser"
-                            type="file"
-                            accept="image/png, image/bmp, image/jpeg"
-                            style={{ display: 'none' }}
-                            onChange={event => this.props.importImg(event.target.files[0])}
-                        />
-                        <input
-                            type="button"
-                            className="btn btn-info"
-                            value="Export to PNG"
-                            onClick={() => this.props.exportPng()}
-                        />
+                    <div className="form-group" style={{ marginLeft: '2vw' }}>
+                        <ImportExportMenu {...this.props} />
                     </div>
-
-                    <div className="form-group" style={{ marginLeft: '3vw' }}>
+                    <div className="form-group" style={{ marginLeft: '2vw' }}>
                         <ColourPicker {...this.props} />
                     </div>
                 </form>
@@ -87,6 +68,62 @@ class Controls extends React.Component {
         );
     }
 }
+
+const ImportExportMenu = ({ importImg, exportPng }) => (
+    <div className="btn-toolbar" role="toolbar">
+        <input
+            type="button"
+            className="btn btn-primary"
+            value="Import"
+            onClick={() => document.getElementById('fileChooser').click()}
+        />
+        <input
+            id="fileChooser"
+            type="file"
+            accept="image/png, image/bmp, image/jpeg"
+            style={{ display: 'none' }}
+            onChange={event => importImg(event.target.files[0])}
+        />
+
+        <div className="btn-group">
+            <button
+                type="button"
+                className="btn btn-info"
+                onClick={() => {
+                    exportPng(parseInt(document.getElementById('scale').value));
+                }}>
+                Export to PNG
+            </button>
+            <button
+                type="button"
+                className="btn btn-info dropdown-toggle"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false">
+                <span className="caret" />
+                <span className="sr-only">Toggle Dropdown</span>
+            </button>
+            <ul className="dropdown-menu">
+                <li>
+                    <div className="form-group" style={{ marginLeft: '1vw' }}>
+                        <label className="control-label" htmlFor="scale">
+                            Scale
+                        </label>
+                        <input
+                            id="scale"
+                            type="number"
+                            name="scale"
+                            className="form-control"
+                            style={{ width: '5em', marginLeft: '4px' }}
+                            defaultValue={1}
+                            required
+                        />
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+);
 
 const ColourPicker = props => (
     <table>

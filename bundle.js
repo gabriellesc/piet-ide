@@ -60,7 +60,7 @@ var Controls = function (_React$Component) {
                         { className: "form-group" },
                         _react2.default.createElement(
                             "label",
-                            { className: "control-label", htmlFor: "grid-height" },
+                            { className: "control-label", htmlFor: "height" },
                             "Height"
                         ),
                         _react2.default.createElement("input", {
@@ -80,7 +80,7 @@ var Controls = function (_React$Component) {
                         { className: "form-group", style: { marginLeft: '1vw' } },
                         _react2.default.createElement(
                             "label",
-                            { className: "control-label", htmlFor: "grid-width" },
+                            { className: "control-label", htmlFor: "width" },
                             "Width"
                         ),
                         _react2.default.createElement("input", {
@@ -109,36 +109,12 @@ var Controls = function (_React$Component) {
                     }),
                     _react2.default.createElement(
                         "div",
-                        { className: "btn-group", role: "group", style: { marginLeft: '2vw' } },
-                        _react2.default.createElement("input", {
-                            type: "button",
-                            className: "btn btn-primary",
-                            value: "Import",
-                            onClick: function onClick() {
-                                return document.getElementById('fileChooser').click();
-                            }
-                        }),
-                        _react2.default.createElement("input", {
-                            id: "fileChooser",
-                            type: "file",
-                            accept: "image/png, image/bmp, image/jpeg",
-                            style: { display: 'none' },
-                            onChange: function onChange(event) {
-                                return _this2.props.importImg(event.target.files[0]);
-                            }
-                        }),
-                        _react2.default.createElement("input", {
-                            type: "button",
-                            className: "btn btn-info",
-                            value: "Export to PNG",
-                            onClick: function onClick() {
-                                return _this2.props.exportPng();
-                            }
-                        })
+                        { className: "form-group", style: { marginLeft: '2vw' } },
+                        _react2.default.createElement(ImportExportMenu, this.props)
                     ),
                     _react2.default.createElement(
                         "div",
-                        { className: "form-group", style: { marginLeft: '3vw' } },
+                        { className: "form-group", style: { marginLeft: '2vw' } },
                         _react2.default.createElement(ColourPicker, this.props)
                     )
                 )
@@ -148,6 +124,87 @@ var Controls = function (_React$Component) {
 
     return Controls;
 }(_react2.default.Component);
+
+var ImportExportMenu = function ImportExportMenu(_ref) {
+    var importImg = _ref.importImg,
+        exportPng = _ref.exportPng;
+    return _react2.default.createElement(
+        "div",
+        { className: "btn-toolbar", role: "toolbar" },
+        _react2.default.createElement("input", {
+            type: "button",
+            className: "btn btn-primary",
+            value: "Import",
+            onClick: function onClick() {
+                return document.getElementById('fileChooser').click();
+            }
+        }),
+        _react2.default.createElement("input", {
+            id: "fileChooser",
+            type: "file",
+            accept: "image/png, image/bmp, image/jpeg",
+            style: { display: 'none' },
+            onChange: function onChange(event) {
+                return importImg(event.target.files[0]);
+            }
+        }),
+        _react2.default.createElement(
+            "div",
+            { className: "btn-group" },
+            _react2.default.createElement(
+                "button",
+                {
+                    type: "button",
+                    className: "btn btn-info",
+                    onClick: function onClick() {
+                        exportPng(parseInt(document.getElementById('scale').value));
+                    } },
+                "Export to PNG"
+            ),
+            _react2.default.createElement(
+                "button",
+                {
+                    type: "button",
+                    className: "btn btn-info dropdown-toggle",
+                    "data-toggle": "dropdown",
+                    "aria-haspopup": "true",
+                    "aria-expanded": "false" },
+                _react2.default.createElement("span", { className: "caret" }),
+                _react2.default.createElement(
+                    "span",
+                    { className: "sr-only" },
+                    "Toggle Dropdown"
+                )
+            ),
+            _react2.default.createElement(
+                "ul",
+                { className: "dropdown-menu" },
+                _react2.default.createElement(
+                    "li",
+                    null,
+                    _react2.default.createElement(
+                        "div",
+                        { className: "form-group", style: { marginLeft: '1vw' } },
+                        _react2.default.createElement(
+                            "label",
+                            { className: "control-label", htmlFor: "scale" },
+                            "Scale"
+                        ),
+                        _react2.default.createElement("input", {
+                            id: "scale",
+                            type: "number",
+                            name: "scale",
+                            className: "form-control",
+                            style: { width: '5em', marginLeft: '4px' },
+                            defaultValue: 1,
+                            required: true
+                        })
+                    )
+                )
+            )
+        )
+    );
+};
 
 var ColourPicker = function ColourPicker(props) {
     return _react2.default.createElement(
@@ -333,12 +390,11 @@ var colours = ['#FFC0C0', // light red
 // initial ordering of commands to match colours
 var initCommands = ['', '+', '/', '>', 'dup', 'in(char)', 'push', '-', 'mod', 'pointer', 'roll', 'out(num)', 'pop', '*', 'not', 'switch', 'in(num)', 'out(char)'];
 
-/* rotateArray([1, 2, 3], 1) => [3, 1, 2] */
-var rotateArray = function rotateArray(array, pivot) {
-    return array.slice(-pivot).concat(array.slice(0, -pivot));
-};
-
 var mapCommandsToColours = function mapCommandsToColours(baseColour) {
+    var rotateArray = function rotateArray(array, pivot) {
+        return array.slice(-pivot).concat(array.slice(0, -pivot));
+    };
+
     var hShift = baseColour % 6;
     var lShift = Math.floor(baseColour / 6);
 
@@ -413,7 +469,7 @@ var appState = {
         appState.notify();
     }.bind(undefined),
 
-    exportPng: function (file) {
+    exportPng: function (scale) {
         // create a new image
         var image = new Jimp(appState.width, appState.height);
 
@@ -426,6 +482,9 @@ var appState = {
         image.scan(0, 0, appState.width, appState.height, function (x, y) {
             image.setPixelColour(colourMap[appState.grid[y][x]], x, y);
         });
+
+        // scale the image
+        image.scale(scale);
 
         image.getBase64(Jimp.MIME_PNG, function (_, uri) {
             window.open(uri);
@@ -452,7 +511,13 @@ var appState = {
                 });
 
                 img.scan(0, 0, img.bitmap.width, img.bitmap.height, function (x, y) {
-                    appState.grid[y][x] = colourMap[img.getPixelColor(x, y)];
+                    var colour = img.getPixelColor(x, y);
+                    // treat non-standard colour as white
+                    if (colourMap[colour] == undefined) {
+                        appState.grid[y][x] = 18;
+                    } else {
+                        appState.grid[y][x] = colourMap[colour];
+                    }
                 });
 
                 appState.notify();

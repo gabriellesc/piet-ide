@@ -121,7 +121,7 @@ const appState = {
         appState.notify();
     }).bind(this),
 
-    exportPng: (file => {
+    exportPng: (scale => {
         // create a new image
         let image = new Jimp(appState.width, appState.height);
 
@@ -132,6 +132,9 @@ const appState = {
         image.scan(0, 0, appState.width, appState.height, (x, y) => {
             image.setPixelColour(colourMap[appState.grid[y][x]], x, y);
         });
+
+        // scale the image
+        image.scale(scale);
 
         image.getBase64(Jimp.MIME_PNG, (_, uri) => {
             window.open(uri);
