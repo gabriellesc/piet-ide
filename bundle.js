@@ -251,7 +251,7 @@ var PaintModeSwitch = function PaintModeSwitch(_ref2) {
                 className: 'btn btn-default' + (paintMode == 0 ? 'active' : ''),
                 style: { padding: '2px 12px' },
                 onClick: function onClick() {
-                    return selectPaintmode(0);
+                    return selectPaintMode(0);
                 } },
             _react2.default.createElement("i", { className: "fi-pencil", style: { fontSize: '14pt' } })
         ),
@@ -389,7 +389,7 @@ var Grid = function (_React$Component) {
                                                 backgroundColor: _this2.props.colours[cell]
                                             },
                                             onClick: function onClick() {
-                                                return _this2.props.paintCell(i, j);
+                                                return _this2.props.paint(i, j);
                                             }
                                         });
                                     })
@@ -540,9 +540,34 @@ var appState = {
         appState.notify();
     }.bind(undefined),
 
-    // paint this cell the currently-selected colour
-    paintCell: function (row, col) {
-        appState.grid[row][col] = appState.selectedColour;
+    // paint this cell/block the currently-selected colour
+    paint: function (row, col) {
+        if (appState.paintMode == 0) {
+            // brush paint mode
+            appState.grid[row][col] = appState.selectedColour;
+        } else {
+            // bucket paint mode
+            (function paintBlock(row, col, origColour) {
+                appState.grid[row][col] = appState.selectedColour;
+
+                // above
+                if (row - 1 >= 0 && appState.grid[row - 1][col] == origColour) {
+                    paintBlock(row - 1, col, origColour);
+                }
+                // below
+                if (row + 1 < appState.height && appState.grid[row + 1][col] == origColour) {
+                    paintBlock(row + 1, col, origColour);
+                }
+                // left
+                if (col - 1 >= 0 && appState.grid[row][col - 1] == origColour) {
+                    paintBlock(row, col - 1, origColour);
+                }
+                // right
+                if (col + 1 < appState.width && appState.grid[row][col + 1] == origColour) {
+                    paintBlock(row, col + 1, origColour);
+                }
+            })(row, col, appState.grid[row][col]);
+        }
 
         appState.notify();
     }.bind(undefined),

@@ -116,9 +116,34 @@ const appState = {
         appState.notify();
     }).bind(this),
 
-    // paint this cell the currently-selected colour
-    paintCell: ((row, col) => {
-        appState.grid[row][col] = appState.selectedColour;
+    // paint this cell/block the currently-selected colour
+    paint: ((row, col) => {
+        if (appState.paintMode == 0) {
+            // brush paint mode
+            appState.grid[row][col] = appState.selectedColour;
+        } else {
+            // bucket paint mode
+            (function paintBlock(row, col, origColour) {
+                appState.grid[row][col] = appState.selectedColour;
+
+                // above
+                if (row - 1 >= 0 && appState.grid[row - 1][col] == origColour) {
+                    paintBlock(row - 1, col, origColour);
+                }
+                // below
+                if (row + 1 < appState.height && appState.grid[row + 1][col] == origColour) {
+                    paintBlock(row + 1, col, origColour);
+                }
+                // left
+                if (col - 1 >= 0 && appState.grid[row][col - 1] == origColour) {
+                    paintBlock(row, col - 1, origColour);
+                }
+                // right
+                if (col + 1 < appState.width && appState.grid[row][col + 1] == origColour) {
+                    paintBlock(row, col + 1, origColour);
+                }
+            })(row, col, appState.grid[row][col]);
+        }
 
         appState.notify();
     }).bind(this),
