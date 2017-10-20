@@ -23,7 +23,7 @@ class Controls extends React.Component {
                                 <td colSpan="3">
                                     <div className="btn-toolbar" role="toolbar">
                                         <ImportExportMenu {...this.props} />
-                                        <ColourModeSwitch {...this.props} />
+                                        <PaintModeSwitch {...this.props} />
                                     </div>
                                 </td>
                                 <td
@@ -144,20 +144,20 @@ const ImportExportMenu = ({ importImg, exportPng }) => [
     </div>,
 ];
 
-const ColourModeSwitch = ({ colourMode, selectColourMode }) => (
+const PaintModeSwitch = ({ paintMode, selectPaintMode }) => (
     <div className="btn-group" role="group" style={{ float: 'right' }}>
         <button
             type="button"
-            className={'btn btn-default' + (colourMode == 0 ? 'active' : '')}
+            className={'btn btn-default' + (paintMode == 0 ? 'active' : '')}
             style={{ padding: '2px 12px' }}
-            onClick={() => selectColourMode(0)}>
+            onClick={() => selectPaintmode(0)}>
             <i className="fi-pencil" style={{ fontSize: '14pt' }} />
         </button>
         <button
             type="button"
-            className={'btn btn-default' + (colourMode == 1 ? 'active' : '')}
+            className={'btn btn-default' + (paintMode == 1 ? 'active' : '')}
             style={{ padding: '2px 12px' }}
-            onClick={() => selectColourMode(1)}>
+            onClick={() => selectPaintMode(1)}>
             <i className="fi-paint-bucket" style={{ fontSize: '14pt' }} />
         </button>
     </div>

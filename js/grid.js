@@ -9,7 +9,7 @@ class Grid extends React.Component {
                         style={{
                             tableLayout: 'fixed',
                             cursor:
-                                this.props.colourMode == 0
+                                this.props.paintMode == 0
                                     ? 'url(img/fi-pencil.png) 5 30,auto'
                                     : 'url(img/fi-paint-bucket.png) 25 25,auto',
                         }}>
@@ -25,7 +25,7 @@ class Grid extends React.Component {
                                                 border: '1px solid black',
                                                 backgroundColor: this.props.colours[cell],
                                             }}
-                                            onClick={() => this.props.colourCell(i, j)}
+                                            onClick={() => this.props.paintCell(i, j)}
                                         />
                                     ))}
                                 </tr>

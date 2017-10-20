@@ -83,7 +83,7 @@ const appState = {
 
     commands: initCommands,
 
-    colourMode: 0, // use brush colour mode initially
+    paintMode: 0, // use brush paint mode initially
 
     // add listener
     subscribe: (listener => appState.listeners.push(listener)).bind(this),
@@ -116,16 +116,16 @@ const appState = {
         appState.notify();
     }).bind(this),
 
-    // colour this cell the currently-selected colour
-    colourCell: ((row, col) => {
+    // paint this cell the currently-selected colour
+    paintCell: ((row, col) => {
         appState.grid[row][col] = appState.selectedColour;
 
         appState.notify();
     }).bind(this),
 
-    // toggle colour mode between brush and fill
-    selectColourMode: (mode => {
-        appState.colourMode = mode;
+    // toggle paint mode between brush and fill
+    selectPaintMode: (mode => {
+        appState.paintMode = mode;
 
         appState.notify();
     }).bind(this),

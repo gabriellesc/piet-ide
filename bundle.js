@@ -71,7 +71,7 @@ var Controls = function (_React$Component) {
                                         "div",
                                         { className: "btn-toolbar", role: "toolbar" },
                                         _react2.default.createElement(ImportExportMenu, this.props),
-                                        _react2.default.createElement(ColourModeSwitch, this.props)
+                                        _react2.default.createElement(PaintModeSwitch, this.props)
                                     )
                                 ),
                                 _react2.default.createElement(
@@ -238,9 +238,9 @@ var ImportExportMenu = function ImportExportMenu(_ref) {
     )];
 };
 
-var ColourModeSwitch = function ColourModeSwitch(_ref2) {
-    var colourMode = _ref2.colourMode,
-        selectColourMode = _ref2.selectColourMode;
+var PaintModeSwitch = function PaintModeSwitch(_ref2) {
+    var paintMode = _ref2.paintMode,
+        selectPaintMode = _ref2.selectPaintMode;
     return _react2.default.createElement(
         "div",
         { className: "btn-group", role: "group", style: { float: 'right' } },
@@ -248,10 +248,10 @@ var ColourModeSwitch = function ColourModeSwitch(_ref2) {
             "button",
             {
                 type: "button",
-                className: 'btn btn-default' + (colourMode == 0 ? 'active' : ''),
+                className: 'btn btn-default' + (paintMode == 0 ? 'active' : ''),
                 style: { padding: '2px 12px' },
                 onClick: function onClick() {
-                    return selectColourMode(0);
+                    return selectPaintmode(0);
                 } },
             _react2.default.createElement("i", { className: "fi-pencil", style: { fontSize: '14pt' } })
         ),
@@ -259,10 +259,10 @@ var ColourModeSwitch = function ColourModeSwitch(_ref2) {
             "button",
             {
                 type: "button",
-                className: 'btn btn-default' + (colourMode == 1 ? 'active' : ''),
+                className: 'btn btn-default' + (paintMode == 1 ? 'active' : ''),
                 style: { padding: '2px 12px' },
                 onClick: function onClick() {
-                    return selectColourMode(1);
+                    return selectPaintMode(1);
                 } },
             _react2.default.createElement("i", { className: "fi-paint-bucket", style: { fontSize: '14pt' } })
         )
@@ -370,7 +370,7 @@ var Grid = function (_React$Component) {
                         {
                             style: {
                                 tableLayout: 'fixed',
-                                cursor: this.props.colourMode == 0 ? 'url(img/fi-pencil.png) 5 30,auto' : 'url(img/fi-paint-bucket.png) 25 25,auto'
+                                cursor: this.props.paintMode == 0 ? 'url(img/fi-pencil.png) 5 30,auto' : 'url(img/fi-paint-bucket.png) 25 25,auto'
                             } },
                         _react2.default.createElement(
                             "tbody",
@@ -389,7 +389,7 @@ var Grid = function (_React$Component) {
                                                 backgroundColor: _this2.props.colours[cell]
                                             },
                                             onClick: function onClick() {
-                                                return _this2.props.colourCell(i, j);
+                                                return _this2.props.paintCell(i, j);
                                             }
                                         });
                                     })
@@ -498,7 +498,7 @@ var appState = {
 
     commands: initCommands,
 
-    colourMode: 0, // use brush colour mode initially
+    paintMode: 0, // use brush paint mode initially
 
     // add listener
     subscribe: function (listener) {
@@ -540,16 +540,16 @@ var appState = {
         appState.notify();
     }.bind(undefined),
 
-    // colour this cell the currently-selected colour
-    colourCell: function (row, col) {
+    // paint this cell the currently-selected colour
+    paintCell: function (row, col) {
         appState.grid[row][col] = appState.selectedColour;
 
         appState.notify();
     }.bind(undefined),
 
-    // toggle colour mode between brush and fill
-    selectColourMode: function (mode) {
-        appState.colourMode = mode;
+    // toggle paint mode between brush and fill
+    selectPaintMode: function (mode) {
+        appState.paintMode = mode;
 
         appState.notify();
     }.bind(undefined),
