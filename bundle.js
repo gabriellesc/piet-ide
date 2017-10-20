@@ -54,7 +54,7 @@ var Controls = function (_React$Component) {
                 { className: "row" },
                 _react2.default.createElement(
                     "div",
-                    { className: "col-md-12" },
+                    { className: "col-sm-12" },
                     _react2.default.createElement(
                         "table",
                         null,
@@ -64,6 +64,27 @@ var Controls = function (_React$Component) {
                             _react2.default.createElement(
                                 "tr",
                                 null,
+                                _react2.default.createElement(
+                                    "td",
+                                    { colSpan: "3" },
+                                    _react2.default.createElement(
+                                        "div",
+                                        { className: "btn-toolbar", role: "toolbar" },
+                                        _react2.default.createElement(ImportExportMenu, this.props),
+                                        _react2.default.createElement(ColourModeSwitch, this.props)
+                                    )
+                                ),
+                                _react2.default.createElement(
+                                    "td",
+                                    {
+                                        rowSpan: "2",
+                                        style: { paddingLeft: '2vw', paddingBottom: '1vh' } },
+                                    _react2.default.createElement(ColourPicker, this.props)
+                                )
+                            ),
+                            _react2.default.createElement(
+                                "tr",
+                                { style: { paddingTop: '1vh', verticalAlign: 'top' } },
                                 _react2.default.createElement(
                                     "td",
                                     null,
@@ -128,20 +149,6 @@ var Controls = function (_React$Component) {
                                             });
                                         }
                                     })
-                                ),
-                                _react2.default.createElement(
-                                    "td",
-                                    { rowSpan: "2", style: { paddingLeft: '2vw' } },
-                                    _react2.default.createElement(ColourPicker, this.props)
-                                )
-                            ),
-                            _react2.default.createElement(
-                                "tr",
-                                null,
-                                _react2.default.createElement(
-                                    "td",
-                                    { colSpan: "3", style: { paddingTop: '1vh', verticalAlign: 'top' } },
-                                    _react2.default.createElement(ImportExportMenu, this.props)
                                 )
                             )
                         )
@@ -157,80 +164,107 @@ var Controls = function (_React$Component) {
 var ImportExportMenu = function ImportExportMenu(_ref) {
     var importImg = _ref.importImg,
         exportPng = _ref.exportPng;
-    return _react2.default.createElement(
+    return [_react2.default.createElement("input", {
+        key: "import-btn",
+        type: "button",
+        className: "btn btn-primary",
+        value: "Import",
+        onClick: function onClick() {
+            return document.getElementById('fileChooser').click();
+        }
+    }), _react2.default.createElement("input", {
+        key: "hidden-file-input",
+        id: "fileChooser",
+        type: "file",
+        accept: "image/png, image/bmp, image/jpeg",
+        style: { display: 'none' },
+        onChange: function onChange(event) {
+            return importImg(event.target.files[0]);
+        }
+    }), _react2.default.createElement(
         "div",
-        { className: "btn-toolbar", role: "toolbar" },
-        _react2.default.createElement("input", {
-            type: "button",
-            className: "btn btn-primary",
-            value: "Import",
-            onClick: function onClick() {
-                return document.getElementById('fileChooser').click();
-            }
-        }),
-        _react2.default.createElement("input", {
-            id: "fileChooser",
-            type: "file",
-            accept: "image/png, image/bmp, image/jpeg",
-            style: { display: 'none' },
-            onChange: function onChange(event) {
-                return importImg(event.target.files[0]);
-            }
-        }),
+        { key: "export-btn", className: "btn-group" },
         _react2.default.createElement(
-            "div",
-            { className: "btn-group" },
+            "button",
+            {
+                type: "button",
+                className: "btn btn-info",
+                onClick: function onClick() {
+                    exportPng(parseInt(document.getElementById('scale').value));
+                } },
+            "Export to PNG"
+        ),
+        _react2.default.createElement(
+            "button",
+            {
+                type: "button",
+                className: "btn btn-info dropdown-toggle",
+                "data-toggle": "dropdown",
+                "aria-haspopup": "true",
+                "aria-expanded": "false" },
+            _react2.default.createElement("span", { className: "caret" }),
             _react2.default.createElement(
-                "button",
-                {
-                    type: "button",
-                    className: "btn btn-info",
-                    onClick: function onClick() {
-                        exportPng(parseInt(document.getElementById('scale').value));
-                    } },
-                "Export to PNG"
-            ),
+                "span",
+                { className: "sr-only" },
+                "Toggle Dropdown"
+            )
+        ),
+        _react2.default.createElement(
+            "ul",
+            { className: "dropdown-menu" },
             _react2.default.createElement(
-                "button",
-                {
-                    type: "button",
-                    className: "btn btn-info dropdown-toggle",
-                    "data-toggle": "dropdown",
-                    "aria-haspopup": "true",
-                    "aria-expanded": "false" },
-                _react2.default.createElement("span", { className: "caret" }),
+                "li",
+                null,
                 _react2.default.createElement(
-                    "span",
-                    { className: "sr-only" },
-                    "Toggle Dropdown"
-                )
-            ),
-            _react2.default.createElement(
-                "ul",
-                { className: "dropdown-menu" },
-                _react2.default.createElement(
-                    "li",
-                    null,
+                    "div",
+                    { className: "form-group", style: { marginLeft: '1vw', marginBottom: '0' } },
                     _react2.default.createElement(
-                        "div",
-                        { className: "form-group", style: { marginLeft: '1vw', marginBottom: '0' } },
-                        _react2.default.createElement(
-                            "label",
-                            { className: "control-label", htmlFor: "scale" },
-                            "Scale"
-                        ),
-                        _react2.default.createElement("input", {
-                            id: "scale",
-                            type: "number",
-                            name: "scale",
-                            className: "form-control",
-                            style: { width: '5em', marginLeft: '4px', display: 'inline-block' },
-                            defaultValue: 1,
-                            required: true
-                        })
-                    )
+                        "label",
+                        { className: "control-label", htmlFor: "scale" },
+                        "Scale"
+                    ),
+                    _react2.default.createElement("input", {
+                        id: "scale",
+                        type: "number",
+                        name: "scale",
+                        className: "form-control",
+                        style: { width: '5em', marginLeft: '4px', display: 'inline-block' },
+                        defaultValue: 1,
+                        required: true
+                    })
                 )
             )
+        )
+    )];
+};
+
+var ColourModeSwitch = function ColourModeSwitch(_ref2) {
+    var colourMode = _ref2.colourMode,
+        selectColourMode = _ref2.selectColourMode;
+    return _react2.default.createElement(
+        "div",
+        { className: "btn-group", role: "group", style: { float: 'right' } },
+        _react2.default.createElement(
+            "button",
+            {
+                type: "button",
+                className: 'btn btn-default' + (colourMode == 0 ? 'active' : ''),
+                style: { padding: '2px 12px' },
+                onClick: function onClick() {
+                    return selectColourMode(0);
+                } },
+            _react2.default.createElement("i", { className: "fi-pencil", style: { fontSize: '14pt' } })
+        ),
+        _react2.default.createElement(
+            "button",
+            {
+                type: "button",
+                className: 'btn btn-default' + (colourMode == 1 ? 'active' : ''),
+                style: { padding: '2px 12px' },
+                onClick: function onClick() {
+                    return selectColourMode(1);
+                } },
+            _react2.default.createElement("i", { className: "fi-paint-bucket", style: { fontSize: '14pt' } })
         )
     );
 };
@@ -291,7 +325,7 @@ var ColourCell = function ColourCell(props) {
 exports.default = Controls;
 
 },{"react":37}],2:[function(require,module,exports){
-'use strict';
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
@@ -299,7 +333,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _react = require('react');
+var _react = require("react");
 
 var _react2 = _interopRequireDefault(_react);
 
@@ -321,36 +355,48 @@ var Grid = function (_React$Component) {
     }
 
     _createClass(Grid, [{
-        key: 'render',
+        key: "render",
         value: function render() {
             var _this2 = this;
 
             return _react2.default.createElement(
-                'table',
-                { style: { tableLayout: 'fixed' } },
+                "div",
+                { className: "row" },
                 _react2.default.createElement(
-                    'tbody',
-                    null,
-                    this.props.grid.map(function (row, i) {
-                        return _react2.default.createElement(
-                            'tr',
-                            { key: 'row-' + i },
-                            row.map(function (cell, j) {
-                                return _react2.default.createElement('td', {
-                                    key: 'cell-' + i + '-' + j,
-                                    style: {
-                                        height: _this2.props.cellDim + 'px',
-                                        width: _this2.props.cellDim + 'px',
-                                        border: '1px solid black',
-                                        backgroundColor: _this2.props.colours[cell]
-                                    },
-                                    onClick: function onClick() {
-                                        return _this2.props.colourCell(i, j);
-                                    }
-                                });
+                    "div",
+                    { className: "col-sm-12" },
+                    _react2.default.createElement(
+                        "table",
+                        {
+                            style: {
+                                tableLayout: 'fixed',
+                                cursor: this.props.colourMode == 0 ? 'url(img/fi-pencil.png) 5 30,auto' : 'url(img/fi-paint-bucket.png) 25 25,auto'
+                            } },
+                        _react2.default.createElement(
+                            "tbody",
+                            null,
+                            this.props.grid.map(function (row, i) {
+                                return _react2.default.createElement(
+                                    "tr",
+                                    { key: 'row-' + i },
+                                    row.map(function (cell, j) {
+                                        return _react2.default.createElement("td", {
+                                            key: 'cell-' + i + '-' + j,
+                                            style: {
+                                                height: _this2.props.cellDim + 'px',
+                                                width: _this2.props.cellDim + 'px',
+                                                border: '1px solid black',
+                                                backgroundColor: _this2.props.colours[cell]
+                                            },
+                                            onClick: function onClick() {
+                                                return _this2.props.colourCell(i, j);
+                                            }
+                                        });
+                                    })
+                                );
                             })
-                        );
-                    })
+                        )
+                    )
                 )
             );
         }
@@ -433,23 +479,26 @@ var mapCommandsToColours = function mapCommandsToColours(baseColour) {
     return [].concat(_toConsumableArray(map[0]), _toConsumableArray(map[1]), _toConsumableArray(map[2]));
 };
 
-var initHeight = 10,
-    initWidth = 10;
+var HEIGHT = 10,
+    // initial height
+WIDTH = 10; // initial width
 
 var appState = {
     listeners: [],
 
-    height: initHeight,
-    width: initHeight,
-    cellDim: Math.min(30, (window.innerWidth - 40) / initWidth),
+    height: HEIGHT,
+    width: HEIGHT,
+    cellDim: Math.min(30, (window.innerWidth - 40) / WIDTH),
 
-    grid: Array(initHeight).fill(0).map(function (_) {
-        return Array(initWidth).fill(18);
+    grid: Array(HEIGHT).fill(0).map(function (_) {
+        return Array(WIDTH).fill(18);
     }), // fill grid with white initially
 
     selectedColour: 0,
 
     commands: initCommands,
+
+    colourMode: 0, // use brush colour mode initially
 
     // add listener
     subscribe: function (listener) {
@@ -494,6 +543,13 @@ var appState = {
     // colour this cell the currently-selected colour
     colourCell: function (row, col) {
         appState.grid[row][col] = appState.selectedColour;
+
+        appState.notify();
+    }.bind(undefined),
+
+    // toggle colour mode between brush and fill
+    selectColourMode: function (mode) {
+        appState.colourMode = mode;
 
         appState.notify();
     }.bind(undefined),

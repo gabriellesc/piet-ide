@@ -16,10 +16,23 @@ class Controls extends React.Component {
     render() {
         return (
             <div className="row">
-                <div className="col-md-12">
+                <div className="col-sm-12">
                     <table>
                         <tbody>
                             <tr>
+                                <td colSpan="3">
+                                    <div className="btn-toolbar" role="toolbar">
+                                        <ImportExportMenu {...this.props} />
+                                        <ColourModeSwitch {...this.props} />
+                                    </div>
+                                </td>
+                                <td
+                                    rowSpan="2"
+                                    style={{ paddingLeft: '2vw', paddingBottom: '1vh' }}>
+                                    <ColourPicker {...this.props} />
+                                </td>
+                            </tr>
+                            <tr style={{ paddingTop: '1vh', verticalAlign: 'top' }}>
                                 <td>
                                     <label htmlFor="height">Height</label>
                                     <input
@@ -66,14 +79,6 @@ class Controls extends React.Component {
                                             })}
                                     />
                                 </td>
-                                <td rowSpan="2" style={{ paddingLeft: '2vw' }}>
-                                    <ColourPicker {...this.props} />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td colSpan="3" style={{ paddingTop: '1vh', verticalAlign: 'top' }}>
-                                    <ImportExportMenu {...this.props} />
-                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -83,59 +88,78 @@ class Controls extends React.Component {
     }
 }
 
-const ImportExportMenu = ({ importImg, exportPng }) => (
-    <div className="btn-toolbar" role="toolbar">
-        <input
-            type="button"
-            className="btn btn-primary"
-            value="Import"
-            onClick={() => document.getElementById('fileChooser').click()}
-        />
-        <input
-            id="fileChooser"
-            type="file"
-            accept="image/png, image/bmp, image/jpeg"
-            style={{ display: 'none' }}
-            onChange={event => importImg(event.target.files[0])}
-        />
+const ImportExportMenu = ({ importImg, exportPng }) => [
+    <input
+        key="import-btn"
+        type="button"
+        className="btn btn-primary"
+        value="Import"
+        onClick={() => document.getElementById('fileChooser').click()}
+    />,
+    <input
+        key="hidden-file-input"
+        id="fileChooser"
+        type="file"
+        accept="image/png, image/bmp, image/jpeg"
+        style={{ display: 'none' }}
+        onChange={event => importImg(event.target.files[0])}
+    />,
 
-        <div className="btn-group">
-            <button
-                type="button"
-                className="btn btn-info"
-                onClick={() => {
-                    exportPng(parseInt(document.getElementById('scale').value));
-                }}>
-                Export to PNG
-            </button>
-            <button
-                type="button"
-                className="btn btn-info dropdown-toggle"
-                data-toggle="dropdown"
-                aria-haspopup="true"
-                aria-expanded="false">
-                <span className="caret" />
-                <span className="sr-only">Toggle Dropdown</span>
-            </button>
-            <ul className="dropdown-menu">
-                <li>
-                    <div className="form-group" style={{ marginLeft: '1vw', marginBottom: '0' }}>
-                        <label className="control-label" htmlFor="scale">
-                            Scale
-                        </label>
-                        <input
-                            id="scale"
-                            type="number"
-                            name="scale"
-                            className="form-control"
-                            style={{ width: '5em', marginLeft: '4px', display: 'inline-block' }}
-                            defaultValue={1}
-                            required
-                        />
-                    </div>
-                </li>
-            </ul>
-        </div>
+    <div key="export-btn" className="btn-group">
+        <button
+            type="button"
+            className="btn btn-info"
+            onClick={() => {
+                exportPng(parseInt(document.getElementById('scale').value));
+            }}>
+            Export to PNG
+        </button>
+        <button
+            type="button"
+            className="btn btn-info dropdown-toggle"
+            data-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="false">
+            <span className="caret" />
+            <span className="sr-only">Toggle Dropdown</span>
+        </button>
+        <ul className="dropdown-menu">
+            <li>
+                <div className="form-group" style={{ marginLeft: '1vw', marginBottom: '0' }}>
+                    <label className="control-label" htmlFor="scale">
+                        Scale
+                    </label>
+                    <input
+                        id="scale"
+                        type="number"
+                        name="scale"
+                        className="form-control"
+                        style={{ width: '5em', marginLeft: '4px', display: 'inline-block' }}
+                        defaultValue={1}
+                        required
+                    />
+                </div>
+            </li>
+        </ul>
+    </div>,
+];
+
+const ColourModeSwitch = ({ colourMode, selectColourMode }) => (
+    <div className="btn-group" role="group" style={{ float: 'right' }}>
+        <button
+            type="button"
+            className={'btn btn-default' + (colourMode == 0 ? 'active' : '')}
+            style={{ padding: '2px 12px' }}
+            onClick={() => selectColourMode(0)}>
+            <i className="fi-pencil" style={{ fontSize: '14pt' }} />
+        </button>
+        <button
+            type="button"
+            className={'btn btn-default' + (colourMode == 1 ? 'active' : '')}
+            style={{ padding: '2px 12px' }}
+            onClick={() => selectColourMode(1)}>
+            <i className="fi-paint-bucket" style={{ fontSize: '14pt' }} />
+        </button>
     </div>
 );
 

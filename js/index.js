@@ -65,23 +65,25 @@ const mapCommandsToColours = baseColour => {
     return [...map[0], ...map[1], ...map[2]];
 };
 
-const initHeight = 10,
-    initWidth = 10;
+const HEIGHT = 10, // initial height
+    WIDTH = 10; // initial width
 
 const appState = {
     listeners: [],
 
-    height: initHeight,
-    width: initHeight,
-    cellDim: Math.min(30, (window.innerWidth - 40) / initWidth),
+    height: HEIGHT,
+    width: HEIGHT,
+    cellDim: Math.min(30, (window.innerWidth - 40) / WIDTH),
 
-    grid: Array(initHeight)
+    grid: Array(HEIGHT)
         .fill(0)
-        .map(_ => Array(initWidth).fill(18)), // fill grid with white initially
+        .map(_ => Array(WIDTH).fill(18)), // fill grid with white initially
 
     selectedColour: 0,
 
     commands: initCommands,
+
+    colourMode: 0, // use brush colour mode initially
 
     // add listener
     subscribe: (listener => appState.listeners.push(listener)).bind(this),
@@ -117,6 +119,13 @@ const appState = {
     // colour this cell the currently-selected colour
     colourCell: ((row, col) => {
         appState.grid[row][col] = appState.selectedColour;
+
+        appState.notify();
+    }).bind(this),
+
+    // toggle colour mode between brush and fill
+    selectColourMode: (mode => {
+        appState.colourMode = mode;
 
         appState.notify();
     }).bind(this),
