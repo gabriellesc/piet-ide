@@ -150,7 +150,7 @@ const PaintModeSwitch = ({ paintMode, selectPaintMode }) => (
             type="button"
             className={'btn btn-default' + (paintMode == 0 ? 'active' : '')}
             style={{ padding: '2px 12px' }}
-            onClick={() => selectPaintmode(0)}>
+            onClick={() => selectPaintMode(0)}>
             <i className="fi-pencil" style={{ fontSize: '14pt' }} />
         </button>
         <button
