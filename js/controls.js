@@ -16,54 +16,68 @@ class Controls extends React.Component {
     render() {
         return (
             <div className="row">
-                <form className="form-inline col-md-12">
-                    <div className="form-group">
-                        <label className="control-label" htmlFor="height">
-                            Height
-                        </label>
-                        <input
-                            ref={input => (this.height = input)}
-                            type="number"
-                            name="height"
-                            className="form-control"
-                            style={{ width: '5em', marginLeft: '4px' }}
-                            required
-                            defaultValue={this.props.height}
-                        />
-                    </div>
-                    <div className="form-group" style={{ marginLeft: '1vw' }}>
-                        <label className="control-label" htmlFor="width">
-                            Width
-                        </label>
-                        <input
-                            ref={input => (this.width = input)}
-                            type="number"
-                            name="width"
-                            className="form-control"
-                            style={{ width: '5em', marginLeft: '4px' }}
-                            defaultValue={this.props.width}
-                            required
-                        />
-                    </div>
-                    <input
-                        type="button"
-                        className="btn btn-warning"
-                        value="Resize / Clear"
-                        style={{ marginLeft: '1vw' }}
-                        onClick={() =>
-                            this.props.resize({
-                                height: parseInt(this.height.value),
-                                width: parseInt(this.width.value),
-                            })}
-                    />
-
-                    <div className="form-group" style={{ marginLeft: '2vw' }}>
-                        <ImportExportMenu {...this.props} />
-                    </div>
-                    <div className="form-group" style={{ marginLeft: '2vw' }}>
-                        <ColourPicker {...this.props} />
-                    </div>
-                </form>
+                <div className="col-md-12">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <label htmlFor="height">Height</label>
+                                    <input
+                                        ref={input => (this.height = input)}
+                                        type="number"
+                                        name="height"
+                                        className="form-control"
+                                        style={{
+                                            width: '5em',
+                                            marginLeft: '4px',
+                                            marginRight: '1vw',
+                                            display: 'inline-block',
+                                        }}
+                                        required
+                                        defaultValue={this.props.height}
+                                    />
+                                </td>
+                                <td>
+                                    <label htmlFor="width">Width</label>
+                                    <input
+                                        ref={input => (this.width = input)}
+                                        type="number"
+                                        name="width"
+                                        className="form-control"
+                                        style={{
+                                            width: '5em',
+                                            marginLeft: '4px',
+                                            display: 'inline-block',
+                                        }}
+                                        defaultValue={this.props.width}
+                                        required
+                                    />
+                                </td>
+                                <td>
+                                    <input
+                                        type="button"
+                                        className="btn btn-warning"
+                                        value="Resize / Clear"
+                                        style={{ marginLeft: '1vw' }}
+                                        onClick={() =>
+                                            this.props.resize({
+                                                height: parseInt(this.height.value),
+                                                width: parseInt(this.width.value),
+                                            })}
+                                    />
+                                </td>
+                                <td rowSpan="2" style={{ paddingLeft: '2vw' }}>
+                                    <ColourPicker {...this.props} />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colSpan="3" style={{ paddingTop: '1vh', verticalAlign: 'top' }}>
+                                    <ImportExportMenu {...this.props} />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         );
     }
@@ -105,7 +119,7 @@ const ImportExportMenu = ({ importImg, exportPng }) => (
             </button>
             <ul className="dropdown-menu">
                 <li>
-                    <div className="form-group" style={{ marginLeft: '1vw' }}>
+                    <div className="form-group" style={{ marginLeft: '1vw', marginBottom: '0' }}>
                         <label className="control-label" htmlFor="scale">
                             Scale
                         </label>
@@ -114,7 +128,7 @@ const ImportExportMenu = ({ importImg, exportPng }) => (
                             type="number"
                             name="scale"
                             className="form-control"
-                            style={{ width: '5em', marginLeft: '4px' }}
+                            style={{ width: '5em', marginLeft: '4px', display: 'inline-block' }}
                             defaultValue={1}
                             required
                         />
@@ -161,7 +175,8 @@ const ColourCell = props => (
             height: '25px',
             padding: '5px',
             backgroundColor: props.colours[props.cellColour],
-            border: '1px solid black',
+            border:
+                props.selectedColour == props.cellColour ? '4px double black' : '1px solid black',
             color: 'white',
             textShadow: '1px 1px 1px black',
             textAlign: 'center',

@@ -53,69 +53,98 @@ var Controls = function (_React$Component) {
                 "div",
                 { className: "row" },
                 _react2.default.createElement(
-                    "form",
-                    { className: "form-inline col-md-12" },
+                    "div",
+                    { className: "col-md-12" },
                     _react2.default.createElement(
-                        "div",
-                        { className: "form-group" },
+                        "table",
+                        null,
                         _react2.default.createElement(
-                            "label",
-                            { className: "control-label", htmlFor: "height" },
-                            "Height"
-                        ),
-                        _react2.default.createElement("input", {
-                            ref: function ref(input) {
-                                return _this2.height = input;
-                            },
-                            type: "number",
-                            name: "height",
-                            className: "form-control",
-                            style: { width: '5em', marginLeft: '4px' },
-                            required: true,
-                            defaultValue: this.props.height
-                        })
-                    ),
-                    _react2.default.createElement(
-                        "div",
-                        { className: "form-group", style: { marginLeft: '1vw' } },
-                        _react2.default.createElement(
-                            "label",
-                            { className: "control-label", htmlFor: "width" },
-                            "Width"
-                        ),
-                        _react2.default.createElement("input", {
-                            ref: function ref(input) {
-                                return _this2.width = input;
-                            },
-                            type: "number",
-                            name: "width",
-                            className: "form-control",
-                            style: { width: '5em', marginLeft: '4px' },
-                            defaultValue: this.props.width,
-                            required: true
-                        })
-                    ),
-                    _react2.default.createElement("input", {
-                        type: "button",
-                        className: "btn btn-warning",
-                        value: "Resize / Clear",
-                        style: { marginLeft: '1vw' },
-                        onClick: function onClick() {
-                            return _this2.props.resize({
-                                height: parseInt(_this2.height.value),
-                                width: parseInt(_this2.width.value)
-                            });
-                        }
-                    }),
-                    _react2.default.createElement(
-                        "div",
-                        { className: "form-group", style: { marginLeft: '2vw' } },
-                        _react2.default.createElement(ImportExportMenu, this.props)
-                    ),
-                    _react2.default.createElement(
-                        "div",
-                        { className: "form-group", style: { marginLeft: '2vw' } },
-                        _react2.default.createElement(ColourPicker, this.props)
+                            "tbody",
+                            null,
+                            _react2.default.createElement(
+                                "tr",
+                                null,
+                                _react2.default.createElement(
+                                    "td",
+                                    null,
+                                    _react2.default.createElement(
+                                        "label",
+                                        { htmlFor: "height" },
+                                        "Height"
+                                    ),
+                                    _react2.default.createElement("input", {
+                                        ref: function ref(input) {
+                                            return _this2.height = input;
+                                        },
+                                        type: "number",
+                                        name: "height",
+                                        className: "form-control",
+                                        style: {
+                                            width: '5em',
+                                            marginLeft: '4px',
+                                            marginRight: '1vw',
+                                            display: 'inline-block'
+                                        },
+                                        required: true,
+                                        defaultValue: this.props.height
+                                    })
+                                ),
+                                _react2.default.createElement(
+                                    "td",
+                                    null,
+                                    _react2.default.createElement(
+                                        "label",
+                                        { htmlFor: "width" },
+                                        "Width"
+                                    ),
+                                    _react2.default.createElement("input", {
+                                        ref: function ref(input) {
+                                            return _this2.width = input;
+                                        },
+                                        type: "number",
+                                        name: "width",
+                                        className: "form-control",
+                                        style: {
+                                            width: '5em',
+                                            marginLeft: '4px',
+                                            display: 'inline-block'
+                                        },
+                                        defaultValue: this.props.width,
+                                        required: true
+                                    })
+                                ),
+                                _react2.default.createElement(
+                                    "td",
+                                    null,
+                                    _react2.default.createElement("input", {
+                                        type: "button",
+                                        className: "btn btn-warning",
+                                        value: "Resize / Clear",
+                                        style: { marginLeft: '1vw' },
+                                        onClick: function onClick() {
+                                            return _this2.props.resize({
+                                                height: parseInt(_this2.height.value),
+                                                width: parseInt(_this2.width.value)
+                                            });
+                                        }
+                                    })
+                                ),
+                                _react2.default.createElement(
+                                    "td",
+                                    { rowSpan: "2", style: { paddingLeft: '2vw' } },
+                                    _react2.default.createElement(ColourPicker, this.props)
+                                )
+                            ),
+                            _react2.default.createElement(
+                                "tr",
+                                null,
+                                _react2.default.createElement(
+                                    "td",
+                                    { colSpan: "3", style: { paddingTop: '1vh', verticalAlign: 'top' } },
+                                    _react2.default.createElement(ImportExportMenu, this.props)
+                                )
+                            )
+                        )
                     )
                 )
             );
@@ -184,7 +213,7 @@ var ImportExportMenu = function ImportExportMenu(_ref) {
                     null,
                     _react2.default.createElement(
                         "div",
-                        { className: "form-group", style: { marginLeft: '1vw' } },
+                        { className: "form-group", style: { marginLeft: '1vw', marginBottom: '0' } },
                         _react2.default.createElement(
                             "label",
                             { className: "control-label", htmlFor: "scale" },
@@ -195,7 +224,7 @@ var ImportExportMenu = function ImportExportMenu(_ref) {
                             type: "number",
                             name: "scale",
                             className: "form-control",
-                            style: { width: '5em', marginLeft: '4px' },
+                            style: { width: '5em', marginLeft: '4px', display: 'inline-block' },
                             defaultValue: 1,
                             required: true
                         })
@@ -246,7 +275,7 @@ var ColourCell = function ColourCell(props) {
                 height: '25px',
                 padding: '5px',
                 backgroundColor: props.colours[props.cellColour],
-                border: '1px solid black',
+                border: props.selectedColour == props.cellColour ? '4px double black' : '1px solid black',
                 color: 'white',
                 textShadow: '1px 1px 1px black',
                 textAlign: 'center',
