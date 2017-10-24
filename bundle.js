@@ -369,8 +369,7 @@ var Grid = function (_React$Component) {
                         "table",
                         {
                             style: {
-                                tableLayout: 'fixed',
-                                cursor: this.props.paintMode == 0 ? 'url(img/fi-pencil.png) 5 30,auto' : 'url(img/fi-paint-bucket.png) 25 25,auto'
+                                tableLayout: 'fixed'
                             } },
                         _react2.default.createElement(
                             "tbody",
@@ -386,7 +385,8 @@ var Grid = function (_React$Component) {
                                                 height: _this2.props.cellDim + 'px',
                                                 width: _this2.props.cellDim + 'px',
                                                 border: '1px solid black',
-                                                backgroundColor: _this2.props.colours[cell]
+                                                backgroundColor: _this2.props.colours[cell],
+                                                cursor: 'url(img/paint-brush.png) 16 3,auto'
                                             },
                                             onClick: function onClick() {
                                                 return _this2.props.paint(i, j);
@@ -406,6 +406,10 @@ var Grid = function (_React$Component) {
 }(_react2.default.Component);
 
 exports.default = Grid;
+/*                                                    this.props.paintMode == 0
+                                                        ? 'url(img/pencil.png) 5 30,auto'
+                                                        : 'url(img/paint-bucket.png) 28 28,auto',
+*/
 
 },{"react":37}],3:[function(require,module,exports){
 (function (Buffer){
@@ -547,26 +551,28 @@ var appState = {
             appState.grid[row][col] = appState.selectedColour;
         } else {
             // bucket paint mode
-            (function paintBlock(row, col, origColour) {
-                appState.grid[row][col] = appState.selectedColour;
+            if (appState.grid[row][col] != appState.selectedColour) {
+                (function paintBlock(row, col, origColour) {
+                    appState.grid[row][col] = appState.selectedColour;
 
-                // above
-                if (row - 1 >= 0 && appState.grid[row - 1][col] == origColour) {
-                    paintBlock(row - 1, col, origColour);
-                }
-                // below
-                if (row + 1 < appState.height && appState.grid[row + 1][col] == origColour) {
-                    paintBlock(row + 1, col, origColour);
-                }
-                // left
-                if (col - 1 >= 0 && appState.grid[row][col - 1] == origColour) {
-                    paintBlock(row, col - 1, origColour);
-                }
-                // right
-                if (col + 1 < appState.width && appState.grid[row][col + 1] == origColour) {
-                    paintBlock(row, col + 1, origColour);
-                }
-            })(row, col, appState.grid[row][col]);
+                    // above
+                    if (row - 1 >= 0 && appState.grid[row - 1][col] == origColour) {
+                        paintBlock(row - 1, col, origColour);
+                    }
+                    // below
+                    if (row + 1 < appState.height && appState.grid[row + 1][col] == origColour) {
+                        paintBlock(row + 1, col, origColour);
+                    }
+                    // left
+                    if (col - 1 >= 0 && appState.grid[row][col - 1] == origColour) {
+                        paintBlock(row, col - 1, origColour);
+                    }
+                    // right
+                    if (col + 1 < appState.width && appState.grid[row][col + 1] == origColour) {
+                        paintBlock(row, col + 1, origColour);
+                    }
+                })(row, col, appState.grid[row][col]);
+            }
         }
 
         appState.notify();
