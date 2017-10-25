@@ -27,7 +27,7 @@ class Controls extends React.Component {
                                     </div>
                                 </td>
                                 <td
-                                    rowSpan="2"
+                                    rowSpan="3"
                                     style={{ paddingLeft: '2vw', paddingBottom: '1vh' }}>
                                     <ColourPicker {...this.props} />
                                 </td>
@@ -78,6 +78,17 @@ class Controls extends React.Component {
                                                 width: parseInt(this.width.value),
                                             })}
                                     />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <BSDisplaySwitch {...this.props} />
+                                    &emsp;<b>
+                                        {this.props.cellInFocus &&
+                                            this.props.blockSizes[this.props.cellInFocus[0]][
+                                                this.props.cellInFocus[1]
+                                            ] + ' pixels in block'}
+                                    </b>
                                 </td>
                             </tr>
                         </tbody>
@@ -148,6 +159,7 @@ const PaintModeSwitch = ({ paintMode, selectPaintMode }) => (
     <div className="btn-group" role="group" style={{ float: 'right' }}>
         <button
             type="button"
+            title="Pencil mode (fill single pixel)"
             className={'btn btn-default' + (paintMode == 0 ? 'active' : '')}
             style={{ padding: '2px 12px' }}
             onClick={() => selectPaintMode(0)}>
@@ -155,6 +167,7 @@ const PaintModeSwitch = ({ paintMode, selectPaintMode }) => (
         </button>
         <button
             type="button"
+            title="Bucket mode (fill block of pixels)"
             className={'btn btn-default' + (paintMode == 1 ? 'active' : '')}
             style={{ padding: '2px 12px' }}
             onClick={() => selectPaintMode(1)}>
@@ -162,6 +175,23 @@ const PaintModeSwitch = ({ paintMode, selectPaintMode }) => (
         </button>
     </div>
 );
+
+const BSDisplaySwitch = ({ displayBS, toggleDisplayBS }) =>
+    displayBS ? (
+        <i
+            className="glyphicon glyphicon-eye-open"
+            title="Show block sizes"
+            style={{ fontSize: '16px' }}
+            onClick={() => toggleDisplayBS()}
+        />
+    ) : (
+        <i
+            className="glyphicon glyphicon-eye-close"
+            title="Show block sizes"
+            style={{ fontSize: '16px' }}
+            onClick={() => toggleDisplayBS()}
+        />
+    );
 
 const ColourPicker = props => (
     <table>

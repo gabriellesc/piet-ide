@@ -77,7 +77,7 @@ var Controls = function (_React$Component) {
                                 _react2.default.createElement(
                                     "td",
                                     {
-                                        rowSpan: "2",
+                                        rowSpan: "3",
                                         style: { paddingLeft: '2vw', paddingBottom: '1vh' } },
                                     _react2.default.createElement(ColourPicker, this.props)
                                 )
@@ -149,6 +149,21 @@ var Controls = function (_React$Component) {
                                             });
                                         }
                                     })
+                                )
+                            ),
+                            _react2.default.createElement(
+                                "tr",
+                                null,
+                                _react2.default.createElement(
+                                    "td",
+                                    null,
+                                    _react2.default.createElement(BSDisplaySwitch, this.props),
+                                    "\u2003",
+                                    _react2.default.createElement(
+                                        "b",
+                                        null,
+                                        this.props.cellInFocus && this.props.blockSizes[this.props.cellInFocus[0]][this.props.cellInFocus[1]] + ' pixels in block'
+                                    )
                                 )
                             )
                         )
@@ -248,6 +263,7 @@ var PaintModeSwitch = function PaintModeSwitch(_ref2) {
             "button",
             {
                 type: "button",
+                title: "Pencil mode (fill single pixel)",
                 className: 'btn btn-default' + (paintMode == 0 ? 'active' : ''),
                 style: { padding: '2px 12px' },
                 onClick: function onClick() {
@@ -259,6 +275,7 @@ var PaintModeSwitch = function PaintModeSwitch(_ref2) {
             "button",
             {
                 type: "button",
+                title: "Bucket mode (fill block of pixels)",
                 className: 'btn btn-default' + (paintMode == 1 ? 'active' : ''),
                 style: { padding: '2px 12px' },
                 onClick: function onClick() {
@@ -267,6 +284,26 @@ var PaintModeSwitch = function PaintModeSwitch(_ref2) {
             _react2.default.createElement("i", { className: "fi-paint-bucket", style: { fontSize: '14pt' } })
         )
     );
+};
+
+var BSDisplaySwitch = function BSDisplaySwitch(_ref3) {
+    var displayBS = _ref3.displayBS,
+        toggleDisplayBS = _ref3.toggleDisplayBS;
+    return displayBS ? _react2.default.createElement("i", {
+        className: "glyphicon glyphicon-eye-open",
+        title: "Show block sizes",
+        style: { fontSize: '16px' },
+        onClick: function onClick() {
+            return toggleDisplayBS();
+        }
+    }) : _react2.default.createElement("i", {
+        className: "glyphicon glyphicon-eye-close",
+        title: "Show block sizes",
+        style: { fontSize: '16px' },
+        onClick: function onClick() {
+            return toggleDisplayBS();
+        }
+    });
 };
 
 var ColourPicker = function ColourPicker(props) {
@@ -370,6 +407,9 @@ var Grid = function (_React$Component) {
                         {
                             style: {
                                 tableLayout: 'fixed'
+                            },
+                            onMouseOut: function onMouseOut() {
+                                return _this2.props.setCellInFocus(null);
                             } },
                         _react2.default.createElement(
                             "tbody",
@@ -379,19 +419,29 @@ var Grid = function (_React$Component) {
                                     "tr",
                                     { key: 'row-' + i },
                                     row.map(function (cell, j) {
-                                        return _react2.default.createElement("td", {
-                                            key: 'cell-' + i + '-' + j,
-                                            style: {
-                                                height: _this2.props.cellDim + 'px',
-                                                width: _this2.props.cellDim + 'px',
-                                                border: '1px solid black',
-                                                backgroundColor: _this2.props.colours[cell],
-                                                cursor: 'url(img/paint-brush.png) 16 3,auto'
-                                            },
-                                            onClick: function onClick() {
-                                                return _this2.props.paint(i, j);
-                                            }
-                                        });
+                                        return _react2.default.createElement(
+                                            "td",
+                                            {
+                                                key: 'cell-' + i + '-' + j,
+                                                title: '(' + i + ',' + j + ')',
+                                                style: {
+                                                    height: _this2.props.cellDim + 'px',
+                                                    width: _this2.props.cellDim + 'px',
+                                                    border: '1px solid black',
+                                                    backgroundColor: _this2.props.colours[cell],
+                                                    color: 'white',
+                                                    textShadow: '1px 1px 1px black',
+                                                    textAlign: 'center',
+                                                    cursor: _this2.props.paintMode == 0 ? 'url(img/pencil.png) 5 30,auto' : 'url(img/paint-bucket.png) 28 28,auto'
+                                                },
+                                                onMouseOver: function onMouseOver() {
+                                                    return _this2.props.setCellInFocus(i, j);
+                                                },
+                                                onClick: function onClick() {
+                                                    return _this2.props.paint(i, j);
+                                                } },
+                                            _this2.props.displayBS && _this2.props.blockSizes[i][j]
+                                        );
                                     })
                                 );
                             })
@@ -406,10 +456,6 @@ var Grid = function (_React$Component) {
 }(_react2.default.Component);
 
 exports.default = Grid;
-/*                                                    this.props.paintMode == 0
-                                                        ? 'url(img/pencil.png) 5 30,auto'
-                                                        : 'url(img/paint-bucket.png) 28 28,auto',
-*/
 
 },{"react":37}],3:[function(require,module,exports){
 (function (Buffer){
@@ -498,11 +544,18 @@ var appState = {
         return Array(WIDTH).fill(18);
     }), // fill grid with white initially
 
+    blockSizes: Array(HEIGHT).fill(0).map(function (_) {
+        return Array(WIDTH).fill(HEIGHT * WIDTH);
+    }),
+
     selectedColour: 0,
 
     commands: initCommands,
 
     paintMode: 0, // use brush paint mode initially
+
+    cellInFocus: null,
+    displayBS: false, // initially do not show block sizes
 
     // add listener
     subscribe: function (listener) {
@@ -525,6 +578,10 @@ var appState = {
 
         appState.grid = Array(height).fill(0).map(function (_) {
             return Array(width).fill(18);
+        });
+
+        appState.blockSizes = Array(height).fill(0).map(function (_) {
+            return Array(width).fill(height * width);
         });
 
         appState.notify();
@@ -575,12 +632,32 @@ var appState = {
             }
         }
 
+        // recompute block sizes
+        appState.blockSizes = appState.computeBlockSizes();
+
         appState.notify();
     }.bind(undefined),
 
     // toggle paint mode between brush and fill
     selectPaintMode: function (mode) {
         appState.paintMode = mode;
+
+        appState.notify();
+    }.bind(undefined),
+
+    setCellInFocus: function (row, cell) {
+        if (row == null) {
+            appState.cellInFocus = null;
+        } else {
+            appState.cellInFocus = [row, cell];
+        }
+
+        appState.notify();
+    }.bind(undefined),
+
+    // toggle block size display mode
+    toggleDisplayBS: function () {
+        appState.displayBS = !appState.displayBS;
 
         appState.notify();
     }.bind(undefined),
@@ -636,11 +713,56 @@ var appState = {
                     }
                 });
 
+                // compute block sizes
+                appState.blockSizes = appState.computeBlockSizes();
+
                 appState.notify();
             });
         };
         reader.readAsArrayBuffer(file);
-    }
+    },
+
+    // return the number of cells in the colour block that contains each cell
+    computeBlockSizes: function () {
+        var blockSizes = Array(appState.height).fill(0).map(function (_) {
+            return Array(appState.width).fill(-1);
+        });
+
+        function labelBlock(row, col, blockColour, label) {
+            // cell has not yet been examined and is part of the current block
+            if (blockSizes[row][col] == -1 && appState.grid[row][col] == blockColour) {
+                blockSizes[row][col] = label;
+
+                return 1 + (row - 1 >= 0 && labelBlock(row - 1, col, blockColour, label)) + ( // left
+                row + 1 < appState.height && labelBlock(row + 1, col, blockColour, label)) + ( // right
+                col - 1 >= 0 && labelBlock(row, col - 1, blockColour, label)) + ( // above
+                col + 1 < appState.width && labelBlock(row, col + 1, blockColour, label)) // below
+                ;
+            }
+
+            return 0;
+        }
+
+        // label each cell
+        var labelMap = [];
+        for (var i = 0; i < appState.height; i++) {
+            for (var j = 0; j < appState.width; j++) {
+                // block size has not yet been calculated for this cell
+                if (blockSizes[i][j] == -1) {
+                    labelMap.push(labelBlock(i, j, appState.grid[i][j], labelMap.length));
+                }
+            }
+        }
+
+        // replace labels with block sizes
+        for (var i = 0; i < appState.height; i++) {
+            for (var j = 0; j < appState.width; j++) {
+                blockSizes[i][j] = labelMap[blockSizes[i][j]];
+            }
+        }
+
+        return blockSizes;
+    }.bind(undefined)
 };
 
 var App = function (_React$Component) {

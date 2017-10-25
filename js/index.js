@@ -79,11 +79,18 @@ const appState = {
         .fill(0)
         .map(_ => Array(WIDTH).fill(18)), // fill grid with white initially
 
+    blockSizes: Array(HEIGHT)
+        .fill(0)
+        .map(_ => Array(WIDTH).fill(HEIGHT * WIDTH)),
+
     selectedColour: 0,
 
     commands: initCommands,
 
     paintMode: 0, // use brush paint mode initially
+
+    cellInFocus: null,
+    displayBS: false, // initially do not show block sizes
 
     // add listener
     subscribe: (listener => appState.listeners.push(listener)).bind(this),
@@ -98,6 +105,10 @@ const appState = {
         appState.grid = Array(height)
             .fill(0)
             .map(_ => Array(width).fill(18));
+
+        appState.blockSizes = Array(height)
+            .fill(0)
+            .map(_ => Array(width).fill(height * width));
 
         appState.notify();
     }).bind(this),
@@ -122,30 +133,33 @@ const appState = {
             // brush paint mode
             appState.grid[row][col] = appState.selectedColour;
         } else {
-	    // bucket paint mode
-	    if (appState.grid[row][col] != appState.selectedColour) {
-		(function paintBlock(row, col, origColour) {
+            // bucket paint mode
+            if (appState.grid[row][col] != appState.selectedColour) {
+                (function paintBlock(row, col, origColour) {
                     appState.grid[row][col] = appState.selectedColour;
 
                     // above
                     if (row - 1 >= 0 && appState.grid[row - 1][col] == origColour) {
-			paintBlock(row - 1, col, origColour);
+                        paintBlock(row - 1, col, origColour);
                     }
                     // below
                     if (row + 1 < appState.height && appState.grid[row + 1][col] == origColour) {
-			paintBlock(row + 1, col, origColour);
+                        paintBlock(row + 1, col, origColour);
                     }
                     // left
                     if (col - 1 >= 0 && appState.grid[row][col - 1] == origColour) {
-			paintBlock(row, col - 1, origColour);
+                        paintBlock(row, col - 1, origColour);
                     }
                     // right
                     if (col + 1 < appState.width && appState.grid[row][col + 1] == origColour) {
-			paintBlock(row, col + 1, origColour);
+                        paintBlock(row, col + 1, origColour);
                     }
-		})(row, col, appState.grid[row][col]);
+                })(row, col, appState.grid[row][col]);
             }
-	}
+        }
+
+        // recompute block sizes
+        appState.blockSizes = appState.computeBlockSizes();
 
         appState.notify();
     }).bind(this),
@@ -153,6 +167,23 @@ const appState = {
     // toggle paint mode between brush and fill
     selectPaintMode: (mode => {
         appState.paintMode = mode;
+
+        appState.notify();
+    }).bind(this),
+
+    setCellInFocus: ((row, cell) => {
+	if (row == null) {
+	    appState.cellInFocus = null;
+	} else {
+            appState.cellInFocus = [row, cell];
+	}
+
+        appState.notify();
+    }).bind(this),
+
+    // toggle block size display mode
+    toggleDisplayBS: (() => {
+        appState.displayBS = !appState.displayBS;
 
         appState.notify();
     }).bind(this),
@@ -204,11 +235,58 @@ const appState = {
                     }
                 });
 
+                // compute block sizes
+                appState.blockSizes = appState.computeBlockSizes();
+
                 appState.notify();
             });
         };
         reader.readAsArrayBuffer(file);
     },
+
+    // return the number of cells in the colour block that contains each cell
+    computeBlockSizes: (() => {
+        let blockSizes = Array(appState.height)
+            .fill(0)
+            .map(_ => Array(appState.width).fill(-1));
+
+        function labelBlock(row, col, blockColour, label) {
+            // cell has not yet been examined and is part of the current block
+            if (blockSizes[row][col] == -1 && appState.grid[row][col] == blockColour) {
+                blockSizes[row][col] = label;
+
+                return (
+                    1 +
+                    (row - 1 >= 0 && labelBlock(row - 1, col, blockColour, label)) + // left
+                    (row + 1 < appState.height && labelBlock(row + 1, col, blockColour, label)) + // right
+                    (col - 1 >= 0 && labelBlock(row, col - 1, blockColour, label)) + // above
+                    (col + 1 < appState.width && labelBlock(row, col + 1, blockColour, label)) // below
+                );
+            }
+
+            return 0;
+        }
+
+        // label each cell
+        let labelMap = [];
+        for (var i = 0; i < appState.height; i++) {
+            for (var j = 0; j < appState.width; j++) {
+                // block size has not yet been calculated for this cell
+                if (blockSizes[i][j] == -1) {
+                    labelMap.push(labelBlock(i, j, appState.grid[i][j], labelMap.length));
+                }
+            }
+        }
+
+        // replace labels with block sizes
+        for (var i = 0; i < appState.height; i++) {
+            for (var j = 0; j < appState.width; j++) {
+                blockSizes[i][j] = labelMap[blockSizes[i][j]];
+            }
+        }
+
+        return blockSizes;
+    }).bind(this),
 };
 
 class App extends React.Component {
