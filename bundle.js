@@ -1,5 +1,5 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
@@ -7,11 +7,82 @@ Object.defineProperty(exports, "__esModule", {
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = require("react");
+var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var ColourPicker = function ColourPicker(props) {
+    return _react2.default.createElement(
+        'table',
+        null,
+        _react2.default.createElement(
+            'tbody',
+            null,
+            [props.colours.slice(0, 6), props.colours.slice(6, 12), props.colours.slice(12, 18)].map(function (colourRow, i) {
+                return _react2.default.createElement(
+                    'tr',
+                    { key: 'colour-row-' + i },
+                    colourRow.map(function (colour, j) {
+                        return _react2.default.createElement(ColourCell, _extends({
+                            key: 'colour-cell-' + i + '-' + j,
+                            cellColour: i * 6 + j
+                        }, props));
+                    })
+                );
+            }),
+            _react2.default.createElement(
+                'tr',
+                null,
+                _react2.default.createElement(ColourCell, _extends({ colSpan: '3', cellColour: 18 }, props)),
+                _react2.default.createElement(ColourCell, _extends({ colSpan: '3', cellColour: 19 }, props))
+            )
+        )
+    );
+};
+
+var ColourCell = function ColourCell(props) {
+    return _react2.default.createElement(
+        'td',
+        {
+            colSpan: props.colSpan ? props.colSpan : '1',
+            style: {
+                width: '32px',
+                height: '32px',
+                padding: '5px',
+                backgroundColor: props.colours[props.cellColour],
+                border: props.selectedColour == props.cellColour ? '4px double black' : '1px solid black',
+                color: 'white',
+                textShadow: '1px 1px 1px black',
+                textAlign: 'center',
+                cursor: 'pointer'
+            },
+            onClick: function onClick() {
+                return props.selectColour(props.cellColour);
+            } },
+        props.commands[props.cellColour]
+    );
+};
+
+exports.default = ColourPicker;
+
+},{"react":38}],2:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _colourPicker = require('./colourPicker.js');
+
+var _colourPicker2 = _interopRequireDefault(_colourPicker);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -31,7 +102,7 @@ var Controls = function (_React$Component) {
     }
 
     _createClass(Controls, [{
-        key: "componentWillReceiveProps",
+        key: 'componentWillReceiveProps',
 
         // manually update input values when dims are changed from appState (eg. when image file
         // is imported)
@@ -45,61 +116,61 @@ var Controls = function (_React$Component) {
             }
         }
     }, {
-        key: "render",
+        key: 'render',
         value: function render() {
             var _this2 = this;
 
             return _react2.default.createElement(
-                "div",
-                { className: "row" },
+                'div',
+                { className: 'row' },
                 _react2.default.createElement(
-                    "div",
-                    { className: "col-sm-12" },
+                    'div',
+                    { className: 'col-sm-12' },
                     _react2.default.createElement(
-                        "table",
+                        'table',
                         null,
                         _react2.default.createElement(
-                            "tbody",
+                            'tbody',
                             null,
                             _react2.default.createElement(
-                                "tr",
+                                'tr',
                                 null,
                                 _react2.default.createElement(
-                                    "td",
-                                    { colSpan: "3" },
+                                    'td',
+                                    { colSpan: '3' },
                                     _react2.default.createElement(
-                                        "div",
-                                        { className: "btn-toolbar", role: "toolbar" },
+                                        'div',
+                                        { className: 'btn-toolbar', role: 'toolbar' },
                                         _react2.default.createElement(ImportExportMenu, this.props),
                                         _react2.default.createElement(PaintModeSwitch, this.props)
                                     )
                                 ),
                                 _react2.default.createElement(
-                                    "td",
+                                    'td',
                                     {
-                                        rowSpan: "3",
+                                        rowSpan: '3',
                                         style: { paddingLeft: '2vw', paddingBottom: '1vh' } },
-                                    _react2.default.createElement(ColourPicker, this.props)
+                                    _react2.default.createElement(_colourPicker2.default, this.props)
                                 )
                             ),
                             _react2.default.createElement(
-                                "tr",
-                                { style: { paddingTop: '1vh', verticalAlign: 'top' } },
+                                'tr',
+                                { style: { paddingTop: '1vh' } },
                                 _react2.default.createElement(
-                                    "td",
+                                    'td',
                                     null,
                                     _react2.default.createElement(
-                                        "label",
-                                        { htmlFor: "height" },
-                                        "Height"
+                                        'label',
+                                        { htmlFor: 'height' },
+                                        'Height'
                                     ),
-                                    _react2.default.createElement("input", {
+                                    _react2.default.createElement('input', {
                                         ref: function ref(input) {
                                             return _this2.height = input;
                                         },
-                                        type: "number",
-                                        name: "height",
-                                        className: "form-control",
+                                        type: 'number',
+                                        name: 'height',
+                                        className: 'form-control',
                                         style: {
                                             width: '5em',
                                             marginLeft: '4px',
@@ -111,20 +182,20 @@ var Controls = function (_React$Component) {
                                     })
                                 ),
                                 _react2.default.createElement(
-                                    "td",
+                                    'td',
                                     null,
                                     _react2.default.createElement(
-                                        "label",
-                                        { htmlFor: "width" },
-                                        "Width"
+                                        'label',
+                                        { htmlFor: 'width' },
+                                        'Width'
                                     ),
-                                    _react2.default.createElement("input", {
+                                    _react2.default.createElement('input', {
                                         ref: function ref(input) {
                                             return _this2.width = input;
                                         },
-                                        type: "number",
-                                        name: "width",
-                                        className: "form-control",
+                                        type: 'number',
+                                        name: 'width',
+                                        className: 'form-control',
                                         style: {
                                             width: '5em',
                                             marginLeft: '4px',
@@ -135,12 +206,12 @@ var Controls = function (_React$Component) {
                                     })
                                 ),
                                 _react2.default.createElement(
-                                    "td",
+                                    'td',
                                     null,
-                                    _react2.default.createElement("input", {
-                                        type: "button",
-                                        className: "btn btn-warning",
-                                        value: "Resize / Clear",
+                                    _react2.default.createElement('input', {
+                                        type: 'button',
+                                        className: 'btn btn-warning',
+                                        value: 'Resize / Clear',
                                         style: { marginLeft: '1vw' },
                                         onClick: function onClick() {
                                             return _this2.props.resize({
@@ -152,15 +223,15 @@ var Controls = function (_React$Component) {
                                 )
                             ),
                             _react2.default.createElement(
-                                "tr",
+                                'tr',
                                 null,
                                 _react2.default.createElement(
-                                    "td",
-                                    null,
+                                    'td',
+                                    { colSpan: '3' },
                                     _react2.default.createElement(BSDisplaySwitch, this.props),
-                                    "\u2003",
+                                    '\u2003',
                                     _react2.default.createElement(
-                                        "b",
+                                        'b',
                                         null,
                                         this.props.cellInFocus && this.props.blockSizes[this.props.cellInFocus[0]][this.props.cellInFocus[1]] + ' pixels in block'
                                     )
@@ -179,70 +250,70 @@ var Controls = function (_React$Component) {
 var ImportExportMenu = function ImportExportMenu(_ref) {
     var importImg = _ref.importImg,
         exportPng = _ref.exportPng;
-    return [_react2.default.createElement("input", {
-        key: "import-btn",
-        type: "button",
-        className: "btn btn-primary",
-        value: "Import",
+    return [_react2.default.createElement('input', {
+        key: 'import-btn',
+        type: 'button',
+        className: 'btn btn-primary',
+        value: 'Import',
         onClick: function onClick() {
             return document.getElementById('fileChooser').click();
         }
-    }), _react2.default.createElement("input", {
-        key: "hidden-file-input",
-        id: "fileChooser",
-        type: "file",
-        accept: "image/png, image/bmp, image/jpeg",
+    }), _react2.default.createElement('input', {
+        key: 'hidden-file-input',
+        id: 'fileChooser',
+        type: 'file',
+        accept: 'image/png, image/bmp, image/jpeg',
         style: { display: 'none' },
         onChange: function onChange(event) {
             return importImg(event.target.files[0]);
         }
     }), _react2.default.createElement(
-        "div",
-        { key: "export-btn", className: "btn-group" },
+        'div',
+        { key: 'export-btn', className: 'btn-group' },
         _react2.default.createElement(
-            "button",
+            'button',
             {
-                type: "button",
-                className: "btn btn-info",
+                type: 'button',
+                className: 'btn btn-info',
                 onClick: function onClick() {
                     exportPng(parseInt(document.getElementById('scale').value));
                 } },
-            "Export to PNG"
+            'Export to PNG'
         ),
         _react2.default.createElement(
-            "button",
+            'button',
             {
-                type: "button",
-                className: "btn btn-info dropdown-toggle",
-                "data-toggle": "dropdown",
-                "aria-haspopup": "true",
-                "aria-expanded": "false" },
-            _react2.default.createElement("span", { className: "caret" }),
+                type: 'button',
+                className: 'btn btn-info dropdown-toggle',
+                'data-toggle': 'dropdown',
+                'aria-haspopup': 'true',
+                'aria-expanded': 'false' },
+            _react2.default.createElement('span', { className: 'caret' }),
             _react2.default.createElement(
-                "span",
-                { className: "sr-only" },
-                "Toggle Dropdown"
+                'span',
+                { className: 'sr-only' },
+                'Toggle Dropdown'
             )
         ),
         _react2.default.createElement(
-            "ul",
-            { className: "dropdown-menu" },
+            'ul',
+            { className: 'dropdown-menu' },
             _react2.default.createElement(
-                "li",
+                'li',
                 null,
                 _react2.default.createElement(
-                    "div",
-                    { className: "form-group", style: { marginLeft: '1vw', marginBottom: '0' } },
+                    'div',
+                    { className: 'form-group', style: { marginLeft: '1vw', marginBottom: '0' } },
                     _react2.default.createElement(
-                        "label",
-                        { className: "control-label", htmlFor: "scale" },
-                        "Scale"
+                        'label',
+                        { className: 'control-label', htmlFor: 'scale' },
+                        'Scale'
                     ),
-                    _react2.default.createElement("input", {
-                        id: "scale",
-                        type: "number",
-                        name: "scale",
-                        className: "form-control",
+                    _react2.default.createElement('input', {
+                        id: 'scale',
+                        type: 'number',
+                        name: 'scale',
+                        className: 'form-control',
                         style: { width: '5em', marginLeft: '4px', display: 'inline-block' },
                         defaultValue: 1,
                         required: true
@@ -257,31 +328,31 @@ var PaintModeSwitch = function PaintModeSwitch(_ref2) {
     var paintMode = _ref2.paintMode,
         selectPaintMode = _ref2.selectPaintMode;
     return _react2.default.createElement(
-        "div",
-        { className: "btn-group", role: "group", style: { float: 'right' } },
+        'div',
+        { className: 'btn-group', role: 'group', style: { float: 'right' } },
         _react2.default.createElement(
-            "button",
+            'button',
             {
-                type: "button",
-                title: "Pencil mode (fill single pixel)",
+                type: 'button',
+                title: 'Pencil mode (fill single pixel)',
                 className: 'btn btn-default' + (paintMode == 0 ? 'active' : ''),
                 style: { padding: '2px 12px' },
                 onClick: function onClick() {
                     return selectPaintMode(0);
                 } },
-            _react2.default.createElement("i", { className: "fi-pencil", style: { fontSize: '14pt' } })
+            _react2.default.createElement('i', { className: 'fi-pencil', style: { fontSize: '14pt' } })
         ),
         _react2.default.createElement(
-            "button",
+            'button',
             {
-                type: "button",
-                title: "Bucket mode (fill block of pixels)",
+                type: 'button',
+                title: 'Bucket mode (fill block of pixels)',
                 className: 'btn btn-default' + (paintMode == 1 ? 'active' : ''),
                 style: { padding: '2px 12px' },
                 onClick: function onClick() {
                     return selectPaintMode(1);
                 } },
-            _react2.default.createElement("i", { className: "fi-paint-bucket", style: { fontSize: '14pt' } })
+            _react2.default.createElement('i', { className: 'fi-paint-bucket', style: { fontSize: '14pt' } })
         )
     );
 };
@@ -289,16 +360,16 @@ var PaintModeSwitch = function PaintModeSwitch(_ref2) {
 var BSDisplaySwitch = function BSDisplaySwitch(_ref3) {
     var displayBS = _ref3.displayBS,
         toggleDisplayBS = _ref3.toggleDisplayBS;
-    return displayBS ? _react2.default.createElement("i", {
-        className: "glyphicon glyphicon-eye-open",
-        title: "Show block sizes",
+    return displayBS ? _react2.default.createElement('i', {
+        className: 'glyphicon glyphicon-eye-open',
+        title: 'Show block sizes',
         style: { fontSize: '16px' },
         onClick: function onClick() {
             return toggleDisplayBS();
         }
-    }) : _react2.default.createElement("i", {
-        className: "glyphicon glyphicon-eye-close",
-        title: "Show block sizes",
+    }) : _react2.default.createElement('i', {
+        className: 'glyphicon glyphicon-eye-close',
+        title: 'Show block sizes',
         style: { fontSize: '16px' },
         onClick: function onClick() {
             return toggleDisplayBS();
@@ -306,62 +377,9 @@ var BSDisplaySwitch = function BSDisplaySwitch(_ref3) {
     });
 };
 
-var ColourPicker = function ColourPicker(props) {
-    return _react2.default.createElement(
-        "table",
-        null,
-        _react2.default.createElement(
-            "tbody",
-            null,
-            [props.colours.slice(0, 6), props.colours.slice(6, 12), props.colours.slice(12, 18)].map(function (colourRow, i) {
-                return _react2.default.createElement(
-                    "tr",
-                    { key: 'colour-row-' + i },
-                    colourRow.map(function (colour, j) {
-                        return _react2.default.createElement(ColourCell, _extends({
-                            key: 'colour-cell-' + i + '-' + j,
-                            colSpan: "1",
-                            cellColour: i * 6 + j
-                        }, props));
-                    })
-                );
-            }),
-            _react2.default.createElement(
-                "tr",
-                null,
-                _react2.default.createElement(ColourCell, _extends({ colSpan: "3", cellColour: 18 }, props)),
-                _react2.default.createElement(ColourCell, _extends({ colSpan: "3", cellColour: 19 }, props))
-            )
-        )
-    );
-};
-
-var ColourCell = function ColourCell(props) {
-    return _react2.default.createElement(
-        "td",
-        {
-            colSpan: props.colSpan,
-            style: {
-                width: '25px',
-                height: '25px',
-                padding: '5px',
-                backgroundColor: props.colours[props.cellColour],
-                border: props.selectedColour == props.cellColour ? '4px double black' : '1px solid black',
-                color: 'white',
-                textShadow: '1px 1px 1px black',
-                textAlign: 'center',
-                cursor: 'pointer'
-            },
-            onClick: function onClick() {
-                return props.selectColour(props.cellColour);
-            } },
-        props.commands[props.cellColour]
-    );
-};
-
 exports.default = Controls;
 
-},{"react":37}],2:[function(require,module,exports){
+},{"./colourPicker.js":1,"react":38}],3:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -406,7 +424,8 @@ var Grid = function (_React$Component) {
                         "table",
                         {
                             style: {
-                                tableLayout: 'fixed'
+                                tableLayout: 'fixed',
+                                marginBottom: '1vh'
                             },
                             onMouseOut: function onMouseOut() {
                                 return _this2.props.setCellInFocus(null);
@@ -430,6 +449,7 @@ var Grid = function (_React$Component) {
                                                     border: '1px solid black',
                                                     backgroundColor: _this2.props.colours[cell],
                                                     color: 'white',
+                                                    fontSize: '11px',
                                                     textShadow: '1px 1px 1px black',
                                                     textAlign: 'center',
                                                     cursor: _this2.props.paintMode == 0 ? 'url(img/pencil.png) 5 30,auto' : 'url(img/paint-bucket.png) 28 28,auto'
@@ -457,7 +477,7 @@ var Grid = function (_React$Component) {
 
 exports.default = Grid;
 
-},{"react":37}],3:[function(require,module,exports){
+},{"react":38}],4:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -794,7 +814,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 }).call(this,require("buffer").Buffer)
-},{"./controls.js":1,"./grid.js":2,"buffer":5,"react":37,"react-dom":34}],4:[function(require,module,exports){
+},{"./controls.js":2,"./grid.js":3,"buffer":6,"react":38,"react-dom":35}],5:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -910,7 +930,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -2626,7 +2646,7 @@ function numberIsNaN (obj) {
   return obj !== obj // eslint-disable-line no-self-compare
 }
 
-},{"base64-js":4,"ieee754":24}],6:[function(require,module,exports){
+},{"base64-js":5,"ieee754":25}],7:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -2703,7 +2723,7 @@ var EventListener = {
 
 module.exports = EventListener;
 }).call(this,require('_process'))
-},{"./emptyFunction":11,"_process":26}],7:[function(require,module,exports){
+},{"./emptyFunction":12,"_process":27}],8:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -2737,7 +2757,7 @@ var ExecutionEnvironment = {
 };
 
 module.exports = ExecutionEnvironment;
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2767,7 +2787,7 @@ function camelize(string) {
 }
 
 module.exports = camelize;
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -2805,7 +2825,7 @@ function camelizeStyleName(string) {
 }
 
 module.exports = camelizeStyleName;
-},{"./camelize":8}],10:[function(require,module,exports){
+},{"./camelize":9}],11:[function(require,module,exports){
 'use strict';
 
 /**
@@ -2843,7 +2863,7 @@ function containsNode(outerNode, innerNode) {
 }
 
 module.exports = containsNode;
-},{"./isTextNode":19}],11:[function(require,module,exports){
+},{"./isTextNode":20}],12:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2880,7 +2900,7 @@ emptyFunction.thatReturnsArgument = function (arg) {
 };
 
 module.exports = emptyFunction;
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -2900,7 +2920,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 module.exports = emptyObject;
 }).call(this,require('_process'))
-},{"_process":26}],13:[function(require,module,exports){
+},{"_process":27}],14:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -2925,7 +2945,7 @@ function focusNode(node) {
 }
 
 module.exports = focusNode;
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 
 /**
@@ -2962,7 +2982,7 @@ function getActiveElement(doc) /*?DOMElement*/{
 }
 
 module.exports = getActiveElement;
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 /**
@@ -2993,7 +3013,7 @@ function hyphenate(string) {
 }
 
 module.exports = hyphenate;
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -3030,7 +3050,7 @@ function hyphenateStyleName(string) {
 }
 
 module.exports = hyphenateStyleName;
-},{"./hyphenate":15}],17:[function(require,module,exports){
+},{"./hyphenate":16}],18:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -3086,7 +3106,7 @@ function invariant(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 }).call(this,require('_process'))
-},{"_process":26}],18:[function(require,module,exports){
+},{"_process":27}],19:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3109,7 +3129,7 @@ function isNode(object) {
 }
 
 module.exports = isNode;
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3132,7 +3152,7 @@ function isTextNode(object) {
 }
 
 module.exports = isTextNode;
-},{"./isNode":18}],20:[function(require,module,exports){
+},{"./isNode":19}],21:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -3153,7 +3173,7 @@ if (ExecutionEnvironment.canUseDOM) {
 }
 
 module.exports = performance || {};
-},{"./ExecutionEnvironment":7}],21:[function(require,module,exports){
+},{"./ExecutionEnvironment":8}],22:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3185,7 +3205,7 @@ if (performance.now) {
 }
 
 module.exports = performanceNow;
-},{"./performance":20}],22:[function(require,module,exports){
+},{"./performance":21}],23:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -3251,7 +3271,7 @@ function shallowEqual(objA, objB) {
 }
 
 module.exports = shallowEqual;
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2014-present, Facebook, Inc.
@@ -3316,7 +3336,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 module.exports = warning;
 }).call(this,require('_process'))
-},{"./emptyFunction":11,"_process":26}],24:[function(require,module,exports){
+},{"./emptyFunction":12,"_process":27}],25:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -3402,7 +3422,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 /*
 object-assign
 (c) Sindre Sorhus
@@ -3494,7 +3514,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 	return to;
 };
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -3680,7 +3700,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -3743,7 +3763,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
 module.exports = checkPropTypes;
 
 }).call(this,require('_process'))
-},{"./lib/ReactPropTypesSecret":31,"_process":26,"fbjs/lib/invariant":17,"fbjs/lib/warning":23}],28:[function(require,module,exports){
+},{"./lib/ReactPropTypesSecret":32,"_process":27,"fbjs/lib/invariant":18,"fbjs/lib/warning":24}],29:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -3803,7 +3823,7 @@ module.exports = function() {
   return ReactPropTypes;
 };
 
-},{"./lib/ReactPropTypesSecret":31,"fbjs/lib/emptyFunction":11,"fbjs/lib/invariant":17}],29:[function(require,module,exports){
+},{"./lib/ReactPropTypesSecret":32,"fbjs/lib/emptyFunction":12,"fbjs/lib/invariant":18}],30:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -4349,7 +4369,7 @@ module.exports = function(isValidElement, throwOnDirectAccess) {
 };
 
 }).call(this,require('_process'))
-},{"./checkPropTypes":27,"./lib/ReactPropTypesSecret":31,"_process":26,"fbjs/lib/emptyFunction":11,"fbjs/lib/invariant":17,"fbjs/lib/warning":23,"object-assign":25}],30:[function(require,module,exports){
+},{"./checkPropTypes":28,"./lib/ReactPropTypesSecret":32,"_process":27,"fbjs/lib/emptyFunction":12,"fbjs/lib/invariant":18,"fbjs/lib/warning":24,"object-assign":26}],31:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -4381,7 +4401,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./factoryWithThrowingShims":28,"./factoryWithTypeCheckers":29,"_process":26}],31:[function(require,module,exports){
+},{"./factoryWithThrowingShims":29,"./factoryWithTypeCheckers":30,"_process":27}],32:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -4395,7 +4415,7 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 module.exports = ReactPropTypesSecret;
 
-},{}],32:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 (function (process){
 /** @license React v16.0.0
  * react-dom.development.js
@@ -21620,7 +21640,7 @@ module.exports = ReactDOMFiberEntry;
 }
 
 }).call(this,require('_process'))
-},{"_process":26,"fbjs/lib/EventListener":6,"fbjs/lib/ExecutionEnvironment":7,"fbjs/lib/camelizeStyleName":9,"fbjs/lib/containsNode":10,"fbjs/lib/emptyFunction":11,"fbjs/lib/emptyObject":12,"fbjs/lib/focusNode":13,"fbjs/lib/getActiveElement":14,"fbjs/lib/hyphenateStyleName":16,"fbjs/lib/invariant":17,"fbjs/lib/performanceNow":21,"fbjs/lib/shallowEqual":22,"fbjs/lib/warning":23,"object-assign":25,"prop-types":30,"prop-types/checkPropTypes":27,"react":37}],33:[function(require,module,exports){
+},{"_process":27,"fbjs/lib/EventListener":7,"fbjs/lib/ExecutionEnvironment":8,"fbjs/lib/camelizeStyleName":10,"fbjs/lib/containsNode":11,"fbjs/lib/emptyFunction":12,"fbjs/lib/emptyObject":13,"fbjs/lib/focusNode":14,"fbjs/lib/getActiveElement":15,"fbjs/lib/hyphenateStyleName":17,"fbjs/lib/invariant":18,"fbjs/lib/performanceNow":22,"fbjs/lib/shallowEqual":23,"fbjs/lib/warning":24,"object-assign":26,"prop-types":31,"prop-types/checkPropTypes":28,"react":38}],34:[function(require,module,exports){
 /*
  React v16.0.0
  react-dom.production.min.js
@@ -21878,7 +21898,7 @@ function ck(a,b,c,d,e){ak(c)?void 0:w("200");var f=c._reactRootContainer;if(f)Xj
 var ek={createPortal:dk,hydrate:function(a,b,c){return ck(null,a,b,!0,c)},render:function(a,b,c){return ck(null,a,b,!1,c)},unstable_renderSubtreeIntoContainer:function(a,b,c,d){null!=a&&Pa.has(a)?void 0:w("38");return ck(a,b,c,!1,d)},unmountComponentAtNode:function(a){ak(a)?void 0:w("40");return a._reactRootContainer?(Xj.unbatchedUpdates(function(){ck(null,null,a,!1,function(){a._reactRootContainer=null})}),!0):!1},findDOMNode:Dh,unstable_createPortal:dk,unstable_batchedUpdates:sb.batchedUpdates,
 unstable_deferredUpdates:Xj.deferredUpdates,flushSync:Xj.flushSync,__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{EventPluginHub:Jb,EventPluginRegistry:sa,EventPropagators:Th,ReactControlledComponent:nb,ReactDOMComponentTree:G,ReactDOMEventListener:L}};Cj({findFiberByHostInstance:G.getClosestInstanceFromNode,findHostInstanceByFiber:Xj.findHostInstance,bundleType:0,version:"16.0.0",rendererPackageName:"react-dom"});module.exports=ek;
 
-},{"fbjs/lib/EventListener":6,"fbjs/lib/ExecutionEnvironment":7,"fbjs/lib/containsNode":10,"fbjs/lib/emptyFunction":11,"fbjs/lib/emptyObject":12,"fbjs/lib/focusNode":13,"fbjs/lib/getActiveElement":14,"fbjs/lib/invariant":17,"fbjs/lib/shallowEqual":22,"object-assign":25,"react":37}],34:[function(require,module,exports){
+},{"fbjs/lib/EventListener":7,"fbjs/lib/ExecutionEnvironment":8,"fbjs/lib/containsNode":11,"fbjs/lib/emptyFunction":12,"fbjs/lib/emptyObject":13,"fbjs/lib/focusNode":14,"fbjs/lib/getActiveElement":15,"fbjs/lib/invariant":18,"fbjs/lib/shallowEqual":23,"object-assign":26,"react":38}],35:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -21920,7 +21940,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react-dom.development.js":32,"./cjs/react-dom.production.min.js":33,"_process":26}],35:[function(require,module,exports){
+},{"./cjs/react-dom.development.js":33,"./cjs/react-dom.production.min.js":34,"_process":27}],36:[function(require,module,exports){
 (function (process){
 /** @license React v16.0.0
  * react.development.js
@@ -23622,7 +23642,7 @@ module.exports = ReactEntry;
 }
 
 }).call(this,require('_process'))
-},{"_process":26,"fbjs/lib/emptyFunction":11,"fbjs/lib/emptyObject":12,"fbjs/lib/invariant":17,"fbjs/lib/warning":23,"object-assign":25,"prop-types/checkPropTypes":27}],36:[function(require,module,exports){
+},{"_process":27,"fbjs/lib/emptyFunction":12,"fbjs/lib/emptyObject":13,"fbjs/lib/invariant":18,"fbjs/lib/warning":24,"object-assign":26,"prop-types/checkPropTypes":28}],37:[function(require,module,exports){
 /*
  React v16.0.0
  react.production.min.js
@@ -23647,7 +23667,7 @@ Object.keys(a).join(", ")+"}":d,""));return g}function O(a,b){return"object"===t
 function R(a,b,d,e,c){var g="";null!=d&&(g=(""+d).replace(J,"$\x26/")+"/");b=L(b,g,e,c);null==a||N(a,"",Q,b);M(b)}var S={forEach:function(a,b,d){if(null==a)return a;b=L(null,null,b,d);null==a||N(a,"",P,b);M(b)},map:function(a,b,d){if(null==a)return a;var e=[];R(a,e,null,b,d);return e},count:function(a){return null==a?0:N(a,"",r.thatReturnsNull,null)},toArray:function(a){var b=[];R(a,b,null,r.thatReturnsArgument);return b}};
 module.exports={Children:{map:S.map,forEach:S.forEach,count:S.count,toArray:S.toArray,only:function(a){G.isValidElement(a)?void 0:t("143");return a}},Component:B.Component,PureComponent:B.PureComponent,unstable_AsyncComponent:B.AsyncComponent,createElement:G.createElement,cloneElement:G.cloneElement,isValidElement:G.isValidElement,createFactory:G.createFactory,version:"16.0.0",__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentOwner:C,assign:f}};
 
-},{"fbjs/lib/emptyFunction":11,"fbjs/lib/emptyObject":12,"fbjs/lib/invariant":17,"object-assign":25}],37:[function(require,module,exports){
+},{"fbjs/lib/emptyFunction":12,"fbjs/lib/emptyObject":13,"fbjs/lib/invariant":18,"object-assign":26}],38:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -23658,4 +23678,4 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react.development.js":35,"./cjs/react.production.min.js":36,"_process":26}]},{},[3]);
+},{"./cjs/react.development.js":36,"./cjs/react.production.min.js":37,"_process":27}]},{},[4]);

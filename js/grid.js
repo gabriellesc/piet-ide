@@ -8,6 +8,7 @@ class Grid extends React.Component {
                     <table
                         style={{
                             tableLayout: 'fixed',
+                            marginBottom: '1vh',
                         }}
                         onMouseOut={() => this.props.setCellInFocus(null)}>
                         <tbody>
@@ -23,6 +24,7 @@ class Grid extends React.Component {
                                                 border: '1px solid black',
                                                 backgroundColor: this.props.colours[cell],
                                                 color: 'white',
+                                                fontSize: '11px',
                                                 textShadow: '1px 1px 1px black',
                                                 textAlign: 'center',
                                                 cursor:

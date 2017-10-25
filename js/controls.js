@@ -1,5 +1,7 @@
 import React from 'react';
 
+import ColourPicker from './colourPicker.js';
+
 class Controls extends React.Component {
     // manually update input values when dims are changed from appState (eg. when image file
     // is imported)
@@ -32,7 +34,7 @@ class Controls extends React.Component {
                                     <ColourPicker {...this.props} />
                                 </td>
                             </tr>
-                            <tr style={{ paddingTop: '1vh', verticalAlign: 'top' }}>
+                            <tr style={{ paddingTop: '1vh' }}>
                                 <td>
                                     <label htmlFor="height">Height</label>
                                     <input
@@ -81,7 +83,7 @@ class Controls extends React.Component {
                                 </td>
                             </tr>
                             <tr>
-                                <td>
+                                <td colSpan="3">
                                     <BSDisplaySwitch {...this.props} />
                                     &emsp;<b>
                                         {this.props.cellInFocus &&
@@ -192,53 +194,5 @@ const BSDisplaySwitch = ({ displayBS, toggleDisplayBS }) =>
             onClick={() => toggleDisplayBS()}
         />
     );
-
-const ColourPicker = props => (
-    <table>
-        <tbody>
-            {[
-                props.colours.slice(0, 6),
-                props.colours.slice(6, 12),
-                props.colours.slice(12, 18),
-            ].map((colourRow, i) => (
-                <tr key={'colour-row-' + i}>
-                    {colourRow.map((colour, j) => (
-                        <ColourCell
-                            key={'colour-cell-' + i + '-' + j}
-                            colSpan="1"
-                            cellColour={i * 6 + j}
-                            {...props}
-                        />
-                    ))}
-                </tr>
-            ))}
-
-            <tr>
-                <ColourCell colSpan="3" cellColour={18} {...props} />
-                <ColourCell colSpan="3" cellColour={19} {...props} />
-            </tr>
-        </tbody>
-    </table>
-);
-
-const ColourCell = props => (
-    <td
-        colSpan={props.colSpan}
-        style={{
-            width: '25px',
-            height: '25px',
-            padding: '5px',
-            backgroundColor: props.colours[props.cellColour],
-            border:
-                props.selectedColour == props.cellColour ? '4px double black' : '1px solid black',
-            color: 'white',
-            textShadow: '1px 1px 1px black',
-            textAlign: 'center',
-            cursor: 'pointer',
-        }}
-        onClick={() => props.selectColour(props.cellColour)}>
-        {props.commands[props.cellColour]}
-    </td>
-);
 
 export default Controls;
