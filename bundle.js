@@ -800,7 +800,13 @@ var appState = {
         debugMode: false, // currently debugging
         currInst: null, // current instruction (in step mode)
 
-        step: function (row, col) {
+        step: function (_ref) {
+            var DP = _ref.DP,
+                CC = _ref.CC,
+                stack = _ref.stack,
+                row = _ref.row,
+                col = _ref.col;
+
             var currColour = grid[row][col];
 
             // find edge of current colour block which is furthest in direction of DP
@@ -811,20 +817,20 @@ var appState = {
 
                 // binary stack operations
                 if (['+', '/', '>', '-', 'mod', '*', 'roll'].includes(inst)) {
-                    var stack = appState.debug.stack.slice();
-                    var op1 = stack.pop(),
-                        op2 = stack.pop();
+                    var newStack = stack.slice();
+                    var op1 = newStack.pop(),
+                        op2 = newStack.pop();
 
                     // ignore stack underflow
                     if (op1 == undefined || op2 == undefined) {
-                        return { stack: appState.debug.stack };
+                        return { stack: stack };
                     }
 
                     switch (inst) {
                         /* Pops the top two values off the stack, adds them, and pushes the 
                         result back on the stack */
                         case '+':
-                            stack.push(op1 + op2);
+                            newStack.push(op1 + op2);
                             break;
 
                         /* Pops the top two values off the stack, calculates the integer 
@@ -833,10 +839,10 @@ var appState = {
                         case '/':
                             // ignore divide by zero instruction
                             if (op1 == 0) {
-                                stack.push(op2);
-                                stack.push(op1);
+                                newStack.push(op2);
+                                newStack.push(op1);
                             } else {
-                                stack.push(Math.floor(op2 / op1));
+                                newStack.push(Math.floor(op2 / op1));
                             }
                             break;
 
@@ -844,13 +850,13 @@ var appState = {
                         if the second top value is greater than the top value, and pushes 0 
                         if it is not greater */
                         case '>':
-                            stack.push(op2 > op1 ? 1 : 0);
+                            newStack.push(op2 > op1 ? 1 : 0);
                             break;
 
                         /* Pops the top two values off the stack, calculates the second top value
                         minus the top value, and pushes the result back on the stack */
                         case '-':
-                            stack.push(op2 - op1);
+                            newStack.push(op2 - op1);
                             break;
 
                         /* Pops the top two values off the stack, calculates the second top value
@@ -859,18 +865,18 @@ var appState = {
                         case 'mod':
                             // divide by 0 error; instruction is ignored
                             if (op1 == 0) {
-                                stack.push(op2);
-                                stack.push(op1);
+                                newStack.push(op2);
+                                newStack.push(op1);
                                 return { error: 'Divide by zero', stack: stack };
                             }
 
-                            stack.push(op2 - op1 * Math.floor(op2 / op1));
+                            newStack.push(op2 - op1 * Math.floor(op2 / op1));
                             break;
 
                         /* Pops the top two values off the stack, multiplies them, and pushes 
                         the result back on the stack */
                         case '*':
-                            stack.push(op1 * op2);
+                            newStack.push(op1 * op2);
                             break;
 
                         /* Pops the top two values off the stack and "rolls" the remaining stack
@@ -882,45 +888,45 @@ var appState = {
                         case 'roll':
                             // negative depth error; instruction is ignored
                             if (op2 < 0) {
-                                stack.push(op2);
-                                stack.push(op1);
+                                newStack.push(op2);
+                                newStack.push(op1);
                                 return { error: 'Negative depth', stack: stack };
                             }
 
                             if (op1 > 0) {
                                 for (var roll = 0; roll < op1; roll++) {
                                     // put top value into stack at depth
-                                    stack.splice(-op2, 0, stack[stack.length - 1]);
+                                    newStack.splice(-op2, 0, newStack[newStack.length - 1]);
                                     // remove original top value from top of stack
-                                    stack.pop();
+                                    newStack.pop();
                                 }
                             } else {
                                 // negative rolls
                                 for (var roll = 0; roll > op1; roll--) {
                                     // put nth value onto top of stack and remove original nth value
-                                    stack.push.apply(stack, _toConsumableArray(stack.splice(-op2, 1)));
+                                    newStack.push.apply(newStack, _toConsumableArray(newStack.splice(-op2, 1)));
                                 }
                             }
                             break;
                     }
 
-                    return { stack: stack };
+                    return { stack: newStack };
                 }
 
                 switch (inst) {
                     /* Pushes a copy of the top value on the stack on to the stack */
                     case 'dup':
-                        var stack = appState.debug.stack.slice();
-                        var val = stack.pop();
+                        var newStack = stack.slice();
+                        var val = newStack.pop();
 
                         // ignore stack underflow
                         if (val == undefined) {
-                            return { stack: appState.debug.stack };
+                            return { stack: stack };
                         }
-                        stack.push(val);
-                        stack.push(val);
+                        newStack.push(val);
+                        newStack.push(val);
 
-                        return { stack: stack };
+                        return { stack: newStack };
 
                     /* Reads a value from STDIN as a character and pushes it on to the stack. */
                     case 'in(char)':
@@ -934,70 +940,70 @@ var appState = {
                     /* Pops the top value off the stack and rotates the DP clockwise that many 
                     steps (anticlockwise if negative) */
                     case 'pointer':
-                        var stack = appState.debug.stack.slice();
-                        var val = stack.pop();
+                        var newStack = stack.slice();
+                        var val = newStack.pop();
 
                         // ignore stack underflow
                         if (val == undefined) {
-                            return { stack: appState.debug.stack };
+                            return { stack: stack };
                         }
 
                         if (val > 0) {
-                            return { stack: stack, DP: (appState.debug.DP + val) % 4 };
+                            return { stack: newStack, DP: (DP + val) % 4 };
                         }
                         // negative rotation (anticlockwise)
-                        return { stack: stack, DP: (appState.debug.DP - val) % 4 };
+                        return { stack: newStack, DP: (DP - val) % 4 };
 
                     /* Pops the top value off the stack and prints it to STDOUT as a number */
                     case 'out(num)':
-                        var stack = appState.debug.stack.slice();
-                        var val = stack.pop();
+                        var newStack = stack.slice();
+                        var val = newStack.pop();
 
                         // ignore stack underflow
                         if (val == undefined) {
-                            return { stack: appState.debug.stack };
+                            return { stack: stack };
                         }
-                        return { stack: stack, output: val };
+                        return { stack: newStack, output: val };
 
                     /* Pops the top value off the stack and discards it */
                     case 'pop':
-                        var stack = appState.debug.stack.slice();
+                        var newStack = stack.slice();
                         // ignore stack underflow
-                        if (stack.pop() == undefined) {
-                            return { stack: appState.debug.stack };
+                        if (newStack.pop() == undefined) {
+                            return { stack: stack };
                         }
-                        return { stack: stack };
+                        return { stack: newStack };
 
                     /* Replaces the top value of the stack with 0 if it is non-zero, and 1 if 
                     it is zero */
                     case 'not':
-                        var stack = appState.debug.stack.slice();
-                        var val = stack.pop();
+                        var newStack = stack.slice();
+                        var val = newStack.pop();
 
                         // ignore stack underflow
                         if (val == undefined) {
-                            return { stack: appState.debug.stack };
+                            return { stack: stack };
                         }
-                        stack.push(val == 0);
+                        newStack.push(val == 0);
 
-                        return { stack: stack };
+                        return { stack: newStack };
 
                     /* Pops the top value off the stack and toggles the CC that many times (the
                     absolute value of that many times if negative) */
                     case 'switch':
-                        var stack = appState.debug.stack.slice();
-                        var val = stack.pop();
+                        var newStack = stack.slice();
+                        var val = newStack.pop();
 
                         // ignore stack underflow
                         if (val == undefined) {
-                            return { stack: appState.debug.stack };
+                            return { stack: stack };
                         }
 
                         if (val > 0) {
-                            return { stack: stack, CC: (appState.debug.CC + val) % 2 };
+                            return { stack: newStack, CC: (CC + val) % 2 };
                         }
                         // negative toggle times
-                        return { stack: stack, CC: (appState.debug.CC - val) % 2 };
+                        return { stack: newStack, CC: (CC - val) % 2 };
 
                     /* Reads a value from STDIN as a number and pushes it on to the stack. */
                     case 'in(num)':
@@ -1008,14 +1014,14 @@ var appState = {
 
                     /* Pops the top value off the stack and prints it to STDOUT as a character */
                     case 'out(char)':
-                        var stack = appState.debug.stack.slice();
-                        var val = stack.pop();
+                        var newStack = stack.slice();
+                        var val = newStack.pop();
 
                         // ignore stack underflow
                         if (val == undefined) {
-                            return { stack: appState.debug.stack };
+                            return { stack: stack };
                         }
-                        return { stack: stack, output: String.fromCharCode(val) };
+                        return { stack: newStack, output: String.fromCharCode(val) };
                 }
             }
         }.bind(undefined)
@@ -1032,9 +1038,9 @@ var appState = {
         });
     }.bind(undefined),
 
-    resize: function (_ref) {
-        var height = _ref.height,
-            width = _ref.width;
+    resize: function (_ref2) {
+        var height = _ref2.height,
+            width = _ref2.width;
 
         appState.height = height;
         appState.width = width;
