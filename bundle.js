@@ -887,8 +887,19 @@ var appState = {
                                 return { error: 'Negative depth', stack: stack };
                             }
 
-                            for (var roll = 0; roll < op1; roll++) {
-                                stack.splice(-op2, 0, stack.slice(-1));
+                            if (op1 > 0) {
+                                for (var roll = 0; roll < op1; roll++) {
+                                    // put top value into stack at depth
+                                    stack.splice(-op2, 0, stack[stack.length - 1]);
+                                    // remove original top value from top of stack
+                                    stack.pop();
+                                }
+                            } else {
+                                // negative rolls
+                                for (var roll = 0; roll > op1; roll--) {
+                                    // put nth value onto top of stack and remove original nth value
+                                    stack.push.apply(stack, _toConsumableArray(stack.splice(-op2, 1)));
+                                }
                             }
                             break;
                     }
@@ -902,8 +913,9 @@ var appState = {
                         var stack = appState.debug.stack.slice();
                         var val = stack.pop();
 
+                        // ignore stack underflow
                         if (val == undefined) {
-                            return { error: 'Stack underflow' };
+                            return { stack: appState.debug.stack };
                         }
                         stack.push(val);
                         stack.push(val);
@@ -922,25 +934,70 @@ var appState = {
                     /* Pops the top value off the stack and rotates the DP clockwise that many 
                     steps (anticlockwise if negative) */
                     case 'pointer':
-                        break;
+                        var stack = appState.debug.stack.slice();
+                        var val = stack.pop();
+
+                        // ignore stack underflow
+                        if (val == undefined) {
+                            return { stack: appState.debug.stack };
+                        }
+
+                        if (val > 0) {
+                            return { stack: stack, DP: (appState.debug.DP + val) % 4 };
+                        }
+                        // negative rotation (anticlockwise)
+                        return { stack: stack, DP: (appState.debug.DP - val) % 4 };
 
                     /* Pops the top value off the stack and prints it to STDOUT as a number */
                     case 'out(num)':
-                        break;
+                        var stack = appState.debug.stack.slice();
+                        var val = stack.pop();
+
+                        // ignore stack underflow
+                        if (val == undefined) {
+                            return { stack: appState.debug.stack };
+                        }
+                        return { stack: stack, output: val };
 
                     /* Pops the top value off the stack and discards it */
                     case 'pop':
-                        break;
+                        var stack = appState.debug.stack.slice();
+                        // ignore stack underflow
+                        if (stack.pop() == undefined) {
+                            return { stack: appState.debug.stack };
+                        }
+                        return { stack: stack };
 
                     /* Replaces the top value of the stack with 0 if it is non-zero, and 1 if 
                     it is zero */
                     case 'not':
-                        break;
+                        var stack = appState.debug.stack.slice();
+                        var val = stack.pop();
+
+                        // ignore stack underflow
+                        if (val == undefined) {
+                            return { stack: appState.debug.stack };
+                        }
+                        stack.push(val == 0);
+
+                        return { stack: stack };
 
                     /* Pops the top value off the stack and toggles the CC that many times (the
                     absolute value of that many times if negative) */
                     case 'switch':
-                        break;
+                        var stack = appState.debug.stack.slice();
+                        var val = stack.pop();
+
+                        // ignore stack underflow
+                        if (val == undefined) {
+                            return { stack: appState.debug.stack };
+                        }
+
+                        if (val > 0) {
+                            return { stack: stack, CC: (appState.debug.CC + val) % 2 };
+                        }
+                        // negative toggle times
+                        return { stack: stack, CC: (appState.debug.CC - val) % 2 };
 
                     /* Reads a value from STDIN as a number and pushes it on to the stack. */
                     case 'in(num)':
@@ -951,7 +1008,14 @@ var appState = {
 
                     /* Pops the top value off the stack and prints it to STDOUT as a character */
                     case 'out(char)':
-                        break;
+                        var stack = appState.debug.stack.slice();
+                        var val = stack.pop();
+
+                        // ignore stack underflow
+                        if (val == undefined) {
+                            return { stack: appState.debug.stack };
+                        }
+                        return { stack: stack, output: String.fromCharCode(val) };
                 }
             }
         }.bind(undefined)
@@ -1190,19 +1254,32 @@ var App = function (_React$Component) {
     }, {
         key: 'render',
         value: function render() {
+            if (this.props.appState.debug.debugIsVisible) {
+                return [_react2.default.createElement(
+                    'div',
+                    {
+                        key: 'main-container',
+                        style: {
+                            float: 'left',
+                            marginBottom: '1vh',
+                            marginRight: '1vw',
+                            width: 'calc(100% - 1vw - 300px'
+                        } },
+                    _react2.default.createElement(_controls2.default, _extends({ colours: colours }, this.props.appState)),
+                    _react2.default.createElement(_grid2.default, _extends({ colours: colours }, this.props.appState))
+                ), _react2.default.createElement(_debugger2.default, _extends({ key: 'debugger' }, this.props.appState))];
+            }
+
             return [_react2.default.createElement(
                 'div',
                 {
-                    key: 'main-container',
+                    key: 'top-container',
                     style: {
-                        float: 'left',
-                        marginBottom: '1vh',
-                        marginRight: '1vw',
-                        width: 'calc(100% - 1vw - ' + (this.props.appState.debug.debugIsVisible ? '300px' : '25px') + ')'
+                        marginBottom: '1vh'
                     } },
                 _react2.default.createElement(_controls2.default, _extends({ colours: colours }, this.props.appState)),
-                _react2.default.createElement(_grid2.default, _extends({ colours: colours }, this.props.appState))
-            ), _react2.default.createElement(_debugger2.default, _extends({ key: 'debugger' }, this.props.appState))];
+                _react2.default.createElement(_debugger2.default, _extends({ key: 'debugger' }, this.props.appState))
+            ), _react2.default.createElement(_grid2.default, _extends({ colours: colours }, this.props.appState))];
         }
     }]);
 
