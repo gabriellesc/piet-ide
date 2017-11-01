@@ -104,6 +104,32 @@ const appState = {
         debugMode: false, // currently debugging
         currInst: null, // current instruction (in step mode)
 
+        // receive input from user
+        receiveInput: (input => {}).bind(this),
+
+        // get one input character from "input stream"
+        getInput: (() => {
+            document.getElementById('in').value[inputPtr];
+
+            // increment pointer into stream
+            this.appState.debug.inputPtr++;
+        }).bind(this),
+
+        // start debugging and either run debugger or take step
+        start: (mode => {}).bind(this),
+
+        // stop debugging (and reset debugger values)
+        stop: (() => {
+            this.appState.debug.DP = 0;
+            this.appState.debug.CC = 0;
+            this.appState.debug.stack = [];
+            this.appState.debug.output = '';
+            this.appState.debug.input = false;
+            this.appState.debug.inputPtr = 0;
+            this.appState.debug.debugMode = false;
+            this.appState.debug.currInst = null;
+        }).bind(this),
+
         step: (({ DP, CC, stack, row, col }) => {
             let currColour = grid[row][col];
 
@@ -546,7 +572,7 @@ class App extends React.Component {
                         float: 'left',
                         marginBottom: '1vh',
                         marginRight: '1vw',
-                        width: 'calc(100% - 1vw - 300px',
+                        width: 'calc(100% - 1vw - 300px)',
                     }}>
                     <Controls colours={colours} {...this.props.appState} />
                     <Grid colours={colours} {...this.props.appState} />
@@ -556,13 +582,8 @@ class App extends React.Component {
         }
 
         return [
-            <div
-                key="top-container"
-                style={{
-                    marginBottom: '1vh',
-                }}>
+            <div key="top-container" style={{ marginBottom: '1vh' }}>
                 <Controls colours={colours} {...this.props.appState} />
-                <Debugger key="debugger" {...this.props.appState} />
             </div>,
             <Grid colours={colours} {...this.props.appState} />,
         ];

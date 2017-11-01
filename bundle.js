@@ -121,115 +121,120 @@ var Controls = function (_React$Component) {
             var _this2 = this;
 
             return _react2.default.createElement(
-                'table',
-                null,
+                'div',
+                { style: { display: 'flex', justifyContent: 'space-between' } },
                 _react2.default.createElement(
-                    'tbody',
+                    'table',
                     null,
                     _react2.default.createElement(
-                        'tr',
+                        'tbody',
                         null,
                         _react2.default.createElement(
-                            'td',
-                            { colSpan: '3' },
+                            'tr',
+                            null,
                             _react2.default.createElement(
-                                'div',
-                                { className: 'btn-toolbar', role: 'toolbar' },
-                                _react2.default.createElement(ImportExportMenu, this.props),
-                                _react2.default.createElement(PaintModeSwitch, this.props)
+                                'td',
+                                { colSpan: '3' },
+                                _react2.default.createElement(
+                                    'div',
+                                    { className: 'btn-toolbar', role: 'toolbar' },
+                                    _react2.default.createElement(ImportExportMenu, this.props),
+                                    _react2.default.createElement(PaintModeSwitch, this.props)
+                                )
+                            ),
+                            _react2.default.createElement(
+                                'td',
+                                { rowSpan: '3', style: { paddingLeft: '2vw', paddingBottom: '1vh' } },
+                                _react2.default.createElement(_colourPicker2.default, this.props)
                             )
                         ),
                         _react2.default.createElement(
-                            'td',
-                            { rowSpan: '3', style: { paddingLeft: '2vw', paddingBottom: '1vh' } },
-                            _react2.default.createElement(_colourPicker2.default, this.props)
-                        )
-                    ),
-                    _react2.default.createElement(
-                        'tr',
-                        { style: { paddingTop: '1vh' } },
-                        _react2.default.createElement(
-                            'td',
-                            null,
+                            'tr',
+                            { style: { paddingTop: '1vh' } },
                             _react2.default.createElement(
-                                'label',
-                                { htmlFor: 'height' },
-                                'Height'
-                            ),
-                            _react2.default.createElement('input', {
-                                ref: function ref(input) {
-                                    return _this2.height = input;
-                                },
-                                type: 'number',
-                                name: 'height',
-                                className: 'form-control',
-                                style: {
-                                    width: '5em',
-                                    marginLeft: '4px',
-                                    marginRight: '1vw',
-                                    display: 'inline-block'
-                                },
-                                required: true,
-                                defaultValue: this.props.height
-                            })
-                        ),
-                        _react2.default.createElement(
-                            'td',
-                            null,
-                            _react2.default.createElement(
-                                'label',
-                                { htmlFor: 'width' },
-                                'Width'
-                            ),
-                            _react2.default.createElement('input', {
-                                ref: function ref(input) {
-                                    return _this2.width = input;
-                                },
-                                type: 'number',
-                                name: 'width',
-                                className: 'form-control',
-                                style: {
-                                    width: '5em',
-                                    marginLeft: '4px',
-                                    display: 'inline-block'
-                                },
-                                defaultValue: this.props.width,
-                                required: true
-                            })
-                        ),
-                        _react2.default.createElement(
-                            'td',
-                            null,
-                            _react2.default.createElement('input', {
-                                type: 'button',
-                                className: 'btn btn-warning',
-                                value: 'Resize / Clear',
-                                style: { marginLeft: '1vw' },
-                                onClick: function onClick() {
-                                    return _this2.props.resize({
-                                        height: parseInt(_this2.height.value),
-                                        width: parseInt(_this2.width.value)
-                                    });
-                                }
-                            })
-                        )
-                    ),
-                    _react2.default.createElement(
-                        'tr',
-                        null,
-                        _react2.default.createElement(
-                            'td',
-                            { colSpan: '3' },
-                            _react2.default.createElement(BSDisplaySwitch, this.props),
-                            '\u2003',
-                            _react2.default.createElement(
-                                'b',
+                                'td',
                                 null,
-                                this.props.cellInFocus && this.props.blockSizes[this.props.cellInFocus[0]][this.props.cellInFocus[1]] + ' pixels in block'
+                                _react2.default.createElement(
+                                    'label',
+                                    { htmlFor: 'height' },
+                                    'Height'
+                                ),
+                                _react2.default.createElement('input', {
+                                    ref: function ref(input) {
+                                        return _this2.height = input;
+                                    },
+                                    type: 'number',
+                                    name: 'height',
+                                    className: 'form-control',
+                                    style: {
+                                        width: '5em',
+                                        marginLeft: '4px',
+                                        marginRight: '1vw',
+                                        display: 'inline-block'
+                                    },
+                                    required: true,
+                                    defaultValue: this.props.height
+                                })
+                            ),
+                            _react2.default.createElement(
+                                'td',
+                                null,
+                                _react2.default.createElement(
+                                    'label',
+                                    { htmlFor: 'width' },
+                                    'Width'
+                                ),
+                                _react2.default.createElement('input', {
+                                    ref: function ref(input) {
+                                        return _this2.width = input;
+                                    },
+                                    type: 'number',
+                                    name: 'width',
+                                    className: 'form-control',
+                                    style: {
+                                        width: '5em',
+                                        marginLeft: '4px',
+                                        display: 'inline-block'
+                                    },
+                                    defaultValue: this.props.width,
+                                    required: true
+                                })
+                            ),
+                            _react2.default.createElement(
+                                'td',
+                                null,
+                                _react2.default.createElement('input', {
+                                    type: 'button',
+                                    className: 'btn btn-warning',
+                                    value: 'Resize / Clear',
+                                    style: { marginLeft: '1vw' },
+                                    onClick: function onClick() {
+                                        return _this2.props.resize({
+                                            height: parseInt(_this2.height.value),
+                                            width: parseInt(_this2.width.value)
+                                        });
+                                    }
+                                })
+                            )
+                        ),
+                        _react2.default.createElement(
+                            'tr',
+                            null,
+                            _react2.default.createElement(
+                                'td',
+                                { colSpan: '3' },
+                                _react2.default.createElement(BSDisplaySwitch, this.props),
+                                '\u2003',
+                                _react2.default.createElement(
+                                    'b',
+                                    null,
+                                    this.props.cellInFocus && this.props.blockSizes[this.props.cellInFocus[0]][this.props.cellInFocus[1]] + ' pixels in block'
+                                )
                             )
                         )
                     )
-                )
+                ),
+                !this.props.debug.debugIsVisible && _react2.default.createElement(DebugTab, this.props)
             );
         }
     }]);
@@ -237,9 +242,36 @@ var Controls = function (_React$Component) {
     return Controls;
 }(_react2.default.Component);
 
-var ImportExportMenu = function ImportExportMenu(_ref) {
-    var importImg = _ref.importImg,
-        exportPng = _ref.exportPng;
+// tab to make debugger visible
+
+
+var DebugTab = function DebugTab(_ref) {
+    var toggleDebugger = _ref.toggleDebugger;
+    return _react2.default.createElement(
+        'div',
+        {
+            style: {
+                height: 'auto',
+                width: '25px',
+                padding: '5px 2px',
+                marginBottom: '1vh',
+                writingMode: 'vertical-lr',
+                textAlign: 'center',
+                color: 'white',
+                fontWeight: 'bold',
+                backgroundColor: '#5bc0de',
+                cursor: 'pointer'
+            },
+            onClick: function onClick() {
+                return toggleDebugger();
+            } },
+        'DEBUGGER'
+    );
+};
+
+var ImportExportMenu = function ImportExportMenu(_ref2) {
+    var importImg = _ref2.importImg,
+        exportPng = _ref2.exportPng;
     return [_react2.default.createElement('input', {
         key: 'import-btn',
         type: 'button',
@@ -315,9 +347,9 @@ var ImportExportMenu = function ImportExportMenu(_ref) {
     )];
 };
 
-var PaintModeSwitch = function PaintModeSwitch(_ref2) {
-    var paintMode = _ref2.paintMode,
-        selectPaintMode = _ref2.selectPaintMode;
+var PaintModeSwitch = function PaintModeSwitch(_ref3) {
+    var paintMode = _ref3.paintMode,
+        selectPaintMode = _ref3.selectPaintMode;
     return _react2.default.createElement(
         'div',
         { className: 'btn-group', role: 'group', style: { float: 'right' } },
@@ -348,9 +380,9 @@ var PaintModeSwitch = function PaintModeSwitch(_ref2) {
     );
 };
 
-var BSDisplaySwitch = function BSDisplaySwitch(_ref3) {
-    var displayBS = _ref3.displayBS,
-        toggleDisplayBS = _ref3.toggleDisplayBS;
+var BSDisplaySwitch = function BSDisplaySwitch(_ref4) {
+    var displayBS = _ref4.displayBS,
+        toggleDisplayBS = _ref4.toggleDisplayBS;
     return displayBS ? _react2.default.createElement('i', {
         className: 'glyphicon glyphicon-eye-open',
         title: 'Show block sizes',
@@ -383,38 +415,8 @@ var _react2 = _interopRequireDefault(_react);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var Debugger = function Debugger(props) {
-    return props.debug.debugIsVisible ? _react2.default.createElement(DebugContainer, props) : _react2.default.createElement(DebugTab, props);
-};
-
-// tab to make debugger visible
-var DebugTab = function DebugTab(_ref) {
-    var toggleDebugger = _ref.toggleDebugger;
-    return _react2.default.createElement(
-        'div',
-        {
-            style: {
-                height: 'auto',
-                width: '25px',
-                padding: '5px 2px',
-                marginBottom: '1vh',
-                writingMode: 'vertical-lr',
-                textAlign: 'start',
-                color: 'white',
-                fontWeight: 'bold',
-                backgroundColor: '#5bc0de',
-                cursor: 'pointer',
-                float: 'right'
-            },
-            onClick: function onClick() {
-                return toggleDebugger();
-            } },
-        'DEBUGGER'
-    );
-};
-
 // main debugger component container
-var DebugContainer = function DebugContainer(props) {
+var Debugger = function Debugger(props) {
     return _react2.default.createElement(
         'div',
         {
@@ -441,7 +443,7 @@ var DebugContainer = function DebugContainer(props) {
                 '\xD7'
             )
         ),
-        _react2.default.createElement(DebugControls, null),
+        _react2.default.createElement(DebugControls, props.debug),
         _react2.default.createElement(Stack, props.debug),
         _react2.default.createElement(Pointers, props.debug),
         _react2.default.createElement(IO, props.debug)
@@ -449,10 +451,11 @@ var DebugContainer = function DebugContainer(props) {
 };
 
 // run/step/stop control buttons
-var DebugControls = function DebugControls() {
+var DebugControls = function DebugControls(_ref) {
+    var stop = _ref.stop;
     return _react2.default.createElement(
         'div',
-        { className: 'btn-group', role: 'group', style: { margin: 'auto auto 1vh', width: '100%' } },
+        { className: 'btn-group', role: 'group', style: { width: '100%' } },
         _react2.default.createElement(
             'button',
             { type: 'button', className: 'btn btn-success', title: 'Run', style: { width: '33%' } },
@@ -465,7 +468,14 @@ var DebugControls = function DebugControls() {
         ),
         _react2.default.createElement(
             'button',
-            { type: 'button', className: 'btn btn-danger', title: 'Stop', style: { width: '33%' } },
+            {
+                type: 'button',
+                className: 'btn btn-danger',
+                title: 'Stop',
+                style: { width: '33%' },
+                onClick: function onClick() {
+                    return stop();
+                } },
             _react2.default.createElement('i', { className: 'glyphicon glyphicon-stop' })
         )
     );
@@ -474,7 +484,9 @@ var DebugControls = function DebugControls() {
 // IO visual containers
 var IO = function IO(_ref2) {
     var output = _ref2.output,
-        input = _ref2.input;
+        input = _ref2.input,
+        debugMode = _ref2.debugMode,
+        receiveInput = _ref2.receiveInput;
     return [_react2.default.createElement(
         'b',
         { key: 'input-label' },
@@ -482,15 +494,19 @@ var IO = function IO(_ref2) {
     ), _react2.default.createElement('br', { key: 'br-1' }), _react2.default.createElement('textarea', {
         key: 'in',
         id: 'in',
+        readOnly: !debugMode,
         style: {
             width: '100%',
             maxWidth: '100%',
             fontFamily: 'monospace',
             fontSize: '12pt'
+        },
+        onKeyUp: function onKeyUp(event) {
+            return console.log(event.charCode);
         }
     }), _react2.default.createElement('br', { key: 'br-2' }), _react2.default.createElement(
         'b',
-        { key: 'ouput-label' },
+        { key: 'output-label' },
         'Output'
     ), _react2.default.createElement('br', { key: 'br-3' }), _react2.default.createElement('textarea', {
         key: 'out',
@@ -799,6 +815,32 @@ var appState = {
         inputPtr: 0, // pointer into input stream
         debugMode: false, // currently debugging
         currInst: null, // current instruction (in step mode)
+
+        // receive input from user
+        receiveInput: function (input) {}.bind(undefined),
+
+        // get one input character from "input stream"
+        getInput: function () {
+            document.getElementById('in').value[inputPtr];
+
+            // increment pointer into stream
+            undefined.appState.debug.inputPtr++;
+        }.bind(undefined),
+
+        // start debugging and either run debugger or take step
+        start: function (mode) {}.bind(undefined),
+
+        // stop debugging (and reset debugger values)
+        stop: function () {
+            undefined.appState.debug.DP = 0;
+            undefined.appState.debug.CC = 0;
+            undefined.appState.debug.stack = [];
+            undefined.appState.debug.output = '';
+            undefined.appState.debug.input = false;
+            undefined.appState.debug.inputPtr = 0;
+            undefined.appState.debug.debugMode = false;
+            undefined.appState.debug.currInst = null;
+        }.bind(undefined),
 
         step: function (_ref) {
             var DP = _ref.DP,
@@ -1269,7 +1311,7 @@ var App = function (_React$Component) {
                             float: 'left',
                             marginBottom: '1vh',
                             marginRight: '1vw',
-                            width: 'calc(100% - 1vw - 300px'
+                            width: 'calc(100% - 1vw - 300px)'
                         } },
                     _react2.default.createElement(_controls2.default, _extends({ colours: colours }, this.props.appState)),
                     _react2.default.createElement(_grid2.default, _extends({ colours: colours }, this.props.appState))
@@ -1278,13 +1320,8 @@ var App = function (_React$Component) {
 
             return [_react2.default.createElement(
                 'div',
-                {
-                    key: 'top-container',
-                    style: {
-                        marginBottom: '1vh'
-                    } },
-                _react2.default.createElement(_controls2.default, _extends({ colours: colours }, this.props.appState)),
-                _react2.default.createElement(_debugger2.default, _extends({ key: 'debugger' }, this.props.appState))
+                { key: 'top-container', style: { marginBottom: '1vh' } },
+                _react2.default.createElement(_controls2.default, _extends({ colours: colours }, this.props.appState))
             ), _react2.default.createElement(_grid2.default, _extends({ colours: colours }, this.props.appState))];
         }
     }]);
