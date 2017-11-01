@@ -67,7 +67,7 @@ var ColourCell = function ColourCell(props) {
 
 exports.default = ColourPicker;
 
-},{"react":38}],2:[function(require,module,exports){
+},{"react":39}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -121,121 +121,111 @@ var Controls = function (_React$Component) {
             var _this2 = this;
 
             return _react2.default.createElement(
-                'div',
-                { className: 'row' },
+                'table',
+                null,
                 _react2.default.createElement(
-                    'div',
-                    { className: 'col-sm-12' },
+                    'tbody',
+                    null,
                     _react2.default.createElement(
-                        'table',
+                        'tr',
                         null,
                         _react2.default.createElement(
-                            'tbody',
+                            'td',
+                            { colSpan: '3' },
+                            _react2.default.createElement(
+                                'div',
+                                { className: 'btn-toolbar', role: 'toolbar' },
+                                _react2.default.createElement(ImportExportMenu, this.props),
+                                _react2.default.createElement(PaintModeSwitch, this.props)
+                            )
+                        ),
+                        _react2.default.createElement(
+                            'td',
+                            { rowSpan: '3', style: { paddingLeft: '2vw', paddingBottom: '1vh' } },
+                            _react2.default.createElement(_colourPicker2.default, this.props)
+                        )
+                    ),
+                    _react2.default.createElement(
+                        'tr',
+                        { style: { paddingTop: '1vh' } },
+                        _react2.default.createElement(
+                            'td',
                             null,
                             _react2.default.createElement(
-                                'tr',
-                                null,
-                                _react2.default.createElement(
-                                    'td',
-                                    { colSpan: '3' },
-                                    _react2.default.createElement(
-                                        'div',
-                                        { className: 'btn-toolbar', role: 'toolbar' },
-                                        _react2.default.createElement(ImportExportMenu, this.props),
-                                        _react2.default.createElement(PaintModeSwitch, this.props)
-                                    )
-                                ),
-                                _react2.default.createElement(
-                                    'td',
-                                    {
-                                        rowSpan: '3',
-                                        style: { paddingLeft: '2vw', paddingBottom: '1vh' } },
-                                    _react2.default.createElement(_colourPicker2.default, this.props)
-                                )
+                                'label',
+                                { htmlFor: 'height' },
+                                'Height'
                             ),
+                            _react2.default.createElement('input', {
+                                ref: function ref(input) {
+                                    return _this2.height = input;
+                                },
+                                type: 'number',
+                                name: 'height',
+                                className: 'form-control',
+                                style: {
+                                    width: '5em',
+                                    marginLeft: '4px',
+                                    marginRight: '1vw',
+                                    display: 'inline-block'
+                                },
+                                required: true,
+                                defaultValue: this.props.height
+                            })
+                        ),
+                        _react2.default.createElement(
+                            'td',
+                            null,
                             _react2.default.createElement(
-                                'tr',
-                                { style: { paddingTop: '1vh' } },
-                                _react2.default.createElement(
-                                    'td',
-                                    null,
-                                    _react2.default.createElement(
-                                        'label',
-                                        { htmlFor: 'height' },
-                                        'Height'
-                                    ),
-                                    _react2.default.createElement('input', {
-                                        ref: function ref(input) {
-                                            return _this2.height = input;
-                                        },
-                                        type: 'number',
-                                        name: 'height',
-                                        className: 'form-control',
-                                        style: {
-                                            width: '5em',
-                                            marginLeft: '4px',
-                                            marginRight: '1vw',
-                                            display: 'inline-block'
-                                        },
-                                        required: true,
-                                        defaultValue: this.props.height
-                                    })
-                                ),
-                                _react2.default.createElement(
-                                    'td',
-                                    null,
-                                    _react2.default.createElement(
-                                        'label',
-                                        { htmlFor: 'width' },
-                                        'Width'
-                                    ),
-                                    _react2.default.createElement('input', {
-                                        ref: function ref(input) {
-                                            return _this2.width = input;
-                                        },
-                                        type: 'number',
-                                        name: 'width',
-                                        className: 'form-control',
-                                        style: {
-                                            width: '5em',
-                                            marginLeft: '4px',
-                                            display: 'inline-block'
-                                        },
-                                        defaultValue: this.props.width,
-                                        required: true
-                                    })
-                                ),
-                                _react2.default.createElement(
-                                    'td',
-                                    null,
-                                    _react2.default.createElement('input', {
-                                        type: 'button',
-                                        className: 'btn btn-warning',
-                                        value: 'Resize / Clear',
-                                        style: { marginLeft: '1vw' },
-                                        onClick: function onClick() {
-                                            return _this2.props.resize({
-                                                height: parseInt(_this2.height.value),
-                                                width: parseInt(_this2.width.value)
-                                            });
-                                        }
-                                    })
-                                )
+                                'label',
+                                { htmlFor: 'width' },
+                                'Width'
                             ),
+                            _react2.default.createElement('input', {
+                                ref: function ref(input) {
+                                    return _this2.width = input;
+                                },
+                                type: 'number',
+                                name: 'width',
+                                className: 'form-control',
+                                style: {
+                                    width: '5em',
+                                    marginLeft: '4px',
+                                    display: 'inline-block'
+                                },
+                                defaultValue: this.props.width,
+                                required: true
+                            })
+                        ),
+                        _react2.default.createElement(
+                            'td',
+                            null,
+                            _react2.default.createElement('input', {
+                                type: 'button',
+                                className: 'btn btn-warning',
+                                value: 'Resize / Clear',
+                                style: { marginLeft: '1vw' },
+                                onClick: function onClick() {
+                                    return _this2.props.resize({
+                                        height: parseInt(_this2.height.value),
+                                        width: parseInt(_this2.width.value)
+                                    });
+                                }
+                            })
+                        )
+                    ),
+                    _react2.default.createElement(
+                        'tr',
+                        null,
+                        _react2.default.createElement(
+                            'td',
+                            { colSpan: '3' },
+                            _react2.default.createElement(BSDisplaySwitch, this.props),
+                            '\u2003',
                             _react2.default.createElement(
-                                'tr',
+                                'b',
                                 null,
-                                _react2.default.createElement(
-                                    'td',
-                                    { colSpan: '3' },
-                                    _react2.default.createElement(BSDisplaySwitch, this.props),
-                                    '\u2003',
-                                    _react2.default.createElement(
-                                        'b',
-                                        null,
-                                        this.props.cellInFocus && this.props.blockSizes[this.props.cellInFocus[0]][this.props.cellInFocus[1]] + ' pixels in block'
-                                    )
-                                )
+                                this.props.cellInFocus && this.props.blockSizes[this.props.cellInFocus[0]][this.props.cellInFocus[1]] + ' pixels in block'
                             )
                         )
                     )
@@ -265,7 +255,8 @@ var ImportExportMenu = function ImportExportMenu(_ref) {
         accept: 'image/png, image/bmp, image/jpeg',
         style: { display: 'none' },
         onChange: function onChange(event) {
-            return importImg(event.target.files[0]);
+            importImg(event.target.files[0]);
+            event.target.value = '';
         }
     }), _react2.default.createElement(
         'div',
@@ -379,8 +370,231 @@ var BSDisplaySwitch = function BSDisplaySwitch(_ref3) {
 
 exports.default = Controls;
 
-},{"./colourPicker.js":1,"react":38}],3:[function(require,module,exports){
-"use strict";
+},{"./colourPicker.js":1,"react":39}],3:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var Debugger = function Debugger(props) {
+    return props.debug.debugIsVisible ? _react2.default.createElement(DebugContainer, props) : _react2.default.createElement(DebugTab, props);
+};
+
+// tab to make debugger visible
+var DebugTab = function DebugTab(_ref) {
+    var toggleDebugger = _ref.toggleDebugger;
+    return _react2.default.createElement(
+        'div',
+        {
+            style: {
+                height: 'auto',
+                width: '25px',
+                padding: '5px 2px',
+                marginBottom: '1vh',
+                writingMode: 'vertical-lr',
+                textAlign: 'start',
+                color: 'white',
+                fontWeight: 'bold',
+                backgroundColor: '#5bc0de',
+                cursor: 'pointer',
+                float: 'right'
+            },
+            onClick: function onClick() {
+                return toggleDebugger();
+            } },
+        'DEBUGGER'
+    );
+};
+
+// main debugger component container
+var DebugContainer = function DebugContainer(props) {
+    return _react2.default.createElement(
+        'div',
+        {
+            style: {
+                height: '100%',
+                width: '300px',
+                border: '1px solid black',
+                borderRadius: '5px',
+                padding: '0 5px 5px',
+                float: 'right'
+            } },
+        _react2.default.createElement(
+            'button',
+            {
+                type: 'button',
+                className: 'close',
+                'aria-label': 'Close',
+                onClick: function onClick() {
+                    return props.toggleDebugger();
+                } },
+            _react2.default.createElement(
+                'span',
+                { 'aria-hidden': 'true' },
+                '\xD7'
+            )
+        ),
+        _react2.default.createElement(DebugControls, null),
+        _react2.default.createElement(Stack, props.debug),
+        _react2.default.createElement(Pointers, props.debug),
+        _react2.default.createElement(IO, props.debug)
+    );
+};
+
+// run/step/stop control buttons
+var DebugControls = function DebugControls() {
+    return _react2.default.createElement(
+        'div',
+        { className: 'btn-group', role: 'group', style: { margin: 'auto auto 1vh', width: '100%' } },
+        _react2.default.createElement(
+            'button',
+            { type: 'button', className: 'btn btn-success', title: 'Run', style: { width: '33%' } },
+            _react2.default.createElement('i', { className: 'glyphicon glyphicon-forward' })
+        ),
+        _react2.default.createElement(
+            'button',
+            { type: 'button', className: 'btn btn-primary', title: 'Step', style: { width: '33%' } },
+            _react2.default.createElement('i', { className: 'glyphicon glyphicon-play' })
+        ),
+        _react2.default.createElement(
+            'button',
+            { type: 'button', className: 'btn btn-danger', title: 'Stop', style: { width: '33%' } },
+            _react2.default.createElement('i', { className: 'glyphicon glyphicon-stop' })
+        )
+    );
+};
+
+// IO visual containers
+var IO = function IO(_ref2) {
+    var output = _ref2.output,
+        input = _ref2.input;
+    return [_react2.default.createElement(
+        'b',
+        { key: 'input-label' },
+        'Input'
+    ), _react2.default.createElement('br', { key: 'br-1' }), _react2.default.createElement('textarea', {
+        key: 'in',
+        id: 'in',
+        style: {
+            width: '100%',
+            maxWidth: '100%',
+            fontFamily: 'monospace',
+            fontSize: '12pt'
+        }
+    }), _react2.default.createElement('br', { key: 'br-2' }), _react2.default.createElement(
+        'b',
+        { key: 'ouput-label' },
+        'Output'
+    ), _react2.default.createElement('br', { key: 'br-3' }), _react2.default.createElement('textarea', {
+        key: 'out',
+        id: 'out',
+        readOnly: true,
+        style: {
+            width: '100%',
+            maxWidth: '100%',
+            fontFamily: 'monospace',
+            fontSize: '12pt'
+        },
+        value: output
+    })];
+};
+
+// visual representation of stack
+var Stack = function Stack(_ref3) {
+    var stack = _ref3.stack;
+    return _react2.default.createElement(
+        'table',
+        { style: { margin: 'auto auto 1vh' } },
+        _react2.default.createElement(
+            'thead',
+            null,
+            _react2.default.createElement(
+                'tr',
+                null,
+                _react2.default.createElement(
+                    'td',
+                    null,
+                    _react2.default.createElement(
+                        'b',
+                        null,
+                        'Stack'
+                    )
+                )
+            )
+        ),
+        _react2.default.createElement(
+            'tbody',
+            null,
+            stack.map(function (val) {
+                return _react2.default.createElement(
+                    'tr',
+                    {
+                        style: {
+                            border: '1px solid black',
+                            width: '200px',
+                            height: '2em',
+                            textAlign: 'center',
+                            verticalAlign: 'center',
+                            fontFamily: 'monospace',
+                            fontSize: '12pt'
+                        } },
+                    _react2.default.createElement(
+                        'td',
+                        null,
+                        val
+                    )
+                );
+            }),
+            _react2.default.createElement(
+                'tr',
+                null,
+                _react2.default.createElement('td', { style: { border: '1px solid black', width: '200px', height: '2em' } })
+            )
+        )
+    );
+};
+
+// visual representation of program pointers
+var Pointers = function Pointers(_ref4) {
+    var DP = _ref4.DP,
+        CC = _ref4.CC;
+    return _react2.default.createElement(
+        'dl',
+        { className: 'dl-horizontal' },
+        _react2.default.createElement(
+            'dt',
+            null,
+            'Direction Pointer:'
+        ),
+        _react2.default.createElement(
+            'dd',
+            { style: { fontSize: '12pt' } },
+            ['🡺', '🡻', '🡸', '🡹'][DP]
+        ),
+        _react2.default.createElement(
+            'dt',
+            null,
+            'Codel Chooser:'
+        ),
+        _react2.default.createElement(
+            'dd',
+            { style: { fontSize: '12pt' } },
+            ['🡸', '🡺'][CC]
+        )
+    );
+};
+
+exports.default = Debugger;
+
+},{"react":39}],4:[function(require,module,exports){
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
@@ -388,7 +602,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _react = require("react");
+var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
@@ -410,63 +624,57 @@ var Grid = function (_React$Component) {
     }
 
     _createClass(Grid, [{
-        key: "render",
+        key: 'render',
         value: function render() {
             var _this2 = this;
 
             return _react2.default.createElement(
-                "div",
-                { className: "row" },
+                'table',
+                {
+                    style: {
+                        tableLayout: 'fixed',
+                        pointerEvents: this.props.debug.debugMode ? 'none' : 'auto'
+                    },
+                    onMouseOut: function onMouseOut() {
+                        return _this2.props.setCellInFocus(null);
+                    } },
                 _react2.default.createElement(
-                    "div",
-                    { className: "col-sm-12" },
-                    _react2.default.createElement(
-                        "table",
-                        {
-                            style: {
-                                tableLayout: 'fixed',
-                                marginBottom: '1vh'
-                            },
-                            onMouseOut: function onMouseOut() {
-                                return _this2.props.setCellInFocus(null);
-                            } },
-                        _react2.default.createElement(
-                            "tbody",
-                            null,
-                            this.props.grid.map(function (row, i) {
+                    'tbody',
+                    null,
+                    this.props.grid.map(function (row, i) {
+                        return _react2.default.createElement(
+                            'tr',
+                            { key: 'row-' + i },
+                            row.map(function (cell, j) {
                                 return _react2.default.createElement(
-                                    "tr",
-                                    { key: 'row-' + i },
-                                    row.map(function (cell, j) {
-                                        return _react2.default.createElement(
-                                            "td",
-                                            {
-                                                key: 'cell-' + i + '-' + j,
-                                                title: '(' + i + ',' + j + ')',
-                                                style: {
-                                                    height: _this2.props.cellDim + 'px',
-                                                    width: _this2.props.cellDim + 'px',
-                                                    border: '1px solid black',
-                                                    backgroundColor: _this2.props.colours[cell],
-                                                    color: 'white',
-                                                    fontSize: '11px',
-                                                    textShadow: '1px 1px 1px black',
-                                                    textAlign: 'center',
-                                                    cursor: _this2.props.paintMode == 0 ? 'url(img/pencil.png) 5 30,auto' : 'url(img/paint-bucket.png) 28 28,auto'
-                                                },
-                                                onMouseOver: function onMouseOver() {
-                                                    return _this2.props.setCellInFocus(i, j);
-                                                },
-                                                onClick: function onClick() {
-                                                    return _this2.props.paint(i, j);
-                                                } },
-                                            _this2.props.displayBS && _this2.props.blockSizes[i][j]
-                                        );
-                                    })
+                                    'td',
+                                    {
+                                        key: 'cell-' + i + '-' + j,
+                                        title: '(' + i + ',' + j + ')',
+                                        style: {
+                                            maxHeight: '30px',
+                                            maxWidth: '30px',
+                                            height: _this2.props.cellDim + 'px',
+                                            width: _this2.props.cellDim + 'px',
+                                            border: '1px solid black',
+                                            backgroundColor: _this2.props.colours[cell],
+                                            color: 'white',
+                                            fontSize: '11px',
+                                            textShadow: '1px 1px 1px black',
+                                            textAlign: 'center',
+                                            cursor: _this2.props.paintMode == 0 ? 'url(img/pencil.png) 5 30,auto' : 'url(img/paint-bucket.png) 28 28,auto'
+                                        },
+                                        onMouseOver: function onMouseOver() {
+                                            return _this2.props.setCellInFocus(i, j);
+                                        },
+                                        onClick: function onClick() {
+                                            return _this2.props.paint(i, j);
+                                        } },
+                                    _this2.props.displayBS && _this2.props.blockSizes[i][j]
                                 );
                             })
-                        )
-                    )
+                        );
+                    })
                 )
             );
         }
@@ -477,7 +685,7 @@ var Grid = function (_React$Component) {
 
 exports.default = Grid;
 
-},{"react":38}],4:[function(require,module,exports){
+},{"react":39}],5:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -500,6 +708,10 @@ var _controls2 = _interopRequireDefault(_controls);
 var _grid = require('./grid.js');
 
 var _grid2 = _interopRequireDefault(_grid);
+
+var _debugger = require('./debugger.js');
+
+var _debugger2 = _interopRequireDefault(_debugger);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -558,7 +770,7 @@ var appState = {
 
     height: HEIGHT,
     width: HEIGHT,
-    cellDim: Math.min(30, (window.innerWidth - 40) / WIDTH),
+    cellDim: Math.min(30, (window.innerWidth - 40) / WIDTH), ///// NEEDS RESIZING - ALSO MAKE SURE CELLS ARE SQUARE
 
     grid: Array(HEIGHT).fill(0).map(function (_) {
         return Array(WIDTH).fill(18);
@@ -577,6 +789,174 @@ var appState = {
     cellInFocus: null,
     displayBS: false, // initially do not show block sizes
 
+    debug: {
+        debugIsVisible: false, // initially, debugger is not visible
+        DP: 0, // index into [right, down, left, up], direction pointer initially points right
+        CC: 0, // index into [left, right], codel chooser initially points left
+        stack: [],
+        output: '',
+        input: false, // whether input is currently requested
+        inputPtr: 0, // pointer into input stream
+        debugMode: false, // currently debugging
+        currInst: null, // current instruction (in step mode)
+
+        step: function (row, col) {
+            var currColour = grid[row][col];
+
+            // find edge of current colour block which is furthest in direction of DP
+            var nextColour = void 0;
+
+            if (nextColour == 18) {} else if (nextColour == 19) {} else {
+                var inst = appState.commands[nextColour]; // match colour transition to command
+
+                // binary stack operations
+                if (['+', '/', '>', '-', 'mod', '*', 'roll'].includes(inst)) {
+                    var stack = appState.debug.stack.slice();
+                    var op1 = stack.pop(),
+                        op2 = stack.pop();
+
+                    // ignore stack underflow
+                    if (op1 == undefined || op2 == undefined) {
+                        return { stack: appState.debug.stack };
+                    }
+
+                    switch (inst) {
+                        /* Pops the top two values off the stack, adds them, and pushes the 
+                        result back on the stack */
+                        case '+':
+                            stack.push(op1 + op2);
+                            break;
+
+                        /* Pops the top two values off the stack, calculates the integer 
+                        division of the second top value by the top value, and pushes the 
+                        result back on the stack */
+                        case '/':
+                            // ignore divide by zero instruction
+                            if (op1 == 0) {
+                                stack.push(op2);
+                                stack.push(op1);
+                            } else {
+                                stack.push(Math.floor(op2 / op1));
+                            }
+                            break;
+
+                        /* Pops the top two values off the stack, and pushes 1 on to the stack 
+                        if the second top value is greater than the top value, and pushes 0 
+                        if it is not greater */
+                        case '>':
+                            stack.push(op2 > op1 ? 1 : 0);
+                            break;
+
+                        /* Pops the top two values off the stack, calculates the second top value
+                        minus the top value, and pushes the result back on the stack */
+                        case '-':
+                            stack.push(op2 - op1);
+                            break;
+
+                        /* Pops the top two values off the stack, calculates the second top value
+                        modulo the top value, and pushes the result back on the stack. The 
+                        result has the same sign as the divisor (the top value). */
+                        case 'mod':
+                            // divide by 0 error; instruction is ignored
+                            if (op1 == 0) {
+                                stack.push(op2);
+                                stack.push(op1);
+                                return { error: 'Divide by zero', stack: stack };
+                            }
+
+                            stack.push(op2 - op1 * Math.floor(op2 / op1));
+                            break;
+
+                        /* Pops the top two values off the stack, multiplies them, and pushes 
+                        the result back on the stack */
+                        case '*':
+                            stack.push(op1 * op2);
+                            break;
+
+                        /* Pops the top two values off the stack and "rolls" the remaining stack
+                        entries to a depth equal to the second value popped, by a number of 
+                        rolls equal to the first value popped. 
+                        A single roll to depth n is defined as burying the top value on the 
+                        stack n deep and bringing all values above it up by 1 place. 
+                        A negative number of rolls rolls in the opposite direction. */
+                        case 'roll':
+                            // negative depth error; instruction is ignored
+                            if (op2 < 0) {
+                                stack.push(op2);
+                                stack.push(op1);
+                                return { error: 'Negative depth', stack: stack };
+                            }
+
+                            for (var roll = 0; roll < op1; roll++) {
+                                stack.splice(-op2, 0, stack.slice(-1));
+                            }
+                            break;
+                    }
+
+                    return { stack: stack };
+                }
+
+                switch (inst) {
+                    /* Pushes a copy of the top value on the stack on to the stack */
+                    case 'dup':
+                        var stack = appState.debug.stack.slice();
+                        var val = stack.pop();
+
+                        if (val == undefined) {
+                            return { error: 'Stack underflow' };
+                        }
+                        stack.push(val);
+                        stack.push(val);
+
+                        return { stack: stack };
+
+                    /* Reads a value from STDIN as a character and pushes it on to the stack. */
+                    case 'in(char)':
+                        // If no input is waiting on STDIN, this is an error and the command is ignored.
+                        break;
+
+                    /* Pushes the value of the colour block just exited on to the stack */
+                    case 'push':
+                        break;
+
+                    /* Pops the top value off the stack and rotates the DP clockwise that many 
+                    steps (anticlockwise if negative) */
+                    case 'pointer':
+                        break;
+
+                    /* Pops the top value off the stack and prints it to STDOUT as a number */
+                    case 'out(num)':
+                        break;
+
+                    /* Pops the top value off the stack and discards it */
+                    case 'pop':
+                        break;
+
+                    /* Replaces the top value of the stack with 0 if it is non-zero, and 1 if 
+                    it is zero */
+                    case 'not':
+                        break;
+
+                    /* Pops the top value off the stack and toggles the CC that many times (the
+                    absolute value of that many times if negative) */
+                    case 'switch':
+                        break;
+
+                    /* Reads a value from STDIN as a number and pushes it on to the stack. */
+                    case 'in(num)':
+                        // If no input is waiting on STDIN, this is an error and the command is ignored.
+                        //  If an integer read does not receive an integer value, this is an error and the command is ignored
+
+                        break;
+
+                    /* Pops the top value off the stack and prints it to STDOUT as a character */
+                    case 'out(char)':
+                        break;
+                }
+            }
+        }.bind(undefined)
+    },
+
     // add listener
     subscribe: function (listener) {
         return appState.listeners.push(listener);
@@ -594,7 +974,6 @@ var appState = {
 
         appState.height = height;
         appState.width = width;
-        appState.cellDim = Math.min(30, (window.innerWidth - 40) / width);
 
         appState.grid = Array(height).fill(0).map(function (_) {
             return Array(width).fill(18);
@@ -782,6 +1161,15 @@ var appState = {
         }
 
         return blockSizes;
+    }.bind(undefined),
+
+    // toggle debugger visibility
+    toggleDebugger: function () {
+        appState.debug.debugIsVisible = !appState.debug.debugIsVisible;
+
+        // update cell dimensions ********
+
+        appState.notify();
     }.bind(undefined)
 };
 
@@ -802,7 +1190,19 @@ var App = function (_React$Component) {
     }, {
         key: 'render',
         value: function render() {
-            return [_react2.default.createElement(_controls2.default, _extends({ key: 'controls', colours: colours }, this.props.appState)), _react2.default.createElement(_grid2.default, _extends({ key: 'grid', colours: colours }, this.props.appState))];
+            return [_react2.default.createElement(
+                'div',
+                {
+                    key: 'main-container',
+                    style: {
+                        float: 'left',
+                        marginBottom: '1vh',
+                        marginRight: '1vw',
+                        width: 'calc(100% - 1vw - ' + (this.props.appState.debug.debugIsVisible ? '300px' : '25px') + ')'
+                    } },
+                _react2.default.createElement(_controls2.default, _extends({ colours: colours }, this.props.appState)),
+                _react2.default.createElement(_grid2.default, _extends({ colours: colours }, this.props.appState))
+            ), _react2.default.createElement(_debugger2.default, _extends({ key: 'debugger' }, this.props.appState))];
         }
     }]);
 
@@ -814,7 +1214,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 }).call(this,require("buffer").Buffer)
-},{"./controls.js":2,"./grid.js":3,"buffer":6,"react":38,"react-dom":35}],5:[function(require,module,exports){
+},{"./controls.js":2,"./debugger.js":3,"./grid.js":4,"buffer":7,"react":39,"react-dom":36}],6:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -930,7 +1330,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -2646,7 +3046,7 @@ function numberIsNaN (obj) {
   return obj !== obj // eslint-disable-line no-self-compare
 }
 
-},{"base64-js":5,"ieee754":25}],7:[function(require,module,exports){
+},{"base64-js":6,"ieee754":26}],8:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -2723,7 +3123,7 @@ var EventListener = {
 
 module.exports = EventListener;
 }).call(this,require('_process'))
-},{"./emptyFunction":12,"_process":27}],8:[function(require,module,exports){
+},{"./emptyFunction":13,"_process":28}],9:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -2757,7 +3157,7 @@ var ExecutionEnvironment = {
 };
 
 module.exports = ExecutionEnvironment;
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2787,7 +3187,7 @@ function camelize(string) {
 }
 
 module.exports = camelize;
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -2825,7 +3225,7 @@ function camelizeStyleName(string) {
 }
 
 module.exports = camelizeStyleName;
-},{"./camelize":9}],11:[function(require,module,exports){
+},{"./camelize":10}],12:[function(require,module,exports){
 'use strict';
 
 /**
@@ -2863,7 +3263,7 @@ function containsNode(outerNode, innerNode) {
 }
 
 module.exports = containsNode;
-},{"./isTextNode":20}],12:[function(require,module,exports){
+},{"./isTextNode":21}],13:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2900,7 +3300,7 @@ emptyFunction.thatReturnsArgument = function (arg) {
 };
 
 module.exports = emptyFunction;
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -2920,7 +3320,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 module.exports = emptyObject;
 }).call(this,require('_process'))
-},{"_process":27}],14:[function(require,module,exports){
+},{"_process":28}],15:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -2945,7 +3345,7 @@ function focusNode(node) {
 }
 
 module.exports = focusNode;
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 /**
@@ -2982,7 +3382,7 @@ function getActiveElement(doc) /*?DOMElement*/{
 }
 
 module.exports = getActiveElement;
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3013,7 +3413,7 @@ function hyphenate(string) {
 }
 
 module.exports = hyphenate;
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -3050,7 +3450,7 @@ function hyphenateStyleName(string) {
 }
 
 module.exports = hyphenateStyleName;
-},{"./hyphenate":16}],18:[function(require,module,exports){
+},{"./hyphenate":17}],19:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -3106,7 +3506,7 @@ function invariant(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 }).call(this,require('_process'))
-},{"_process":27}],19:[function(require,module,exports){
+},{"_process":28}],20:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3129,7 +3529,7 @@ function isNode(object) {
 }
 
 module.exports = isNode;
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3152,7 +3552,7 @@ function isTextNode(object) {
 }
 
 module.exports = isTextNode;
-},{"./isNode":19}],21:[function(require,module,exports){
+},{"./isNode":20}],22:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -3173,7 +3573,7 @@ if (ExecutionEnvironment.canUseDOM) {
 }
 
 module.exports = performance || {};
-},{"./ExecutionEnvironment":8}],22:[function(require,module,exports){
+},{"./ExecutionEnvironment":9}],23:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3205,7 +3605,7 @@ if (performance.now) {
 }
 
 module.exports = performanceNow;
-},{"./performance":21}],23:[function(require,module,exports){
+},{"./performance":22}],24:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -3271,7 +3671,7 @@ function shallowEqual(objA, objB) {
 }
 
 module.exports = shallowEqual;
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2014-present, Facebook, Inc.
@@ -3336,7 +3736,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 module.exports = warning;
 }).call(this,require('_process'))
-},{"./emptyFunction":12,"_process":27}],25:[function(require,module,exports){
+},{"./emptyFunction":13,"_process":28}],26:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -3422,7 +3822,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 /*
 object-assign
 (c) Sindre Sorhus
@@ -3514,7 +3914,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 	return to;
 };
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -3700,7 +4100,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -3763,7 +4163,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
 module.exports = checkPropTypes;
 
 }).call(this,require('_process'))
-},{"./lib/ReactPropTypesSecret":32,"_process":27,"fbjs/lib/invariant":18,"fbjs/lib/warning":24}],29:[function(require,module,exports){
+},{"./lib/ReactPropTypesSecret":33,"_process":28,"fbjs/lib/invariant":19,"fbjs/lib/warning":25}],30:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -3823,7 +4223,7 @@ module.exports = function() {
   return ReactPropTypes;
 };
 
-},{"./lib/ReactPropTypesSecret":32,"fbjs/lib/emptyFunction":12,"fbjs/lib/invariant":18}],30:[function(require,module,exports){
+},{"./lib/ReactPropTypesSecret":33,"fbjs/lib/emptyFunction":13,"fbjs/lib/invariant":19}],31:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -4369,7 +4769,7 @@ module.exports = function(isValidElement, throwOnDirectAccess) {
 };
 
 }).call(this,require('_process'))
-},{"./checkPropTypes":28,"./lib/ReactPropTypesSecret":32,"_process":27,"fbjs/lib/emptyFunction":12,"fbjs/lib/invariant":18,"fbjs/lib/warning":24,"object-assign":26}],31:[function(require,module,exports){
+},{"./checkPropTypes":29,"./lib/ReactPropTypesSecret":33,"_process":28,"fbjs/lib/emptyFunction":13,"fbjs/lib/invariant":19,"fbjs/lib/warning":25,"object-assign":27}],32:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -4401,7 +4801,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./factoryWithThrowingShims":29,"./factoryWithTypeCheckers":30,"_process":27}],32:[function(require,module,exports){
+},{"./factoryWithThrowingShims":30,"./factoryWithTypeCheckers":31,"_process":28}],33:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -4415,7 +4815,7 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 module.exports = ReactPropTypesSecret;
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 (function (process){
 /** @license React v16.0.0
  * react-dom.development.js
@@ -21640,7 +22040,7 @@ module.exports = ReactDOMFiberEntry;
 }
 
 }).call(this,require('_process'))
-},{"_process":27,"fbjs/lib/EventListener":7,"fbjs/lib/ExecutionEnvironment":8,"fbjs/lib/camelizeStyleName":10,"fbjs/lib/containsNode":11,"fbjs/lib/emptyFunction":12,"fbjs/lib/emptyObject":13,"fbjs/lib/focusNode":14,"fbjs/lib/getActiveElement":15,"fbjs/lib/hyphenateStyleName":17,"fbjs/lib/invariant":18,"fbjs/lib/performanceNow":22,"fbjs/lib/shallowEqual":23,"fbjs/lib/warning":24,"object-assign":26,"prop-types":31,"prop-types/checkPropTypes":28,"react":38}],34:[function(require,module,exports){
+},{"_process":28,"fbjs/lib/EventListener":8,"fbjs/lib/ExecutionEnvironment":9,"fbjs/lib/camelizeStyleName":11,"fbjs/lib/containsNode":12,"fbjs/lib/emptyFunction":13,"fbjs/lib/emptyObject":14,"fbjs/lib/focusNode":15,"fbjs/lib/getActiveElement":16,"fbjs/lib/hyphenateStyleName":18,"fbjs/lib/invariant":19,"fbjs/lib/performanceNow":23,"fbjs/lib/shallowEqual":24,"fbjs/lib/warning":25,"object-assign":27,"prop-types":32,"prop-types/checkPropTypes":29,"react":39}],35:[function(require,module,exports){
 /*
  React v16.0.0
  react-dom.production.min.js
@@ -21898,7 +22298,7 @@ function ck(a,b,c,d,e){ak(c)?void 0:w("200");var f=c._reactRootContainer;if(f)Xj
 var ek={createPortal:dk,hydrate:function(a,b,c){return ck(null,a,b,!0,c)},render:function(a,b,c){return ck(null,a,b,!1,c)},unstable_renderSubtreeIntoContainer:function(a,b,c,d){null!=a&&Pa.has(a)?void 0:w("38");return ck(a,b,c,!1,d)},unmountComponentAtNode:function(a){ak(a)?void 0:w("40");return a._reactRootContainer?(Xj.unbatchedUpdates(function(){ck(null,null,a,!1,function(){a._reactRootContainer=null})}),!0):!1},findDOMNode:Dh,unstable_createPortal:dk,unstable_batchedUpdates:sb.batchedUpdates,
 unstable_deferredUpdates:Xj.deferredUpdates,flushSync:Xj.flushSync,__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{EventPluginHub:Jb,EventPluginRegistry:sa,EventPropagators:Th,ReactControlledComponent:nb,ReactDOMComponentTree:G,ReactDOMEventListener:L}};Cj({findFiberByHostInstance:G.getClosestInstanceFromNode,findHostInstanceByFiber:Xj.findHostInstance,bundleType:0,version:"16.0.0",rendererPackageName:"react-dom"});module.exports=ek;
 
-},{"fbjs/lib/EventListener":7,"fbjs/lib/ExecutionEnvironment":8,"fbjs/lib/containsNode":11,"fbjs/lib/emptyFunction":12,"fbjs/lib/emptyObject":13,"fbjs/lib/focusNode":14,"fbjs/lib/getActiveElement":15,"fbjs/lib/invariant":18,"fbjs/lib/shallowEqual":23,"object-assign":26,"react":38}],35:[function(require,module,exports){
+},{"fbjs/lib/EventListener":8,"fbjs/lib/ExecutionEnvironment":9,"fbjs/lib/containsNode":12,"fbjs/lib/emptyFunction":13,"fbjs/lib/emptyObject":14,"fbjs/lib/focusNode":15,"fbjs/lib/getActiveElement":16,"fbjs/lib/invariant":19,"fbjs/lib/shallowEqual":24,"object-assign":27,"react":39}],36:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -21940,7 +22340,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react-dom.development.js":33,"./cjs/react-dom.production.min.js":34,"_process":27}],36:[function(require,module,exports){
+},{"./cjs/react-dom.development.js":34,"./cjs/react-dom.production.min.js":35,"_process":28}],37:[function(require,module,exports){
 (function (process){
 /** @license React v16.0.0
  * react.development.js
@@ -23642,7 +24042,7 @@ module.exports = ReactEntry;
 }
 
 }).call(this,require('_process'))
-},{"_process":27,"fbjs/lib/emptyFunction":12,"fbjs/lib/emptyObject":13,"fbjs/lib/invariant":18,"fbjs/lib/warning":24,"object-assign":26,"prop-types/checkPropTypes":28}],37:[function(require,module,exports){
+},{"_process":28,"fbjs/lib/emptyFunction":13,"fbjs/lib/emptyObject":14,"fbjs/lib/invariant":19,"fbjs/lib/warning":25,"object-assign":27,"prop-types/checkPropTypes":29}],38:[function(require,module,exports){
 /*
  React v16.0.0
  react.production.min.js
@@ -23667,7 +24067,7 @@ Object.keys(a).join(", ")+"}":d,""));return g}function O(a,b){return"object"===t
 function R(a,b,d,e,c){var g="";null!=d&&(g=(""+d).replace(J,"$\x26/")+"/");b=L(b,g,e,c);null==a||N(a,"",Q,b);M(b)}var S={forEach:function(a,b,d){if(null==a)return a;b=L(null,null,b,d);null==a||N(a,"",P,b);M(b)},map:function(a,b,d){if(null==a)return a;var e=[];R(a,e,null,b,d);return e},count:function(a){return null==a?0:N(a,"",r.thatReturnsNull,null)},toArray:function(a){var b=[];R(a,b,null,r.thatReturnsArgument);return b}};
 module.exports={Children:{map:S.map,forEach:S.forEach,count:S.count,toArray:S.toArray,only:function(a){G.isValidElement(a)?void 0:t("143");return a}},Component:B.Component,PureComponent:B.PureComponent,unstable_AsyncComponent:B.AsyncComponent,createElement:G.createElement,cloneElement:G.cloneElement,isValidElement:G.isValidElement,createFactory:G.createFactory,version:"16.0.0",__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentOwner:C,assign:f}};
 
-},{"fbjs/lib/emptyFunction":12,"fbjs/lib/emptyObject":13,"fbjs/lib/invariant":18,"object-assign":26}],38:[function(require,module,exports){
+},{"fbjs/lib/emptyFunction":13,"fbjs/lib/emptyObject":14,"fbjs/lib/invariant":19,"object-assign":27}],39:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -23678,4 +24078,4 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react.development.js":36,"./cjs/react.production.min.js":37,"_process":27}]},{},[4]);
+},{"./cjs/react.development.js":37,"./cjs/react.production.min.js":38,"_process":28}]},{},[5]);

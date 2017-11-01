@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 
 import Controls from './controls.js';
 import Grid from './grid.js';
+import Debugger from './debugger.js';
 
 const colours = [
     '#FFC0C0', // light red
@@ -73,7 +74,7 @@ const appState = {
 
     height: HEIGHT,
     width: HEIGHT,
-    cellDim: Math.min(30, (window.innerWidth - 40) / WIDTH),
+    cellDim: Math.min(30, (window.innerWidth - 40) / WIDTH), ///// NEEDS RESIZING - ALSO MAKE SURE CELLS ARE SQUARE
 
     grid: Array(HEIGHT)
         .fill(0)
@@ -92,6 +93,176 @@ const appState = {
     cellInFocus: null,
     displayBS: false, // initially do not show block sizes
 
+    debug: {
+        debugIsVisible: false, // initially, debugger is not visible
+        DP: 0, // index into [right, down, left, up], direction pointer initially points right
+        CC: 0, // index into [left, right], codel chooser initially points left
+        stack: [],
+        output: '',
+        input: false, // whether input is currently requested
+        inputPtr: 0, // pointer into input stream
+        debugMode: false, // currently debugging
+        currInst: null, // current instruction (in step mode)
+
+        step: ((row, col) => {
+            let currColour = grid[row][col];
+
+            // find edge of current colour block which is furthest in direction of DP
+            let nextColour;
+
+            if (nextColour == 18) {
+            } else if (nextColour == 19) {
+            } else {
+                let inst = appState.commands[nextColour]; // match colour transition to command
+
+                // binary stack operations
+                if (['+', '/', '>', '-', 'mod', '*', 'roll'].includes(inst)) {
+                    var stack = appState.debug.stack.slice();
+                    var op1 = stack.pop(),
+                        op2 = stack.pop();
+
+                    // ignore stack underflow
+                    if (op1 == undefined || op2 == undefined) {
+                        return { stack: appState.debug.stack };
+                    }
+
+                    switch (inst) {
+                        /* Pops the top two values off the stack, adds them, and pushes the 
+			   result back on the stack */
+                        case '+':
+                            stack.push(op1 + op2);
+                            break;
+
+                        /* Pops the top two values off the stack, calculates the integer 
+			   division of the second top value by the top value, and pushes the 
+			   result back on the stack */
+                        case '/':
+                            // ignore divide by zero instruction
+                            if (op1 == 0) {
+                                stack.push(op2);
+                                stack.push(op1);
+                            } else {
+                                stack.push(Math.floor(op2 / op1));
+                            }
+                            break;
+
+                        /* Pops the top two values off the stack, and pushes 1 on to the stack 
+			   if the second top value is greater than the top value, and pushes 0 
+			   if it is not greater */
+                        case '>':
+                            stack.push(op2 > op1 ? 1 : 0);
+                            break;
+
+                        /* Pops the top two values off the stack, calculates the second top value
+			   minus the top value, and pushes the result back on the stack */
+                        case '-':
+                            stack.push(op2 - op1);
+                            break;
+
+                        /* Pops the top two values off the stack, calculates the second top value
+			   modulo the top value, and pushes the result back on the stack. The 
+			   result has the same sign as the divisor (the top value). */
+                        case 'mod':
+                            // divide by 0 error; instruction is ignored
+                            if (op1 == 0) {
+                                stack.push(op2);
+                                stack.push(op1);
+                                return { error: 'Divide by zero', stack: stack };
+                            }
+
+                            stack.push(op2 - op1 * Math.floor(op2 / op1));
+                            break;
+
+                        /* Pops the top two values off the stack, multiplies them, and pushes 
+			   the result back on the stack */
+                        case '*':
+                            stack.push(op1 * op2);
+                            break;
+
+                        /* Pops the top two values off the stack and "rolls" the remaining stack
+			   entries to a depth equal to the second value popped, by a number of 
+			   rolls equal to the first value popped. 
+			   A single roll to depth n is defined as burying the top value on the 
+			   stack n deep and bringing all values above it up by 1 place. 
+			   A negative number of rolls rolls in the opposite direction. */
+                        case 'roll':
+                            // negative depth error; instruction is ignored
+                            if (op2 < 0) {
+                                stack.push(op2);
+                                stack.push(op1);
+                                return { error: 'Negative depth', stack: stack };
+                            }
+
+                            for (var roll = 0; roll < op1; roll++) {
+                                stack.splice(-op2, 0, stack.slice(-1));
+                            }
+                            break;
+                    }
+
+                    return { stack: stack };
+                }
+
+                switch (inst) {
+                    /* Pushes a copy of the top value on the stack on to the stack */
+                    case 'dup':
+                        var stack = appState.debug.stack.slice();
+                        var val = stack.pop();
+
+                        if (val == undefined) {
+                            return { error: 'Stack underflow' };
+                        }
+                        stack.push(val);
+                        stack.push(val);
+
+                        return { stack: stack };
+
+                    /* Reads a value from STDIN as a character and pushes it on to the stack. */
+                    case 'in(char)':
+                        // If no input is waiting on STDIN, this is an error and the command is ignored.
+                        break;
+
+                    /* Pushes the value of the colour block just exited on to the stack */
+                    case 'push':
+                        break;
+
+                    /* Pops the top value off the stack and rotates the DP clockwise that many 
+		       steps (anticlockwise if negative) */
+                    case 'pointer':
+                        break;
+
+                    /* Pops the top value off the stack and prints it to STDOUT as a number */
+                    case 'out(num)':
+                        break;
+
+                    /* Pops the top value off the stack and discards it */
+                    case 'pop':
+                        break;
+
+                    /* Replaces the top value of the stack with 0 if it is non-zero, and 1 if 
+		       it is zero */
+                    case 'not':
+                        break;
+
+                    /* Pops the top value off the stack and toggles the CC that many times (the
+		       absolute value of that many times if negative) */
+                    case 'switch':
+                        break;
+
+                    /* Reads a value from STDIN as a number and pushes it on to the stack. */
+                    case 'in(num)':
+                        // If no input is waiting on STDIN, this is an error and the command is ignored.
+                        //  If an integer read does not receive an integer value, this is an error and the command is ignored
+
+                        break;
+
+                    /* Pops the top value off the stack and prints it to STDOUT as a character */
+                    case 'out(char)':
+                        break;
+                }
+            }
+        }).bind(this),
+    },
+
     // add listener
     subscribe: (listener => appState.listeners.push(listener)).bind(this),
     // notify listeners
@@ -100,7 +271,6 @@ const appState = {
     resize: (({ height, width }) => {
         appState.height = height;
         appState.width = width;
-        appState.cellDim = Math.min(30, (window.innerWidth - 40) / width);
 
         appState.grid = Array(height)
             .fill(0)
@@ -172,11 +342,11 @@ const appState = {
     }).bind(this),
 
     setCellInFocus: ((row, cell) => {
-	if (row == null) {
-	    appState.cellInFocus = null;
-	} else {
+        if (row == null) {
+            appState.cellInFocus = null;
+        } else {
             appState.cellInFocus = [row, cell];
-	}
+        }
 
         appState.notify();
     }).bind(this),
@@ -287,6 +457,15 @@ const appState = {
 
         return blockSizes;
     }).bind(this),
+
+    // toggle debugger visibility
+    toggleDebugger: (() => {
+        appState.debug.debugIsVisible = !appState.debug.debugIsVisible;
+
+        // update cell dimensions ********
+
+        appState.notify();
+    }).bind(this),
 };
 
 class App extends React.Component {
@@ -296,8 +475,21 @@ class App extends React.Component {
 
     render() {
         return [
-            <Controls key="controls" colours={colours} {...this.props.appState} />,
-            <Grid key="grid" colours={colours} {...this.props.appState} />,
+            <div
+                key="main-container"
+                style={{
+                    float: 'left',
+                    marginBottom: '1vh',
+                    marginRight: '1vw',
+                    width:
+                        'calc(100% - 1vw - ' +
+                        (this.props.appState.debug.debugIsVisible ? '300px' : '25px') +
+                        ')',
+                }}>
+                <Controls colours={colours} {...this.props.appState} />
+                <Grid colours={colours} {...this.props.appState} />
+            </div>,
+            <Debugger key="debugger" {...this.props.appState} />,
         ];
     }
 }
