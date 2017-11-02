@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "babel-polyfill": "^6.26.0",
     "babelify": "^7.3.0",
     "browserify": "^14.4.0",
     "react": "^16.0.0",
@@ -11,6 +12,7 @@
     "watchify": "^3.9.0"
   },
   "devDependencies": {
+    "babel-plugin-transform-regenerator": "^6.26.0",
     "babel-preset-env": "^1.6.0",
     "babel-preset-react": "^6.24.1"
   },

@@ -1,4 +1,4 @@
-export function* step(commands, grid, blockSizes) {
+export default function* step(commands, grid, blockSizes) {
     // start at top left cell
     let row = 0,
         col = 0,
