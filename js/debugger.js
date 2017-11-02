@@ -26,12 +26,22 @@ const Debugger = props => (
 );
 
 // run/step/stop control buttons
-const DebugControls = ({ stop }) => (
+const DebugControls = ({ start, stop }) => (
     <div className="btn-group" role="group" style={{ width: '100%' }}>
-        <button type="button" className="btn btn-success" title="Run" style={{ width: '33%' }}>
+        <button
+            type="button"
+            className="btn btn-success"
+            title="Run"
+            style={{ width: '33%' }}
+            onClick={() => start('run')}>
             <i className="glyphicon glyphicon-forward" />
         </button>
-        <button type="button" className="btn btn-primary" title="Step" style={{ width: '33%' }}>
+        <button
+            type="button"
+            className="btn btn-primary"
+            title="Step"
+            style={{ width: '33%' }}
+            onClick={() => start('step')}>
             <i className="glyphicon glyphicon-play" />
         </button>
         <button
@@ -46,20 +56,20 @@ const DebugControls = ({ stop }) => (
 );
 
 // IO visual containers
-const IO = ({ output, input, debugMode, receiveInput }) => [
+const IO = ({ output, input, inDebugMode, receiveInput }) => [
     <b key="input-label">Input</b>,
     <br key="br-1" />,
     <textarea
         key="in"
         id="in"
-        readOnly={!debugMode}
+        readOnly={!inDebugMode}
         style={{
             width: '100%',
             maxWidth: '100%',
             fontFamily: 'monospace',
             fontSize: '12pt',
         }}
-        onKeyUp={event => console.log(event.charCode)}
+        onKeyPress={event => receiveInput(event.charCode)}
     />,
     <br key="br-2" />,
     <b key="output-label">Output</b>,

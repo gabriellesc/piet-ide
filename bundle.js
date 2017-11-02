@@ -67,7 +67,7 @@ var ColourCell = function ColourCell(props) {
 
 exports.default = ColourPicker;
 
-},{"react":39}],2:[function(require,module,exports){
+},{"react":40}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -402,7 +402,7 @@ var BSDisplaySwitch = function BSDisplaySwitch(_ref4) {
 
 exports.default = Controls;
 
-},{"./colourPicker.js":1,"react":39}],3:[function(require,module,exports){
+},{"./colourPicker.js":1,"react":40}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -452,18 +452,33 @@ var Debugger = function Debugger(props) {
 
 // run/step/stop control buttons
 var DebugControls = function DebugControls(_ref) {
-    var stop = _ref.stop;
+    var start = _ref.start,
+        stop = _ref.stop;
     return _react2.default.createElement(
         'div',
         { className: 'btn-group', role: 'group', style: { width: '100%' } },
         _react2.default.createElement(
             'button',
-            { type: 'button', className: 'btn btn-success', title: 'Run', style: { width: '33%' } },
+            {
+                type: 'button',
+                className: 'btn btn-success',
+                title: 'Run',
+                style: { width: '33%' },
+                onClick: function onClick() {
+                    return start('run');
+                } },
             _react2.default.createElement('i', { className: 'glyphicon glyphicon-forward' })
         ),
         _react2.default.createElement(
             'button',
-            { type: 'button', className: 'btn btn-primary', title: 'Step', style: { width: '33%' } },
+            {
+                type: 'button',
+                className: 'btn btn-primary',
+                title: 'Step',
+                style: { width: '33%' },
+                onClick: function onClick() {
+                    return start('step');
+                } },
             _react2.default.createElement('i', { className: 'glyphicon glyphicon-play' })
         ),
         _react2.default.createElement(
@@ -485,7 +500,7 @@ var DebugControls = function DebugControls(_ref) {
 var IO = function IO(_ref2) {
     var output = _ref2.output,
         input = _ref2.input,
-        debugMode = _ref2.debugMode,
+        inDebugMode = _ref2.inDebugMode,
         receiveInput = _ref2.receiveInput;
     return [_react2.default.createElement(
         'b',
@@ -494,15 +509,15 @@ var IO = function IO(_ref2) {
     ), _react2.default.createElement('br', { key: 'br-1' }), _react2.default.createElement('textarea', {
         key: 'in',
         id: 'in',
-        readOnly: !debugMode,
+        readOnly: !inDebugMode,
         style: {
             width: '100%',
             maxWidth: '100%',
             fontFamily: 'monospace',
             fontSize: '12pt'
         },
-        onKeyUp: function onKeyUp(event) {
-            return console.log(event.charCode);
+        onKeyPress: function onKeyPress(event) {
+            return receiveInput(event.charCode);
         }
     }), _react2.default.createElement('br', { key: 'br-2' }), _react2.default.createElement(
         'b',
@@ -609,7 +624,7 @@ var Pointers = function Pointers(_ref4) {
 
 exports.default = Debugger;
 
-},{"react":39}],4:[function(require,module,exports){
+},{"react":40}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -649,7 +664,7 @@ var Grid = function (_React$Component) {
                 {
                     style: {
                         tableLayout: 'fixed',
-                        pointerEvents: this.props.debug.debugMode ? 'none' : 'auto'
+                        pointerEvents: this.props.debug.inDebugMode ? 'none' : 'auto'
                     },
                     onMouseOut: function onMouseOut() {
                         return _this2.props.setCellInFocus(null);
@@ -701,7 +716,7 @@ var Grid = function (_React$Component) {
 
 exports.default = Grid;
 
-},{"react":39}],5:[function(require,module,exports){
+},{"react":40}],5:[function(require,module,exports){
 (function (Buffer){
 'use strict';
 
@@ -728,6 +743,10 @@ var _grid2 = _interopRequireDefault(_grid);
 var _debugger = require('./debugger.js');
 
 var _debugger2 = _interopRequireDefault(_debugger);
+
+var _interpreter = require('./interpreter.js');
+
+var _interpreter2 = _interopRequireDefault(_interpreter);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -785,7 +804,7 @@ var appState = {
     listeners: [],
 
     height: HEIGHT,
-    width: HEIGHT,
+    width: WIDTH,
     cellDim: Math.min(30, (window.innerWidth - 40) / WIDTH), ///// NEEDS RESIZING - ALSO MAKE SURE CELLS ARE SQUARE
 
     grid: Array(HEIGHT).fill(0).map(function (_) {
@@ -800,274 +819,10 @@ var appState = {
 
     commands: initCommands,
 
-    paintMode: 0, // use brush paint mode initially
+    paintMode: 0, // 0 (brush) or 1 (fill); use brush paint mode initially
 
     cellInFocus: null,
     displayBS: false, // initially do not show block sizes
-
-    debug: {
-        debugIsVisible: false, // initially, debugger is not visible
-        DP: 0, // index into [right, down, left, up], direction pointer initially points right
-        CC: 0, // index into [left, right], codel chooser initially points left
-        stack: [],
-        output: '',
-        input: false, // whether input is currently requested
-        inputPtr: 0, // pointer into input stream
-        debugMode: false, // currently debugging
-        currInst: null, // current instruction (in step mode)
-
-        // receive input from user
-        receiveInput: function (input) {}.bind(undefined),
-
-        // get one input character from "input stream"
-        getInput: function () {
-            document.getElementById('in').value[inputPtr];
-
-            // increment pointer into stream
-            undefined.appState.debug.inputPtr++;
-        }.bind(undefined),
-
-        // start debugging and either run debugger or take step
-        start: function (mode) {}.bind(undefined),
-
-        // stop debugging (and reset debugger values)
-        stop: function () {
-            undefined.appState.debug.DP = 0;
-            undefined.appState.debug.CC = 0;
-            undefined.appState.debug.stack = [];
-            undefined.appState.debug.output = '';
-            undefined.appState.debug.input = false;
-            undefined.appState.debug.inputPtr = 0;
-            undefined.appState.debug.debugMode = false;
-            undefined.appState.debug.currInst = null;
-        }.bind(undefined),
-
-        step: function (_ref) {
-            var DP = _ref.DP,
-                CC = _ref.CC,
-                stack = _ref.stack,
-                row = _ref.row,
-                col = _ref.col;
-
-            var currColour = grid[row][col];
-
-            // find edge of current colour block which is furthest in direction of DP
-            var nextColour = void 0;
-
-            if (nextColour == 18) {} else if (nextColour == 19) {} else {
-                var inst = appState.commands[nextColour]; // match colour transition to command
-
-                // binary stack operations
-                if (['+', '/', '>', '-', 'mod', '*', 'roll'].includes(inst)) {
-                    var newStack = stack.slice();
-                    var op1 = newStack.pop(),
-                        op2 = newStack.pop();
-
-                    // ignore stack underflow
-                    if (op1 == undefined || op2 == undefined) {
-                        return { stack: stack };
-                    }
-
-                    switch (inst) {
-                        /* Pops the top two values off the stack, adds them, and pushes the 
-                        result back on the stack */
-                        case '+':
-                            newStack.push(op1 + op2);
-                            break;
-
-                        /* Pops the top two values off the stack, calculates the integer 
-                        division of the second top value by the top value, and pushes the 
-                        result back on the stack */
-                        case '/':
-                            // ignore divide by zero instruction
-                            if (op1 == 0) {
-                                newStack.push(op2);
-                                newStack.push(op1);
-                            } else {
-                                newStack.push(Math.floor(op2 / op1));
-                            }
-                            break;
-
-                        /* Pops the top two values off the stack, and pushes 1 on to the stack 
-                        if the second top value is greater than the top value, and pushes 0 
-                        if it is not greater */
-                        case '>':
-                            newStack.push(op2 > op1 ? 1 : 0);
-                            break;
-
-                        /* Pops the top two values off the stack, calculates the second top value
-                        minus the top value, and pushes the result back on the stack */
-                        case '-':
-                            newStack.push(op2 - op1);
-                            break;
-
-                        /* Pops the top two values off the stack, calculates the second top value
-                        modulo the top value, and pushes the result back on the stack. The 
-                        result has the same sign as the divisor (the top value). */
-                        case 'mod':
-                            // divide by 0 error; instruction is ignored
-                            if (op1 == 0) {
-                                newStack.push(op2);
-                                newStack.push(op1);
-                                return { error: 'Divide by zero', stack: stack };
-                            }
-
-                            newStack.push(op2 - op1 * Math.floor(op2 / op1));
-                            break;
-
-                        /* Pops the top two values off the stack, multiplies them, and pushes 
-                        the result back on the stack */
-                        case '*':
-                            newStack.push(op1 * op2);
-                            break;
-
-                        /* Pops the top two values off the stack and "rolls" the remaining stack
-                        entries to a depth equal to the second value popped, by a number of 
-                        rolls equal to the first value popped. 
-                        A single roll to depth n is defined as burying the top value on the 
-                        stack n deep and bringing all values above it up by 1 place. 
-                        A negative number of rolls rolls in the opposite direction. */
-                        case 'roll':
-                            // negative depth error; instruction is ignored
-                            if (op2 < 0) {
-                                newStack.push(op2);
-                                newStack.push(op1);
-                                return { error: 'Negative depth', stack: stack };
-                            }
-
-                            if (op1 > 0) {
-                                for (var roll = 0; roll < op1; roll++) {
-                                    // put top value into stack at depth
-                                    newStack.splice(-op2, 0, newStack[newStack.length - 1]);
-                                    // remove original top value from top of stack
-                                    newStack.pop();
-                                }
-                            } else {
-                                // negative rolls
-                                for (var roll = 0; roll > op1; roll--) {
-                                    // put nth value onto top of stack and remove original nth value
-                                    newStack.push.apply(newStack, _toConsumableArray(newStack.splice(-op2, 1)));
-                                }
-                            }
-                            break;
-                    }
-
-                    return { stack: newStack };
-                }
-
-                switch (inst) {
-                    /* Pushes a copy of the top value on the stack on to the stack */
-                    case 'dup':
-                        var newStack = stack.slice();
-                        var val = newStack.pop();
-
-                        // ignore stack underflow
-                        if (val == undefined) {
-                            return { stack: stack };
-                        }
-                        newStack.push(val);
-                        newStack.push(val);
-
-                        return { stack: newStack };
-
-                    /* Reads a value from STDIN as a character and pushes it on to the stack. */
-                    case 'in(char)':
-                        // If no input is waiting on STDIN, this is an error and the command is ignored.
-                        break;
-
-                    /* Pushes the value of the colour block just exited on to the stack */
-                    case 'push':
-                        break;
-
-                    /* Pops the top value off the stack and rotates the DP clockwise that many 
-                    steps (anticlockwise if negative) */
-                    case 'pointer':
-                        var newStack = stack.slice();
-                        var val = newStack.pop();
-
-                        // ignore stack underflow
-                        if (val == undefined) {
-                            return { stack: stack };
-                        }
-
-                        if (val > 0) {
-                            return { stack: newStack, DP: (DP + val) % 4 };
-                        }
-                        // negative rotation (anticlockwise)
-                        return { stack: newStack, DP: (DP - val) % 4 };
-
-                    /* Pops the top value off the stack and prints it to STDOUT as a number */
-                    case 'out(num)':
-                        var newStack = stack.slice();
-                        var val = newStack.pop();
-
-                        // ignore stack underflow
-                        if (val == undefined) {
-                            return { stack: stack };
-                        }
-                        return { stack: newStack, output: val };
-
-                    /* Pops the top value off the stack and discards it */
-                    case 'pop':
-                        var newStack = stack.slice();
-                        // ignore stack underflow
-                        if (newStack.pop() == undefined) {
-                            return { stack: stack };
-                        }
-                        return { stack: newStack };
-
-                    /* Replaces the top value of the stack with 0 if it is non-zero, and 1 if 
-                    it is zero */
-                    case 'not':
-                        var newStack = stack.slice();
-                        var val = newStack.pop();
-
-                        // ignore stack underflow
-                        if (val == undefined) {
-                            return { stack: stack };
-                        }
-                        newStack.push(val == 0);
-
-                        return { stack: newStack };
-
-                    /* Pops the top value off the stack and toggles the CC that many times (the
-                    absolute value of that many times if negative) */
-                    case 'switch':
-                        var newStack = stack.slice();
-                        var val = newStack.pop();
-
-                        // ignore stack underflow
-                        if (val == undefined) {
-                            return { stack: stack };
-                        }
-
-                        if (val > 0) {
-                            return { stack: newStack, CC: (CC + val) % 2 };
-                        }
-                        // negative toggle times
-                        return { stack: newStack, CC: (CC - val) % 2 };
-
-                    /* Reads a value from STDIN as a number and pushes it on to the stack. */
-                    case 'in(num)':
-                        // If no input is waiting on STDIN, this is an error and the command is ignored.
-                        //  If an integer read does not receive an integer value, this is an error and the command is ignored
-
-                        break;
-
-                    /* Pops the top value off the stack and prints it to STDOUT as a character */
-                    case 'out(char)':
-                        var newStack = stack.slice();
-                        var val = newStack.pop();
-
-                        // ignore stack underflow
-                        if (val == undefined) {
-                            return { stack: stack };
-                        }
-                        return { stack: newStack, output: String.fromCharCode(val) };
-                }
-            }
-        }.bind(undefined)
-    },
 
     // add listener
     subscribe: function (listener) {
@@ -1080,9 +835,9 @@ var appState = {
         });
     }.bind(undefined),
 
-    resize: function (_ref2) {
-        var height = _ref2.height,
-            width = _ref2.width;
+    resize: function (_ref) {
+        var height = _ref.height,
+            width = _ref.width;
 
         appState.height = height;
         appState.width = width;
@@ -1282,7 +1037,91 @@ var appState = {
         // update cell dimensions ********
 
         appState.notify();
-    }.bind(undefined)
+    }.bind(undefined),
+
+    debug: {
+        debugIsVisible: false, // initially, debugger is not visible
+        inDebugMode: false, // currently debugging
+
+        DP: 0, // index into [right, down, left, up], direction pointer initially points right
+        CC: 0, // index into [left, right], codel chooser initially points left
+        stack: [],
+        output: '',
+
+        input: '',
+        inputPtr: 0, // pointer into input stream
+        currInst: null, // current instruction (in step mode)
+
+        // receive input from user
+        receiveInput: function (input) {
+            appState.debug.input += String.fromCharCode(input);
+        }.bind(undefined),
+
+        // get one input character from "input stream" (then increment pointer into stream)
+        getInput: function () {
+            // insufficient number of chars in input stream
+            if (appState.debug.input.length < appState.debug.inputPtr) {
+                // ************
+            }
+
+            return appState.debug.input[appState.debug.inputPtr++];
+        }.bind(undefined),
+
+        // start debugging, and either run debugger or take step
+        start: function (mode) {
+            var stepGen = void 0; //***********
+            if (!appState.debug.inDebugMode) {
+                stepGen = (0, _interpreter2.default)(appState.commands, appState.grid, appState.blockSizes);
+            }
+
+            var callStepAndUpdate = function callStepAndUpdate() {
+                var nextStep = _interpreter2.default.next();
+
+                // update values
+                if (nextStep.DP) {
+                    appState.debug.DP = nextStep.DP;
+                }
+                if (nextStep.CC) {
+                    appState.debug.CC = nextStep.CC;
+                }
+                if (nextStep.stack) {
+                    appState.debug.stack = nextStep.stack;
+                }
+                if (nextStep.output) {
+                    appState.debug.output = nextStep.output;
+                }
+
+                return nextStep.done;
+            };
+
+            switch (mode) {
+                case 'run':
+                    appState.debug.inDebugMode = true;
+                    while (!callStepAndUpdate()) {} // call step and update until done
+                    appState.debug.inDebugMode = false;
+                    break;
+                case 'step':
+                    callStepAndUpdate(); // call step and update once
+                    break;
+            }
+
+            appState.notify();
+        }.bind(undefined),
+
+        // stop debugging (and reset debugger values)
+        stop: function () {
+            appState.debug.DP = 0;
+            appState.debug.CC = 0;
+            appState.debug.stack = [];
+            appState.debug.output = '';
+            appState.debug.input = ''; // update UI to reflect cleared input???
+            appState.debug.inputPtr = 0;
+            appState.debug.inDebugMode = false;
+            appState.debug.currInst = null;
+
+            appState.notify();
+        }.bind(undefined)
+    }
 };
 
 var App = function (_React$Component) {
@@ -1322,7 +1161,7 @@ var App = function (_React$Component) {
                 'div',
                 { key: 'top-container', style: { marginBottom: '1vh' } },
                 _react2.default.createElement(_controls2.default, _extends({ colours: colours }, this.props.appState))
-            ), _react2.default.createElement(_grid2.default, _extends({ colours: colours }, this.props.appState))];
+            ), _react2.default.createElement(_grid2.default, _extends({ key: 'grid', colours: colours }, this.props.appState))];
         }
     }]);
 
@@ -1334,7 +1173,360 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 }).call(this,require("buffer").Buffer)
-},{"./controls.js":2,"./debugger.js":3,"./grid.js":4,"buffer":7,"react":39,"react-dom":36}],6:[function(require,module,exports){
+},{"./controls.js":2,"./debugger.js":3,"./grid.js":4,"./interpreter.js":6,"buffer":8,"react":40,"react-dom":37}],6:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.step = step;
+
+var _marked = /*#__PURE__*/regeneratorRuntime.mark(step);
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+function step(commands, grid, blockSizes) {
+    var row, col, bounceCount, DP, CC, stack, output, currColour, nextColour, inst, newStack, op1, op2, roll, val;
+    return regeneratorRuntime.wrap(function step$(_context) {
+        while (1) {
+            switch (_context.prev = _context.next) {
+                case 0:
+                    // start at top left cell
+                    row = 0, col = 0, bounceCount = 0, DP = 0, CC = 0, stack = [], output = '';
+
+                    // terminate interpreter when bounce count reaches 8
+
+                case 1:
+                    if (!(bounceCount < 8)) {
+                        _context.next = 120;
+                        break;
+                    }
+
+                    currColour = grid[row][col];
+
+                    // find edge of current colour block which is furthest in direction of DP
+
+                    nextColour = void 0;
+
+                    if (!(nextColour == 18)) {
+                        _context.next = 7;
+                        break;
+                    }
+
+                    _context.next = 118;
+                    break;
+
+                case 7:
+                    if (!(nextColour == 19)) {
+                        _context.next = 18;
+                        break;
+                    }
+
+                    // black block
+                    bounceCount++; // increment bounceCount
+
+                    if (!(bounceCount % 2 != 0)) {
+                        _context.next = 14;
+                        break;
+                    }
+
+                    _context.next = 12;
+                    return { DP: (DP + 1) % 4 };
+
+                case 12:
+                    _context.next = 16;
+                    break;
+
+                case 14:
+                    _context.next = 16;
+                    return { CC: (CC + 1) % 2 };
+
+                case 16:
+                    _context.next = 118;
+                    break;
+
+                case 18:
+                    bounceCount = 0; // we can move, so reset the bounce count
+
+                    inst = commands[nextColour]; // match colour transition to command
+
+                    // binary stack operations
+
+                    if (!['+', '/', '>', '-', 'mod', '*', 'roll'].includes(inst)) {
+                        _context.next = 55;
+                        break;
+                    }
+
+                    newStack = stack.slice();
+                    op1 = newStack.pop(), op2 = newStack.pop();
+
+                    // ignore stack underflow
+
+                    if (!(op1 == undefined || op2 == undefined)) {
+                        _context.next = 26;
+                        break;
+                    }
+
+                    _context.next = 26;
+                    return { stack: stack };
+
+                case 26:
+                    _context.t0 = inst;
+                    _context.next = _context.t0 === '+' ? 29 : _context.t0 === '/' ? 31 : _context.t0 === '>' ? 33 : _context.t0 === '-' ? 35 : _context.t0 === 'mod' ? 37 : _context.t0 === '*' ? 44 : _context.t0 === 'roll' ? 46 : 53;
+                    break;
+
+                case 29:
+                    newStack.push(op1 + op2);
+                    return _context.abrupt('break', 53);
+
+                case 31:
+                    // ignore divide by zero instruction
+                    if (op1 == 0) {
+                        newStack.push(op2);
+                        newStack.push(op1);
+                    } else {
+                        newStack.push(Math.floor(op2 / op1));
+                    }
+                    return _context.abrupt('break', 53);
+
+                case 33:
+                    newStack.push(op2 > op1 ? 1 : 0);
+                    return _context.abrupt('break', 53);
+
+                case 35:
+                    newStack.push(op2 - op1);
+                    return _context.abrupt('break', 53);
+
+                case 37:
+                    if (!(op1 == 0)) {
+                        _context.next = 42;
+                        break;
+                    }
+
+                    newStack.push(op2);
+                    newStack.push(op1);
+                    _context.next = 42;
+                    return { error: 'Divide by zero', stack: stack };
+
+                case 42:
+
+                    newStack.push(op2 - op1 * Math.floor(op2 / op1));
+                    return _context.abrupt('break', 53);
+
+                case 44:
+                    newStack.push(op1 * op2);
+                    return _context.abrupt('break', 53);
+
+                case 46:
+                    if (!(op2 < 0)) {
+                        _context.next = 51;
+                        break;
+                    }
+
+                    newStack.push(op2);
+                    newStack.push(op1);
+                    _context.next = 51;
+                    return { error: 'Negative depth', stack: stack };
+
+                case 51:
+
+                    if (op1 > 0) {
+                        for (roll = 0; roll < op1; roll++) {
+                            // put top value into stack at depth
+                            newStack.splice(-op2, 0, newStack[newStack.length - 1]);
+                            // remove original top value from top of stack
+                            newStack.pop();
+                        }
+                    } else {
+                        // negative rolls
+                        for (roll = 0; roll > op1; roll--) {
+                            // put nth value onto top of stack and remove original nth value
+                            newStack.push.apply(newStack, _toConsumableArray(newStack.splice(-op2, 1)));
+                        }
+                    }
+                    return _context.abrupt('break', 53);
+
+                case 53:
+                    _context.next = 55;
+                    return { stack: newStack };
+
+                case 55:
+                    _context.t1 = inst;
+                    _context.next = _context.t1 === 'dup' ? 58 : _context.t1 === 'in(char)' ? 67 : _context.t1 === 'push' ? 68 : _context.t1 === 'pointer' ? 69 : _context.t1 === 'out(num)' ? 79 : _context.t1 === 'pop' ? 86 : _context.t1 === 'not' ? 92 : _context.t1 === 'switch' ? 100 : _context.t1 === 'in(num)' ? 110 : _context.t1 === 'out(char)' ? 111 : 118;
+                    break;
+
+                case 58:
+                    newStack = stack.slice();
+                    val = newStack.pop();
+
+                    // ignore stack underflow
+
+                    if (!(val == undefined)) {
+                        _context.next = 63;
+                        break;
+                    }
+
+                    _context.next = 63;
+                    return { stack: stack };
+
+                case 63:
+                    newStack.push(val);
+                    newStack.push(val);
+
+                    _context.next = 67;
+                    return { stack: newStack };
+
+                case 67:
+                    return _context.abrupt('break', 118);
+
+                case 68:
+                    return _context.abrupt('break', 118);
+
+                case 69:
+                    newStack = stack.slice();
+                    val = newStack.pop();
+
+                    // ignore stack underflow
+
+                    if (!(val == undefined)) {
+                        _context.next = 74;
+                        break;
+                    }
+
+                    _context.next = 74;
+                    return { stack: stack };
+
+                case 74:
+                    if (!(val > 0)) {
+                        _context.next = 77;
+                        break;
+                    }
+
+                    _context.next = 77;
+                    return { stack: newStack, DP: (DP + val) % 4 };
+
+                case 77:
+                    _context.next = 79;
+                    return { stack: newStack, DP: (DP - val) % 4 };
+
+                case 79:
+                    newStack = stack.slice();
+                    val = newStack.pop();
+
+                    // ignore stack underflow
+
+                    if (!(val == undefined)) {
+                        _context.next = 84;
+                        break;
+                    }
+
+                    _context.next = 84;
+                    return { stack: stack };
+
+                case 84:
+                    _context.next = 86;
+                    return { stack: newStack, output: output + val };
+
+                case 86:
+                    newStack = stack.slice();
+                    // ignore stack underflow
+
+                    if (!(newStack.pop() == undefined)) {
+                        _context.next = 90;
+                        break;
+                    }
+
+                    _context.next = 90;
+                    return { stack: stack };
+
+                case 90:
+                    _context.next = 92;
+                    return { stack: newStack };
+
+                case 92:
+                    newStack = stack.slice();
+                    val = newStack.pop();
+
+                    // ignore stack underflow
+
+                    if (!(val == undefined)) {
+                        _context.next = 97;
+                        break;
+                    }
+
+                    _context.next = 97;
+                    return { stack: stack };
+
+                case 97:
+                    newStack.push(val == 0);
+
+                    _context.next = 100;
+                    return { stack: newStack };
+
+                case 100:
+                    newStack = stack.slice();
+                    val = newStack.pop();
+
+                    // ignore stack underflow
+
+                    if (!(val == undefined)) {
+                        _context.next = 105;
+                        break;
+                    }
+
+                    _context.next = 105;
+                    return { stack: stack };
+
+                case 105:
+                    if (!(val > 0)) {
+                        _context.next = 108;
+                        break;
+                    }
+
+                    _context.next = 108;
+                    return { stack: newStack, CC: (CC + val) % 2 };
+
+                case 108:
+                    _context.next = 110;
+                    return { stack: newStack, CC: (CC - val) % 2 };
+
+                case 110:
+                    return _context.abrupt('break', 118);
+
+                case 111:
+                    newStack = stack.slice();
+                    val = newStack.pop();
+
+                    // ignore stack underflow
+
+                    if (!(val == undefined)) {
+                        _context.next = 116;
+                        break;
+                    }
+
+                    _context.next = 116;
+                    return { stack: stack };
+
+                case 116:
+                    _context.next = 118;
+                    return { stack: newStack, output: output + String.fromCharCode(val) };
+
+                case 118:
+                    _context.next = 1;
+                    break;
+
+                case 120:
+                    return _context.abrupt('return');
+
+                case 121:
+                case 'end':
+                    return _context.stop();
+            }
+        }
+    }, _marked, this);
+}
+
+},{}],7:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -1450,7 +1642,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -3166,7 +3358,7 @@ function numberIsNaN (obj) {
   return obj !== obj // eslint-disable-line no-self-compare
 }
 
-},{"base64-js":6,"ieee754":26}],8:[function(require,module,exports){
+},{"base64-js":7,"ieee754":27}],9:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -3243,7 +3435,7 @@ var EventListener = {
 
 module.exports = EventListener;
 }).call(this,require('_process'))
-},{"./emptyFunction":13,"_process":28}],9:[function(require,module,exports){
+},{"./emptyFunction":14,"_process":29}],10:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -3277,7 +3469,7 @@ var ExecutionEnvironment = {
 };
 
 module.exports = ExecutionEnvironment;
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 "use strict";
 
 /**
@@ -3307,7 +3499,7 @@ function camelize(string) {
 }
 
 module.exports = camelize;
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -3345,7 +3537,7 @@ function camelizeStyleName(string) {
 }
 
 module.exports = camelizeStyleName;
-},{"./camelize":10}],12:[function(require,module,exports){
+},{"./camelize":11}],13:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3383,7 +3575,7 @@ function containsNode(outerNode, innerNode) {
 }
 
 module.exports = containsNode;
-},{"./isTextNode":21}],13:[function(require,module,exports){
+},{"./isTextNode":22}],14:[function(require,module,exports){
 "use strict";
 
 /**
@@ -3420,7 +3612,7 @@ emptyFunction.thatReturnsArgument = function (arg) {
 };
 
 module.exports = emptyFunction;
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -3440,7 +3632,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 module.exports = emptyObject;
 }).call(this,require('_process'))
-},{"_process":28}],15:[function(require,module,exports){
+},{"_process":29}],16:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -3465,7 +3657,7 @@ function focusNode(node) {
 }
 
 module.exports = focusNode;
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3502,7 +3694,7 @@ function getActiveElement(doc) /*?DOMElement*/{
 }
 
 module.exports = getActiveElement;
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3533,7 +3725,7 @@ function hyphenate(string) {
 }
 
 module.exports = hyphenate;
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -3570,7 +3762,7 @@ function hyphenateStyleName(string) {
 }
 
 module.exports = hyphenateStyleName;
-},{"./hyphenate":17}],19:[function(require,module,exports){
+},{"./hyphenate":18}],20:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -3626,7 +3818,7 @@ function invariant(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 }).call(this,require('_process'))
-},{"_process":28}],20:[function(require,module,exports){
+},{"_process":29}],21:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3649,7 +3841,7 @@ function isNode(object) {
 }
 
 module.exports = isNode;
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3672,7 +3864,7 @@ function isTextNode(object) {
 }
 
 module.exports = isTextNode;
-},{"./isNode":20}],22:[function(require,module,exports){
+},{"./isNode":21}],23:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -3693,7 +3885,7 @@ if (ExecutionEnvironment.canUseDOM) {
 }
 
 module.exports = performance || {};
-},{"./ExecutionEnvironment":9}],23:[function(require,module,exports){
+},{"./ExecutionEnvironment":10}],24:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3725,7 +3917,7 @@ if (performance.now) {
 }
 
 module.exports = performanceNow;
-},{"./performance":22}],24:[function(require,module,exports){
+},{"./performance":23}],25:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -3791,7 +3983,7 @@ function shallowEqual(objA, objB) {
 }
 
 module.exports = shallowEqual;
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2014-present, Facebook, Inc.
@@ -3856,7 +4048,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 module.exports = warning;
 }).call(this,require('_process'))
-},{"./emptyFunction":13,"_process":28}],26:[function(require,module,exports){
+},{"./emptyFunction":14,"_process":29}],27:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -3942,7 +4134,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /*
 object-assign
 (c) Sindre Sorhus
@@ -4034,7 +4226,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 	return to;
 };
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -4220,7 +4412,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -4283,7 +4475,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
 module.exports = checkPropTypes;
 
 }).call(this,require('_process'))
-},{"./lib/ReactPropTypesSecret":33,"_process":28,"fbjs/lib/invariant":19,"fbjs/lib/warning":25}],30:[function(require,module,exports){
+},{"./lib/ReactPropTypesSecret":34,"_process":29,"fbjs/lib/invariant":20,"fbjs/lib/warning":26}],31:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -4343,7 +4535,7 @@ module.exports = function() {
   return ReactPropTypes;
 };
 
-},{"./lib/ReactPropTypesSecret":33,"fbjs/lib/emptyFunction":13,"fbjs/lib/invariant":19}],31:[function(require,module,exports){
+},{"./lib/ReactPropTypesSecret":34,"fbjs/lib/emptyFunction":14,"fbjs/lib/invariant":20}],32:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -4889,7 +5081,7 @@ module.exports = function(isValidElement, throwOnDirectAccess) {
 };
 
 }).call(this,require('_process'))
-},{"./checkPropTypes":29,"./lib/ReactPropTypesSecret":33,"_process":28,"fbjs/lib/emptyFunction":13,"fbjs/lib/invariant":19,"fbjs/lib/warning":25,"object-assign":27}],32:[function(require,module,exports){
+},{"./checkPropTypes":30,"./lib/ReactPropTypesSecret":34,"_process":29,"fbjs/lib/emptyFunction":14,"fbjs/lib/invariant":20,"fbjs/lib/warning":26,"object-assign":28}],33:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -4921,7 +5113,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./factoryWithThrowingShims":30,"./factoryWithTypeCheckers":31,"_process":28}],33:[function(require,module,exports){
+},{"./factoryWithThrowingShims":31,"./factoryWithTypeCheckers":32,"_process":29}],34:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -4935,7 +5127,7 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 module.exports = ReactPropTypesSecret;
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 (function (process){
 /** @license React v16.0.0
  * react-dom.development.js
@@ -22160,7 +22352,7 @@ module.exports = ReactDOMFiberEntry;
 }
 
 }).call(this,require('_process'))
-},{"_process":28,"fbjs/lib/EventListener":8,"fbjs/lib/ExecutionEnvironment":9,"fbjs/lib/camelizeStyleName":11,"fbjs/lib/containsNode":12,"fbjs/lib/emptyFunction":13,"fbjs/lib/emptyObject":14,"fbjs/lib/focusNode":15,"fbjs/lib/getActiveElement":16,"fbjs/lib/hyphenateStyleName":18,"fbjs/lib/invariant":19,"fbjs/lib/performanceNow":23,"fbjs/lib/shallowEqual":24,"fbjs/lib/warning":25,"object-assign":27,"prop-types":32,"prop-types/checkPropTypes":29,"react":39}],35:[function(require,module,exports){
+},{"_process":29,"fbjs/lib/EventListener":9,"fbjs/lib/ExecutionEnvironment":10,"fbjs/lib/camelizeStyleName":12,"fbjs/lib/containsNode":13,"fbjs/lib/emptyFunction":14,"fbjs/lib/emptyObject":15,"fbjs/lib/focusNode":16,"fbjs/lib/getActiveElement":17,"fbjs/lib/hyphenateStyleName":19,"fbjs/lib/invariant":20,"fbjs/lib/performanceNow":24,"fbjs/lib/shallowEqual":25,"fbjs/lib/warning":26,"object-assign":28,"prop-types":33,"prop-types/checkPropTypes":30,"react":40}],36:[function(require,module,exports){
 /*
  React v16.0.0
  react-dom.production.min.js
@@ -22418,7 +22610,7 @@ function ck(a,b,c,d,e){ak(c)?void 0:w("200");var f=c._reactRootContainer;if(f)Xj
 var ek={createPortal:dk,hydrate:function(a,b,c){return ck(null,a,b,!0,c)},render:function(a,b,c){return ck(null,a,b,!1,c)},unstable_renderSubtreeIntoContainer:function(a,b,c,d){null!=a&&Pa.has(a)?void 0:w("38");return ck(a,b,c,!1,d)},unmountComponentAtNode:function(a){ak(a)?void 0:w("40");return a._reactRootContainer?(Xj.unbatchedUpdates(function(){ck(null,null,a,!1,function(){a._reactRootContainer=null})}),!0):!1},findDOMNode:Dh,unstable_createPortal:dk,unstable_batchedUpdates:sb.batchedUpdates,
 unstable_deferredUpdates:Xj.deferredUpdates,flushSync:Xj.flushSync,__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{EventPluginHub:Jb,EventPluginRegistry:sa,EventPropagators:Th,ReactControlledComponent:nb,ReactDOMComponentTree:G,ReactDOMEventListener:L}};Cj({findFiberByHostInstance:G.getClosestInstanceFromNode,findHostInstanceByFiber:Xj.findHostInstance,bundleType:0,version:"16.0.0",rendererPackageName:"react-dom"});module.exports=ek;
 
-},{"fbjs/lib/EventListener":8,"fbjs/lib/ExecutionEnvironment":9,"fbjs/lib/containsNode":12,"fbjs/lib/emptyFunction":13,"fbjs/lib/emptyObject":14,"fbjs/lib/focusNode":15,"fbjs/lib/getActiveElement":16,"fbjs/lib/invariant":19,"fbjs/lib/shallowEqual":24,"object-assign":27,"react":39}],36:[function(require,module,exports){
+},{"fbjs/lib/EventListener":9,"fbjs/lib/ExecutionEnvironment":10,"fbjs/lib/containsNode":13,"fbjs/lib/emptyFunction":14,"fbjs/lib/emptyObject":15,"fbjs/lib/focusNode":16,"fbjs/lib/getActiveElement":17,"fbjs/lib/invariant":20,"fbjs/lib/shallowEqual":25,"object-assign":28,"react":40}],37:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -22460,7 +22652,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react-dom.development.js":34,"./cjs/react-dom.production.min.js":35,"_process":28}],37:[function(require,module,exports){
+},{"./cjs/react-dom.development.js":35,"./cjs/react-dom.production.min.js":36,"_process":29}],38:[function(require,module,exports){
 (function (process){
 /** @license React v16.0.0
  * react.development.js
@@ -24162,7 +24354,7 @@ module.exports = ReactEntry;
 }
 
 }).call(this,require('_process'))
-},{"_process":28,"fbjs/lib/emptyFunction":13,"fbjs/lib/emptyObject":14,"fbjs/lib/invariant":19,"fbjs/lib/warning":25,"object-assign":27,"prop-types/checkPropTypes":29}],38:[function(require,module,exports){
+},{"_process":29,"fbjs/lib/emptyFunction":14,"fbjs/lib/emptyObject":15,"fbjs/lib/invariant":20,"fbjs/lib/warning":26,"object-assign":28,"prop-types/checkPropTypes":30}],39:[function(require,module,exports){
 /*
  React v16.0.0
  react.production.min.js
@@ -24187,7 +24379,7 @@ Object.keys(a).join(", ")+"}":d,""));return g}function O(a,b){return"object"===t
 function R(a,b,d,e,c){var g="";null!=d&&(g=(""+d).replace(J,"$\x26/")+"/");b=L(b,g,e,c);null==a||N(a,"",Q,b);M(b)}var S={forEach:function(a,b,d){if(null==a)return a;b=L(null,null,b,d);null==a||N(a,"",P,b);M(b)},map:function(a,b,d){if(null==a)return a;var e=[];R(a,e,null,b,d);return e},count:function(a){return null==a?0:N(a,"",r.thatReturnsNull,null)},toArray:function(a){var b=[];R(a,b,null,r.thatReturnsArgument);return b}};
 module.exports={Children:{map:S.map,forEach:S.forEach,count:S.count,toArray:S.toArray,only:function(a){G.isValidElement(a)?void 0:t("143");return a}},Component:B.Component,PureComponent:B.PureComponent,unstable_AsyncComponent:B.AsyncComponent,createElement:G.createElement,cloneElement:G.cloneElement,isValidElement:G.isValidElement,createFactory:G.createFactory,version:"16.0.0",__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentOwner:C,assign:f}};
 
-},{"fbjs/lib/emptyFunction":13,"fbjs/lib/emptyObject":14,"fbjs/lib/invariant":19,"object-assign":27}],39:[function(require,module,exports){
+},{"fbjs/lib/emptyFunction":14,"fbjs/lib/emptyObject":15,"fbjs/lib/invariant":20,"object-assign":28}],40:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -24198,4 +24390,4 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react.development.js":37,"./cjs/react.production.min.js":38,"_process":28}]},{},[5]);
+},{"./cjs/react.development.js":38,"./cjs/react.production.min.js":39,"_process":29}]},{},[5]);

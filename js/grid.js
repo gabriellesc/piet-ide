@@ -6,7 +6,7 @@ class Grid extends React.Component {
             <table
                 style={{
                     tableLayout: 'fixed',
-                    pointerEvents: this.props.debug.debugMode ? 'none' : 'auto',
+                    pointerEvents: this.props.debug.inDebugMode ? 'none' : 'auto',
                 }}
                 onMouseOut={() => this.props.setCellInFocus(null)}>
                 <tbody>
