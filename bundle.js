@@ -426,7 +426,8 @@ var Debugger = function Debugger(props) {
                 border: '1px solid black',
                 borderRadius: '5px',
                 padding: '0 5px 5px',
-                float: 'right'
+                float: 'right',
+                background: 'white'
             } },
         _react2.default.createElement(
             'button',

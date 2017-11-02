@@ -10,6 +10,7 @@ const Debugger = props => (
             borderRadius: '5px',
             padding: '0 5px 5px',
             float: 'right',
+            background: 'white',
         }}>
         <button
             type="button"

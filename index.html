@@ -11,16 +11,37 @@
     <link href="https://cdn.jsdelivr.net/foundation-icons/3.0/foundation-icons.min.css"
           rel="stylesheet">
     <link href="../css/styles.css" rel="stylesheet">
+
+    <script>
+      function toggleHeader() {
+        var headerToggle = document.getElementById('header-toggle');
+
+        if (headerToggle.textContent == '▼') {
+          headerToggle.textContent = '▲';
+          document.getElementById('header').style.display = 'block';
+          document.getElementById('root').style['margin-top'] = '0';
+        } else {
+          headerToggle.textContent = '▼';
+          document.getElementById('header').style.display = 'none';
+          document.getElementById('root').style['margin-top'] = '1vh';
+        }
+      }
+    </script>
   </head>
   <body>
     <!-- full-width content container, spanning entire viewport -->
     <main class="container-fluid"> 
-      <div class="page-header"><h2>Piet IDE</h2>
+      <div class="page-header" id="header"><h2>Piet IDE</h2>
 	<p>
 	  An IDE/interpreter for the programming language <a href="http://www.dangermouse.net/esoteric/piet.html">Piet</a>.
 	</p>
       </div>
-
+      <div
+	 id="header-toggle"
+	 style="color:#ccc;float:right;display:block;cursor:pointer;margin-top:-35px;font-size:18px;"
+	 title="Show/hide header"
+	 onclick="toggleHeader()">&#9650;</div>
+      
       <div id="root"></div>
     </main>
 
