@@ -785,6 +785,7 @@ var colours = ['#FFC0C0', // light red
 // initial ordering of commands to match colours
 var initCommands = ['', '+', '/', '>', 'dup', 'in(char)', 'push', '-', 'mod', 'pointer', 'roll', 'out(num)', 'pop', '*', 'not', 'switch', 'in(num)', 'out(char)'];
 
+// re-order commands to correspond to colours order based on currently-selected colour
 var mapCommandsToColours = function mapCommandsToColours(baseColour) {
     var rotateArray = function rotateArray(array, pivot) {
         return array.slice(-pivot).concat(array.slice(0, -pivot));
@@ -1074,24 +1075,15 @@ var appState = {
         start: function (mode) {
             var stepGen = void 0; //***********
             if (!appState.debug.inDebugMode) {
-                stepGen = (0, _interpreter2.default)(appState.commands, appState.grid, appState.blockSizes);
+                stepGen = (0, _interpreter2.default)(appState.commands, appState.grid, appState.blockSizes, appState.debug.getInput);
             }
 
             var callStepAndUpdate = function callStepAndUpdate() {
                 var nextStep = _interpreter2.default.next();
 
                 // update values
-                if (nextStep.DP) {
-                    appState.debug.DP = nextStep.DP;
-                }
-                if (nextStep.CC) {
-                    appState.debug.CC = nextStep.CC;
-                }
-                if (nextStep.stack) {
-                    appState.debug.stack = nextStep.stack;
-                }
-                if (nextStep.output) {
-                    appState.debug.output = nextStep.output;
+                for (var val in nextStep) {
+                    appState.debug[val] = nextStep[val];
                 }
 
                 return nextStep.done;
@@ -1182,14 +1174,85 @@ document.addEventListener('DOMContentLoaded', function () {
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 exports.default = step;
 
 var _marked = /*#__PURE__*/regeneratorRuntime.mark(step);
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
-function step(commands, grid, blockSizes) {
-    var row, col, bounceCount, DP, CC, stack, output, currColour, nextColour, inst, newStack, op1, op2, roll, val;
+// find the next colour block visited by the compiler, from [row, col]
+function getNextColour(grid, row, col, DP, CC) {
+    var height = grid.length,
+        width = grid[0].length,
+        origColour = grid[row][col],
+        visited = Array(height).fill(0).map(function (_) {
+        return Array(width).fill(false);
+    }),
+        farEdge = [0, 0];
+
+    (function visitCell(row, col) {
+        // if we have already visited this cell or it is not part of the current block, skip it
+        if (visited[row][col] || grid[row][col] != origColour) {
+            return;
+        }
+        visited[row][col] = true; // mark this cell as visited
+
+        // check if we are on an edge in the direction of DP
+        switch (DP) {
+            // right
+            case 0:
+                if (col + 1 < width && grid[row][col + 1] != origColour) {
+                    // right => lowermost block, or left => uppermost block
+                    if (CC && row > farEdge[0] || !CC && row < farEdge[0]) {
+                        farEdge = [row, col];
+                    }
+                }
+                break;
+            // down
+            case 1:
+                if (row + 1 < height && grid[row + 1][col] != origColour) {
+                    // right => leftmost block, or left => rightmost block
+                    if (CC && col < farEdge[1] || !CC && col > farEdge[1]) {
+                        farEdge = [row, col];
+                    }
+                }
+                break;
+            // left
+            case 2:
+                if (col - 1 > 0 && grid[row][col - 1] != origColour) {
+                    // right => uppermost block, or left => lowermost block
+                    if (CC && row < farEdge[0] || !CC && row > farEdge[0]) {
+                        farEdge = [row, col];
+                    }
+                }
+                break;
+            // up
+            case 3:
+                if (row - 1 > 0 && grid[row - 1][col] != origColour) {
+                    // right => rightmost block, or left => leftmost block
+                    if (CC && col > farEdge[1] || !CC && col < farEdge[1]) {
+                        farEdge = [row, col];
+                    }
+                }
+                break;
+        }
+
+        // visit neighbours
+        visitCell(row, col + 1);
+        visitCell(row + 1, col);
+        visitCell(row, col - 1);
+        visitCell(row - 1, col);
+    })(row, col);
+
+    return farEdge;
+}
+
+function step(commands, grid, blockSizes, getInput) {
+    var row, col, bounceCount, DP, CC, stack, output, _getNextColour, _getNextColour2, nextRow, nextCol, nextColour, inst, newStack, op1, op2, roll, val, newChar, newNum;
+
     return regeneratorRuntime.wrap(function step$(_context) {
         while (1) {
             switch (_context.prev = _context.next) {
@@ -1197,26 +1260,24 @@ function step(commands, grid, blockSizes) {
                     // start at top left cell
                     row = 0, col = 0, bounceCount = 0, DP = 0, CC = 0, stack = [], output = '';
 
-                    // terminate interpreter when bounce count reaches 8
+                    // terminate compiler when bounce count reaches 8
 
                 case 1:
                     if (!(bounceCount < 8)) {
-                        _context.next = 120;
+                        _context.next = 154;
                         break;
                     }
 
-                    currColour = grid[row][col];
-
-                    // find edge of current colour block which is furthest in direction of DP
-
-                    nextColour = void 0;
+                    // find next colour block
+                    _getNextColour = getNextColour(grid, row, col, DP, CC), _getNextColour2 = _slicedToArray(_getNextColour, 2), nextRow = _getNextColour2[0], nextCol = _getNextColour2[1];
+                    nextColour = grid[nextRow][nextCol];
 
                     if (!(nextColour == 18)) {
                         _context.next = 7;
                         break;
                     }
 
-                    _context.next = 118;
+                    _context.next = 152;
                     break;
 
                 case 7:
@@ -1245,7 +1306,7 @@ function step(commands, grid, blockSizes) {
                     return { CC: (CC + 1) % 2 };
 
                 case 16:
-                    _context.next = 118;
+                    _context.next = 152;
                     break;
 
                 case 18:
@@ -1256,7 +1317,7 @@ function step(commands, grid, blockSizes) {
                     // binary stack operations
 
                     if (!['+', '/', '>', '-', 'mod', '*', 'roll'].includes(inst)) {
-                        _context.next = 55;
+                        _context.next = 58;
                         break;
                     }
 
@@ -1266,7 +1327,7 @@ function step(commands, grid, blockSizes) {
                     // ignore stack underflow
 
                     if (!(op1 == undefined || op2 == undefined)) {
-                        _context.next = 26;
+                        _context.next = 27;
                         break;
                     }
 
@@ -1274,15 +1335,18 @@ function step(commands, grid, blockSizes) {
                     return { stack: stack };
 
                 case 26:
+                    return _context.abrupt('continue', 1);
+
+                case 27:
                     _context.t0 = inst;
-                    _context.next = _context.t0 === '+' ? 29 : _context.t0 === '/' ? 31 : _context.t0 === '>' ? 33 : _context.t0 === '-' ? 35 : _context.t0 === 'mod' ? 37 : _context.t0 === '*' ? 44 : _context.t0 === 'roll' ? 46 : 53;
+                    _context.next = _context.t0 === '+' ? 30 : _context.t0 === '/' ? 32 : _context.t0 === '>' ? 34 : _context.t0 === '-' ? 36 : _context.t0 === 'mod' ? 38 : _context.t0 === '*' ? 45 : _context.t0 === 'roll' ? 47 : 55;
                     break;
 
-                case 29:
+                case 30:
                     newStack.push(op1 + op2);
-                    return _context.abrupt('break', 53);
+                    return _context.abrupt('break', 55);
 
-                case 31:
+                case 32:
                     // ignore divide by zero instruction
                     if (op1 == 0) {
                         newStack.push(op2);
@@ -1290,48 +1354,54 @@ function step(commands, grid, blockSizes) {
                     } else {
                         newStack.push(Math.floor(op2 / op1));
                     }
-                    return _context.abrupt('break', 53);
+                    return _context.abrupt('break', 55);
 
-                case 33:
+                case 34:
                     newStack.push(op2 > op1 ? 1 : 0);
-                    return _context.abrupt('break', 53);
+                    return _context.abrupt('break', 55);
 
-                case 35:
+                case 36:
                     newStack.push(op2 - op1);
-                    return _context.abrupt('break', 53);
+                    return _context.abrupt('break', 55);
 
-                case 37:
+                case 38:
                     if (!(op1 == 0)) {
-                        _context.next = 42;
+                        _context.next = 43;
                         break;
                     }
 
                     newStack.push(op2);
                     newStack.push(op1);
-                    _context.next = 42;
+                    _context.next = 43;
                     return { error: 'Divide by zero', stack: stack };
 
-                case 42:
+                case 43:
 
                     newStack.push(op2 - op1 * Math.floor(op2 / op1));
-                    return _context.abrupt('break', 53);
+                    return _context.abrupt('break', 55);
 
-                case 44:
+                case 45:
                     newStack.push(op1 * op2);
-                    return _context.abrupt('break', 53);
+                    return _context.abrupt('break', 55);
 
-                case 46:
+                case 47:
                     if (!(op2 < 0)) {
-                        _context.next = 51;
+                        _context.next = 52;
                         break;
                     }
 
                     newStack.push(op2);
                     newStack.push(op1);
-                    _context.next = 51;
+                    _context.next = 52;
                     return { error: 'Negative depth', stack: stack };
 
-                case 51:
+                case 52:
+
+                    // depth argument is greater than current stack depth, so use the current
+                    // depth instead
+                    if (op2 > newStack.length) {
+                        op2 = newStack.length;
+                    }
 
                     if (op1 > 0) {
                         for (roll = 0; roll < op1; roll++) {
@@ -1347,181 +1417,261 @@ function step(commands, grid, blockSizes) {
                             newStack.push.apply(newStack, _toConsumableArray(newStack.splice(-op2, 1)));
                         }
                     }
-                    return _context.abrupt('break', 53);
-
-                case 53:
-                    _context.next = 55;
-                    return { stack: newStack };
+                    return _context.abrupt('break', 55);
 
                 case 55:
-                    _context.t1 = inst;
-                    _context.next = _context.t1 === 'dup' ? 58 : _context.t1 === 'in(char)' ? 67 : _context.t1 === 'push' ? 68 : _context.t1 === 'pointer' ? 69 : _context.t1 === 'out(num)' ? 79 : _context.t1 === 'pop' ? 86 : _context.t1 === 'not' ? 92 : _context.t1 === 'switch' ? 100 : _context.t1 === 'in(num)' ? 110 : _context.t1 === 'out(char)' ? 111 : 118;
-                    break;
-
-                case 58:
-                    newStack = stack.slice();
-                    val = newStack.pop();
-
-                    // ignore stack underflow
-
-                    if (!(val == undefined)) {
-                        _context.next = 63;
-                        break;
-                    }
-
-                    _context.next = 63;
-                    return { stack: stack };
-
-                case 63:
-                    newStack.push(val);
-                    newStack.push(val);
-
-                    _context.next = 67;
+                    _context.next = 57;
                     return { stack: newStack };
 
-                case 67:
-                    return _context.abrupt('break', 118);
+                case 57:
+                    return _context.abrupt('continue', 1);
 
-                case 68:
-                    return _context.abrupt('break', 118);
+                case 58:
+                    _context.t1 = inst;
+                    _context.next = _context.t1 === 'dup' ? 61 : _context.t1 === 'in(char)' ? 72 : _context.t1 === 'push' ? 78 : _context.t1 === 'pointer' ? 83 : _context.t1 === 'out(num)' ? 96 : _context.t1 === 'pop' ? 105 : _context.t1 === 'not' ? 113 : _context.t1 === 'switch' ? 123 : _context.t1 === 'in(num)' ? 136 : _context.t1 === 'out(char)' ? 143 : 152;
+                    break;
 
-                case 69:
+                case 61:
                     newStack = stack.slice();
                     val = newStack.pop();
 
                     // ignore stack underflow
 
                     if (!(val == undefined)) {
-                        _context.next = 74;
+                        _context.next = 67;
                         break;
                     }
 
-                    _context.next = 74;
+                    _context.next = 66;
                     return { stack: stack };
 
-                case 74:
-                    if (!(val > 0)) {
-                        _context.next = 77;
-                        break;
-                    }
+                case 66:
+                    return _context.abrupt('continue', 1);
+
+                case 67:
+                    newStack.push(val);
+                    newStack.push(val);
+
+                    _context.next = 71;
+                    return { stack: newStack };
+
+                case 71:
+                    return _context.abrupt('continue', 1);
+
+                case 72:
+                    // If no input is waiting on STDIN, this is an error and the command is ignored.
+                    newChar = getInput();
+                    newStack = stack.slice();
+
+                    newStack.push(newChar.charCodeAt());
 
                     _context.next = 77;
-                    return { stack: newStack, DP: (DP + val) % 4 };
+                    return { stack: newStack };
 
                 case 77:
-                    _context.next = 79;
-                    return { stack: newStack, DP: (DP - val) % 4 };
+                    return _context.abrupt('continue', 1);
 
-                case 79:
+                case 78:
+                    newStack = stack.slice();
+
+                    newStack.push(blockSizes[row][col]);
+
+                    _context.next = 82;
+                    return { stack: newStack };
+
+                case 82:
+                    return _context.abrupt('continue', 1);
+
+                case 83:
                     newStack = stack.slice();
                     val = newStack.pop();
 
                     // ignore stack underflow
 
                     if (!(val == undefined)) {
-                        _context.next = 84;
+                        _context.next = 89;
                         break;
                     }
 
-                    _context.next = 84;
+                    _context.next = 88;
                     return { stack: stack };
 
-                case 84:
-                    _context.next = 86;
+                case 88:
+                    return _context.abrupt('continue', 1);
+
+                case 89:
+                    if (!(val > 0)) {
+                        _context.next = 93;
+                        break;
+                    }
+
+                    _context.next = 92;
+                    return { stack: newStack, DP: (DP + val) % 4 };
+
+                case 92:
+                    return _context.abrupt('continue', 1);
+
+                case 93:
+                    _context.next = 95;
+                    return { stack: newStack, DP: (DP - val) % 4 };
+
+                case 95:
+                    return _context.abrupt('continue', 1);
+
+                case 96:
+                    newStack = stack.slice();
+                    val = newStack.pop();
+
+                    // ignore stack underflow
+
+                    if (!(val == undefined)) {
+                        _context.next = 102;
+                        break;
+                    }
+
+                    _context.next = 101;
+                    return { stack: stack };
+
+                case 101:
+                    return _context.abrupt('continue', 1);
+
+                case 102:
+                    _context.next = 104;
                     return { stack: newStack, output: output + val };
 
-                case 86:
+                case 104:
+                    return _context.abrupt('continue', 1);
+
+                case 105:
                     newStack = stack.slice();
                     // ignore stack underflow
 
                     if (!(newStack.pop() == undefined)) {
-                        _context.next = 90;
+                        _context.next = 110;
                         break;
                     }
 
-                    _context.next = 90;
+                    _context.next = 109;
                     return { stack: stack };
 
-                case 90:
-                    _context.next = 92;
-                    return { stack: newStack };
-
-                case 92:
-                    newStack = stack.slice();
-                    val = newStack.pop();
-
-                    // ignore stack underflow
-
-                    if (!(val == undefined)) {
-                        _context.next = 97;
-                        break;
-                    }
-
-                    _context.next = 97;
-                    return { stack: stack };
-
-                case 97:
-                    newStack.push(val == 0);
-
-                    _context.next = 100;
-                    return { stack: newStack };
-
-                case 100:
-                    newStack = stack.slice();
-                    val = newStack.pop();
-
-                    // ignore stack underflow
-
-                    if (!(val == undefined)) {
-                        _context.next = 105;
-                        break;
-                    }
-
-                    _context.next = 105;
-                    return { stack: stack };
-
-                case 105:
-                    if (!(val > 0)) {
-                        _context.next = 108;
-                        break;
-                    }
-
-                    _context.next = 108;
-                    return { stack: newStack, CC: (CC + val) % 2 };
-
-                case 108:
-                    _context.next = 110;
-                    return { stack: newStack, CC: (CC - val) % 2 };
+                case 109:
+                    return _context.abrupt('continue', 1);
 
                 case 110:
-                    return _context.abrupt('break', 118);
+                    _context.next = 112;
+                    return { stack: newStack };
 
-                case 111:
+                case 112:
+                    return _context.abrupt('continue', 1);
+
+                case 113:
                     newStack = stack.slice();
                     val = newStack.pop();
 
                     // ignore stack underflow
 
                     if (!(val == undefined)) {
-                        _context.next = 116;
+                        _context.next = 119;
                         break;
                     }
 
-                    _context.next = 116;
+                    _context.next = 118;
                     return { stack: stack };
 
-                case 116:
-                    _context.next = 118;
+                case 118:
+                    return _context.abrupt('continue', 1);
+
+                case 119:
+                    newStack.push(val == 0);
+
+                    _context.next = 122;
+                    return { stack: newStack };
+
+                case 122:
+                    return _context.abrupt('continue', 1);
+
+                case 123:
+                    newStack = stack.slice();
+                    val = newStack.pop();
+
+                    // ignore stack underflow
+
+                    if (!(val == undefined)) {
+                        _context.next = 129;
+                        break;
+                    }
+
+                    _context.next = 128;
+                    return { stack: stack };
+
+                case 128:
+                    return _context.abrupt('continue', 1);
+
+                case 129:
+                    if (!(val > 0)) {
+                        _context.next = 133;
+                        break;
+                    }
+
+                    _context.next = 132;
+                    return { stack: newStack, CC: (CC + val) % 2 };
+
+                case 132:
+                    return _context.abrupt('continue', 1);
+
+                case 133:
+                    _context.next = 135;
+                    return { stack: newStack, CC: (CC - val) % 2 };
+
+                case 135:
+                    return _context.abrupt('continue', 1);
+
+                case 136:
+                    // If no input is waiting on STDIN, this is an error and the command is ignored.
+                    //  If an integer read does not receive an integer value, this is an error and the command is ignored
+                    newNum = getInput();
+                    newStack = stack.slice();
+
+                    newStack.push(parseInt(newNum));
+
+                    _context.next = 141;
+                    return { stack: newStack };
+
+                case 141:
+                    return _context.abrupt('continue', 1);
+
+                case 143:
+                    newStack = stack.slice();
+                    val = newStack.pop();
+
+                    // ignore stack underflow
+
+                    if (!(val == undefined)) {
+                        _context.next = 149;
+                        break;
+                    }
+
+                    _context.next = 148;
+                    return { stack: stack };
+
+                case 148:
+                    return _context.abrupt('continue', 1);
+
+                case 149:
+                    _context.next = 151;
                     return { stack: newStack, output: output + String.fromCharCode(val) };
 
-                case 118:
+                case 151:
+                    return _context.abrupt('continue', 1);
+
+                case 152:
                     _context.next = 1;
                     break;
 
-                case 120:
+                case 154:
                     return _context.abrupt('return');
 
-                case 121:
+                case 155:
                 case 'end':
                     return _context.stop();
             }

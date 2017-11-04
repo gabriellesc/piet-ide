@@ -53,6 +53,7 @@ const initCommands = [
     'out(char)',
 ];
 
+// re-order commands to correspond to colours order based on currently-selected colour
 const mapCommandsToColours = baseColour => {
     const rotateArray = (array, pivot) => array.slice(-pivot).concat(array.slice(0, -pivot));
 
@@ -332,24 +333,20 @@ const appState = {
         start: (mode => {
             let stepGen; //***********
             if (!appState.debug.inDebugMode) {
-                stepGen = step(appState.commands, appState.grid, appState.blockSizes);
+                stepGen = step(
+                    appState.commands,
+                    appState.grid,
+                    appState.blockSizes,
+                    appState.debug.getInput
+                );
             }
 
             let callStepAndUpdate = () => {
                 var nextStep = step.next();
 
                 // update values
-                if (nextStep.DP) {
-                    appState.debug.DP = nextStep.DP;
-                }
-                if (nextStep.CC) {
-                    appState.debug.CC = nextStep.CC;
-                }
-                if (nextStep.stack) {
-                    appState.debug.stack = nextStep.stack;
-                }
-                if (nextStep.output) {
-                    appState.debug.output = nextStep.output;
+                for (var val in nextStep) {
+                    appState.debug[val] = nextStep[val];
                 }
 
                 return nextStep.done;

@@ -1,8 +1,75 @@
-export default function* step(commands, grid, blockSizes) {
+// find the next colour block visited by the compiler, from [row, col]
+function getNextColour(grid, row, col, DP, CC) {
+    let height = grid.length,
+        width = grid[0].length,
+        origColour = grid[row][col],
+        visited = Array(height)
+            .fill(0)
+            .map(_ => Array(width).fill(false)),
+        farEdge = [0, 0];
+
+    (function visitCell(row, col) {
+        // if we have already visited this cell or it is not part of the current block, skip it
+        if (visited[row][col] || grid[row][col] != origColour) {
+            return;
+        }
+        visited[row][col] = true; // mark this cell as visited
+
+        // check if we are on an edge in the direction of DP
+        switch (DP) {
+            // right
+            case 0:
+                if (col + 1 < width && grid[row][col + 1] != origColour) {
+                    // right => lowermost block, or left => uppermost block
+                    if ((CC && row > farEdge[0]) || (!CC && row < farEdge[0])) {
+                        farEdge = [row, col];
+                    }
+                }
+                break;
+            // down
+            case 1:
+                if (row + 1 < height && grid[row + 1][col] != origColour) {
+                    // right => leftmost block, or left => rightmost block
+                    if ((CC && col < farEdge[1]) || (!CC && col > farEdge[1])) {
+                        farEdge = [row, col];
+                    }
+                }
+                break;
+            // left
+            case 2:
+                if (col - 1 > 0 && grid[row][col - 1] != origColour) {
+                    // right => uppermost block, or left => lowermost block
+                    if ((CC && row < farEdge[0]) || (!CC && row > farEdge[0])) {
+                        farEdge = [row, col];
+                    }
+                }
+                break;
+            // up
+            case 3:
+                if (row - 1 > 0 && grid[row - 1][col] != origColour) {
+                    // right => rightmost block, or left => leftmost block
+                    if ((CC && col > farEdge[1]) || (!CC && col < farEdge[1])) {
+                        farEdge = [row, col];
+                    }
+                }
+                break;
+        }
+
+        // visit neighbours
+        visitCell(row, col + 1);
+        visitCell(row + 1, col);
+        visitCell(row, col - 1);
+        visitCell(row - 1, col);
+    })(row, col);
+
+    return farEdge;
+}
+
+export default function* step(commands, grid, blockSizes, getInput) {
     // start at top left cell
     let row = 0,
         col = 0,
-        // number of consecutive times that the interpreter has tried to move off the current
+        // number of consecutive times that the compiler has tried to move off the current
         // block and hit an edge or black block
         bounceCount = 0,
         DP = 0, // index into [right, down, left, up], direction pointer initially points right
@@ -10,12 +77,11 @@ export default function* step(commands, grid, blockSizes) {
         stack = [],
         output = '';
 
-    // terminate interpreter when bounce count reaches 8
+    // terminate compiler when bounce count reaches 8
     while (bounceCount < 8) {
-        let currColour = grid[row][col];
-
-        // find edge of current colour block which is furthest in direction of DP
-        let nextColour;
+        // find next colour block
+        let [nextRow, nextCol] = getNextColour(grid, row, col, DP, CC);
+        let nextColour = grid[nextRow][nextCol];
 
         if (nextColour == 18) {
             // white block
@@ -44,6 +110,7 @@ export default function* step(commands, grid, blockSizes) {
                 // ignore stack underflow
                 if (op1 == undefined || op2 == undefined) {
                     yield { stack: stack };
+                    continue;
                 }
 
                 switch (inst) {
@@ -113,6 +180,12 @@ export default function* step(commands, grid, blockSizes) {
                             yield { error: 'Negative depth', stack: stack };
                         }
 
+                        // depth argument is greater than current stack depth, so use the current
+                        // depth instead
+                        if (op2 > newStack.length) {
+                            op2 = newStack.length;
+                        }
+
                         if (op1 > 0) {
                             for (var roll = 0; roll < op1; roll++) {
                                 // put top value into stack at depth
@@ -131,6 +204,7 @@ export default function* step(commands, grid, blockSizes) {
                 }
 
                 yield { stack: newStack };
+                continue;
             }
 
             switch (inst) {
@@ -142,20 +216,32 @@ export default function* step(commands, grid, blockSizes) {
                     // ignore stack underflow
                     if (val == undefined) {
                         yield { stack: stack };
+                        continue;
                     }
                     newStack.push(val);
                     newStack.push(val);
 
                     yield { stack: newStack };
+                    continue;
 
                 /* Reads a value from STDIN as a character and pushes it on to the stack. */
                 case 'in(char)':
                     // If no input is waiting on STDIN, this is an error and the command is ignored.
-                    break;
+                    var newChar = getInput();
+
+                    var newStack = stack.slice();
+                    newStack.push(newChar.charCodeAt());
+
+                    yield { stack: newStack };
+                    continue;
 
                 /* Pushes the value of the colour block just exited on to the stack */
                 case 'push':
-                    break;
+                    var newStack = stack.slice();
+                    newStack.push(blockSizes[row][col]);
+
+                    yield { stack: newStack };
+                    continue;
 
                 /* Pops the top value off the stack and rotates the DP clockwise that many 
 		       steps (anticlockwise if negative) */
@@ -166,13 +252,16 @@ export default function* step(commands, grid, blockSizes) {
                     // ignore stack underflow
                     if (val == undefined) {
                         yield { stack: stack };
+                        continue;
                     }
 
                     if (val > 0) {
                         yield { stack: newStack, DP: (DP + val) % 4 };
+                        continue;
                     }
                     // negative rotation (anticlockwise)
                     yield { stack: newStack, DP: (DP - val) % 4 };
+                    continue;
 
                 /* Pops the top value off the stack and prints it to STDOUT as a number */
                 case 'out(num)':
@@ -182,8 +271,10 @@ export default function* step(commands, grid, blockSizes) {
                     // ignore stack underflow
                     if (val == undefined) {
                         yield { stack: stack };
+                        continue;
                     }
                     yield { stack: newStack, output: output + val };
+                    continue;
 
                 /* Pops the top value off the stack and discards it */
                 case 'pop':
@@ -191,8 +282,10 @@ export default function* step(commands, grid, blockSizes) {
                     // ignore stack underflow
                     if (newStack.pop() == undefined) {
                         yield { stack: stack };
+                        continue;
                     }
                     yield { stack: newStack };
+                    continue;
 
                 /* Replaces the top value of the stack with 0 if it is non-zero, and 1 if 
 		       it is zero */
@@ -203,10 +296,12 @@ export default function* step(commands, grid, blockSizes) {
                     // ignore stack underflow
                     if (val == undefined) {
                         yield { stack: stack };
+                        continue;
                     }
                     newStack.push(val == 0);
 
                     yield { stack: newStack };
+                    continue;
 
                 /* Pops the top value off the stack and toggles the CC that many times (the
 		       absolute value of that many times if negative) */
@@ -217,18 +312,29 @@ export default function* step(commands, grid, blockSizes) {
                     // ignore stack underflow
                     if (val == undefined) {
                         yield { stack: stack };
+                        continue;
                     }
 
                     if (val > 0) {
                         yield { stack: newStack, CC: (CC + val) % 2 };
+                        continue;
                     }
                     // negative toggle times
                     yield { stack: newStack, CC: (CC - val) % 2 };
+                    continue;
 
                 /* Reads a value from STDIN as a number and pushes it on to the stack. */
+                // This reads a single character as a number - should parse more intelligently?
                 case 'in(num)':
                     // If no input is waiting on STDIN, this is an error and the command is ignored.
                     //  If an integer read does not receive an integer value, this is an error and the command is ignored
+                    var newNum = getInput();
+
+                    var newStack = stack.slice();
+                    newStack.push(parseInt(newNum));
+
+                    yield { stack: newStack };
+                    continue;
 
                     break;
 
@@ -240,11 +346,13 @@ export default function* step(commands, grid, blockSizes) {
                     // ignore stack underflow
                     if (val == undefined) {
                         yield { stack: stack };
+                        continue;
                     }
                     yield { stack: newStack, output: output + String.fromCharCode(val) };
+                    continue;
             }
         }
     }
 
-    return; // terminate interpreter
+    return; // terminate compiler
 }
