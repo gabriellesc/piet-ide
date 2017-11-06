@@ -16,107 +16,99 @@ class Controls extends React.Component {
     }
 
     render() {
-        return (
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <table>
-                    <tbody>
-                        <tr>
-                            <td colSpan="3">
-                                <div className="btn-toolbar" role="toolbar">
-                                    <ImportExportMenu {...this.props} />
-                                    <PaintModeSwitch {...this.props} />
-                                </div>
-                            </td>
-                            <td rowSpan="3" style={{ paddingLeft: '2vw', paddingBottom: '1vh' }}>
-                                <ColourPicker {...this.props} />
-                            </td>
-                        </tr>
-                        <tr style={{ paddingTop: '1vh' }}>
-                            <td>
-                                <label htmlFor="height">Height</label>
-                                <input
-                                    ref={input => (this.height = input)}
-                                    type="number"
-                                    name="height"
-                                    className="form-control"
-                                    style={{
-                                        width: '5em',
-                                        marginLeft: '4px',
-                                        marginRight: '1vw',
-                                        display: 'inline-block',
-                                    }}
-                                    required
-                                    defaultValue={this.props.height}
-                                />
-                            </td>
-                            <td>
-                                <label htmlFor="width">Width</label>
-                                <input
-                                    ref={input => (this.width = input)}
-                                    type="number"
-                                    name="width"
-                                    className="form-control"
-                                    style={{
-                                        width: '5em',
-                                        marginLeft: '4px',
-                                        display: 'inline-block',
-                                    }}
-                                    defaultValue={this.props.width}
-                                    required
-                                />
-                            </td>
-                            <td>
-                                <input
-                                    type="button"
-                                    className="btn btn-warning"
-                                    value="Resize / Clear"
-                                    style={{ marginLeft: '1vw' }}
-                                    onClick={() =>
-                                        this.props.resize({
-                                            height: parseInt(this.height.value),
-                                            width: parseInt(this.width.value),
-                                        })}
-                                />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colSpan="3">
-                                <BSDisplaySwitch {...this.props} />
-                                &emsp;<b>
-                                    {this.props.cellInFocus &&
-                                        this.props.blockSizes[this.props.cellInFocus[0]][
-                                            this.props.cellInFocus[1]
-                                        ] + ' pixels in block'}
-                                </b>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                {!this.props.debug.debugIsVisible && <DebugTab {...this.props} />}
-            </div>
-        );
+        return [
+            <div
+                key="controls-row-1"
+                className="btn-toolbar"
+                role="toolbar"
+                style={{ gridColumn: 'controls1' }}>
+                <ImportExportMenu {...this.props} />
+                <PaintModeSwitch {...this.props} />
+            </div>,
+            <div
+                key="controls-row-2"
+                style={{
+                    gridColumn: 'controls2',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                }}>
+                <label htmlFor="height" style={{ margin: 'auto 0' }}>
+                    Height
+                </label>
+                <input
+                    ref={input => (this.height = input)}
+                    type="number"
+                    name="height"
+                    className="form-control"
+                    style={{
+                        width: '5em',
+                        display: 'inline-block',
+                    }}
+                    required
+                    defaultValue={this.props.height}
+                />
+                <label htmlFor="width" style={{ margin: 'auto 0 auto 5px' }}>
+                    Width
+                </label>
+                <input
+                    ref={input => (this.width = input)}
+                    type="number"
+                    name="width"
+                    className="form-control"
+                    style={{
+                        width: '5em',
+                        display: 'inline-block',
+                    }}
+                    defaultValue={this.props.width}
+                    required
+                />
+                <input
+                    type="button"
+                    className="btn btn-warning"
+                    value="Resize / Clear"
+                    onClick={() =>
+                        this.props.resize({
+                            height: parseInt(this.height.value),
+                            width: parseInt(this.width.value),
+                        })}
+                />
+            </div>,
+            <div key="controls-row-3" style={{ gridColumn: 'controls3' }}>
+                <BSDisplaySwitch {...this.props} />
+                &emsp;<b>
+                    {this.props.cellInFocus &&
+                        this.props.blockSizes[this.props.cellInFocus[0]][
+                            this.props.cellInFocus[1]
+                        ] + ' pixels in block'}
+                </b>
+            </div>,
+            <ColourPicker key="colour-picker" {...this.props} />,
+            <DebugTab key="debug-tab" {...this.props} />,
+        ];
     }
 }
 
 // tab to make debugger visible
-const DebugTab = ({ toggleDebugger }) => (
-    <div
-        style={{
-            height: 'auto',
-            width: '25px',
-            padding: '5px 2px',
-            marginBottom: '1vh',
-            writingMode: 'vertical-lr',
-            textAlign: 'center',
-            color: 'white',
-            fontWeight: 'bold',
-            backgroundColor: '#5bc0de',
-            cursor: 'pointer',
-        }}
-        onClick={() => toggleDebugger()}>
-        DEBUGGER
-    </div>
-);
+const DebugTab = props =>
+    props.debug.debugIsVisible ? null : (
+        <div
+            style={{
+                gridColumn: 'dtab',
+                gridRow: '1 / 4',
+                height: '100%',
+                width: '25px',
+                padding: '5px 2px',
+                writingMode: 'vertical-lr',
+                textAlign: 'center',
+                color: 'white',
+                fontWeight: 'bold',
+                backgroundColor: '#5bc0de',
+                cursor: 'pointer',
+            }}
+            onClick={() => props.toggleDebugger()}>
+            DEBUGGER
+        </div>
+    );
 
 const ImportExportMenu = ({ importImg, exportPng }) => [
     <input

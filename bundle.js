@@ -16,7 +16,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var ColourPicker = function ColourPicker(props) {
     return _react2.default.createElement(
         'table',
-        null,
+        { style: { gridColumn: 'cpicker', gridRow: '1 / 4' } },
         _react2.default.createElement(
             'tbody',
             null,
@@ -74,6 +74,8 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _react = require('react');
@@ -120,122 +122,84 @@ var Controls = function (_React$Component) {
         value: function render() {
             var _this2 = this;
 
-            return _react2.default.createElement(
+            return [_react2.default.createElement(
                 'div',
-                { style: { display: 'flex', justifyContent: 'space-between' } },
+                {
+                    key: 'controls-row-1',
+                    className: 'btn-toolbar',
+                    role: 'toolbar',
+                    style: { gridColumn: 'controls1' } },
+                _react2.default.createElement(ImportExportMenu, this.props),
+                _react2.default.createElement(PaintModeSwitch, this.props)
+            ), _react2.default.createElement(
+                'div',
+                {
+                    key: 'controls-row-2',
+                    style: {
+                        gridColumn: 'controls2',
+                        display: 'flex',
+                        justifyContent: 'space-between'
+                    } },
                 _react2.default.createElement(
-                    'table',
-                    null,
-                    _react2.default.createElement(
-                        'tbody',
-                        null,
-                        _react2.default.createElement(
-                            'tr',
-                            null,
-                            _react2.default.createElement(
-                                'td',
-                                { colSpan: '3' },
-                                _react2.default.createElement(
-                                    'div',
-                                    { className: 'btn-toolbar', role: 'toolbar' },
-                                    _react2.default.createElement(ImportExportMenu, this.props),
-                                    _react2.default.createElement(PaintModeSwitch, this.props)
-                                )
-                            ),
-                            _react2.default.createElement(
-                                'td',
-                                { rowSpan: '3', style: { paddingLeft: '2vw', paddingBottom: '1vh' } },
-                                _react2.default.createElement(_colourPicker2.default, this.props)
-                            )
-                        ),
-                        _react2.default.createElement(
-                            'tr',
-                            { style: { paddingTop: '1vh' } },
-                            _react2.default.createElement(
-                                'td',
-                                null,
-                                _react2.default.createElement(
-                                    'label',
-                                    { htmlFor: 'height' },
-                                    'Height'
-                                ),
-                                _react2.default.createElement('input', {
-                                    ref: function ref(input) {
-                                        return _this2.height = input;
-                                    },
-                                    type: 'number',
-                                    name: 'height',
-                                    className: 'form-control',
-                                    style: {
-                                        width: '5em',
-                                        marginLeft: '4px',
-                                        marginRight: '1vw',
-                                        display: 'inline-block'
-                                    },
-                                    required: true,
-                                    defaultValue: this.props.height
-                                })
-                            ),
-                            _react2.default.createElement(
-                                'td',
-                                null,
-                                _react2.default.createElement(
-                                    'label',
-                                    { htmlFor: 'width' },
-                                    'Width'
-                                ),
-                                _react2.default.createElement('input', {
-                                    ref: function ref(input) {
-                                        return _this2.width = input;
-                                    },
-                                    type: 'number',
-                                    name: 'width',
-                                    className: 'form-control',
-                                    style: {
-                                        width: '5em',
-                                        marginLeft: '4px',
-                                        display: 'inline-block'
-                                    },
-                                    defaultValue: this.props.width,
-                                    required: true
-                                })
-                            ),
-                            _react2.default.createElement(
-                                'td',
-                                null,
-                                _react2.default.createElement('input', {
-                                    type: 'button',
-                                    className: 'btn btn-warning',
-                                    value: 'Resize / Clear',
-                                    style: { marginLeft: '1vw' },
-                                    onClick: function onClick() {
-                                        return _this2.props.resize({
-                                            height: parseInt(_this2.height.value),
-                                            width: parseInt(_this2.width.value)
-                                        });
-                                    }
-                                })
-                            )
-                        ),
-                        _react2.default.createElement(
-                            'tr',
-                            null,
-                            _react2.default.createElement(
-                                'td',
-                                { colSpan: '3' },
-                                _react2.default.createElement(BSDisplaySwitch, this.props),
-                                '\u2003',
-                                _react2.default.createElement(
-                                    'b',
-                                    null,
-                                    this.props.cellInFocus && this.props.blockSizes[this.props.cellInFocus[0]][this.props.cellInFocus[1]] + ' pixels in block'
-                                )
-                            )
-                        )
-                    )
+                    'label',
+                    { htmlFor: 'height', style: { margin: 'auto 0' } },
+                    'Height'
                 ),
-                !this.props.debug.debugIsVisible && _react2.default.createElement(DebugTab, this.props)
-            );
+                _react2.default.createElement('input', {
+                    ref: function ref(input) {
+                        return _this2.height = input;
+                    },
+                    type: 'number',
+                    name: 'height',
+                    className: 'form-control',
+                    style: {
+                        width: '5em',
+                        display: 'inline-block'
+                    },
+                    required: true,
+                    defaultValue: this.props.height
+                }),
+                _react2.default.createElement(
+                    'label',
+                    { htmlFor: 'width', style: { margin: 'auto 0 auto 5px' } },
+                    'Width'
+                ),
+                _react2.default.createElement('input', {
+                    ref: function ref(input) {
+                        return _this2.width = input;
+                    },
+                    type: 'number',
+                    name: 'width',
+                    className: 'form-control',
+                    style: {
+                        width: '5em',
+                        display: 'inline-block'
+                    },
+                    defaultValue: this.props.width,
+                    required: true
+                }),
+                _react2.default.createElement('input', {
+                    type: 'button',
+                    className: 'btn btn-warning',
+                    value: 'Resize / Clear',
+                    onClick: function onClick() {
+                        return _this2.props.resize({
+                            height: parseInt(_this2.height.value),
+                            width: parseInt(_this2.width.value)
+                        });
+                    }
+                })
+            ), _react2.default.createElement(
+                'div',
+                { key: 'controls-row-3', style: { gridColumn: 'controls3' } },
+                _react2.default.createElement(BSDisplaySwitch, this.props),
+                '\u2003',
+                _react2.default.createElement(
+                    'b',
+                    null,
+                    this.props.cellInFocus && this.props.blockSizes[this.props.cellInFocus[0]][this.props.cellInFocus[1]] + ' pixels in block'
+                )
+            ), _react2.default.createElement(_colourPicker2.default, _extends({ key: 'colour-picker' }, this.props)), _react2.default.createElement(DebugTab, _extends({ key: 'debug-tab' }, this.props))];
         }
     }]);
 
@@ -245,16 +209,16 @@ var Controls = function (_React$Component) {
 // tab to make debugger visible
 
 
-var DebugTab = function DebugTab(_ref) {
-    var toggleDebugger = _ref.toggleDebugger;
-    return _react2.default.createElement(
+var DebugTab = function DebugTab(props) {
+    return props.debug.debugIsVisible ? null : _react2.default.createElement(
         'div',
         {
             style: {
-                height: 'auto',
+                gridColumn: 'dtab',
+                gridRow: '1 / 4',
+                height: '100%',
                 width: '25px',
                 padding: '5px 2px',
-                marginBottom: '1vh',
                 writingMode: 'vertical-lr',
                 textAlign: 'center',
                 color: 'white',
@@ -263,15 +227,15 @@ var DebugTab = function DebugTab(_ref) {
                 cursor: 'pointer'
             },
             onClick: function onClick() {
-                return toggleDebugger();
+                return props.toggleDebugger();
             } },
         'DEBUGGER'
     );
 };
 
-var ImportExportMenu = function ImportExportMenu(_ref2) {
-    var importImg = _ref2.importImg,
-        exportPng = _ref2.exportPng;
+var ImportExportMenu = function ImportExportMenu(_ref) {
+    var importImg = _ref.importImg,
+        exportPng = _ref.exportPng;
     return [_react2.default.createElement('input', {
         key: 'import-btn',
         type: 'button',
@@ -347,9 +311,9 @@ var ImportExportMenu = function ImportExportMenu(_ref2) {
     )];
 };
 
-var PaintModeSwitch = function PaintModeSwitch(_ref3) {
-    var paintMode = _ref3.paintMode,
-        selectPaintMode = _ref3.selectPaintMode;
+var PaintModeSwitch = function PaintModeSwitch(_ref2) {
+    var paintMode = _ref2.paintMode,
+        selectPaintMode = _ref2.selectPaintMode;
     return _react2.default.createElement(
         'div',
         { className: 'btn-group', role: 'group', style: { float: 'right' } },
@@ -380,9 +344,9 @@ var PaintModeSwitch = function PaintModeSwitch(_ref3) {
     );
 };
 
-var BSDisplaySwitch = function BSDisplaySwitch(_ref4) {
-    var displayBS = _ref4.displayBS,
-        toggleDisplayBS = _ref4.toggleDisplayBS;
+var BSDisplaySwitch = function BSDisplaySwitch(_ref3) {
+    var displayBS = _ref3.displayBS,
+        toggleDisplayBS = _ref3.toggleDisplayBS;
     return displayBS ? _react2.default.createElement('i', {
         className: 'glyphicon glyphicon-eye-open',
         title: 'Show block sizes',
@@ -664,7 +628,9 @@ var Grid = function (_React$Component) {
                 'table',
                 {
                     style: {
+                        margin: '1vh 0',
                         tableLayout: 'fixed',
+                        gridColumn: 'grid / span 4',
                         pointerEvents: this.props.debug.inDebugMode ? 'none' : 'auto'
                     },
                     onMouseOut: function onMouseOut() {
@@ -1136,27 +1102,23 @@ var App = function (_React$Component) {
     }, {
         key: 'render',
         value: function render() {
-            if (this.props.appState.debug.debugIsVisible) {
-                return [_react2.default.createElement(
-                    'div',
-                    {
-                        key: 'main-container',
-                        style: {
-                            float: 'left',
-                            marginBottom: '1vh',
-                            marginRight: '1vw',
-                            width: 'calc(100% - 1vw - 300px)'
-                        } },
-                    _react2.default.createElement(_controls2.default, _extends({ colours: colours }, this.props.appState)),
-                    _react2.default.createElement(_grid2.default, _extends({ colours: colours }, this.props.appState))
-                ), _react2.default.createElement(_debugger2.default, _extends({ key: 'debugger' }, this.props.appState))];
-            }
-
-            return [_react2.default.createElement(
+            return _react2.default.createElement(
                 'div',
-                { key: 'top-container', style: { marginBottom: '1vh' } },
-                _react2.default.createElement(_controls2.default, _extends({ colours: colours }, this.props.appState))
-            ), _react2.default.createElement(_grid2.default, _extends({ key: 'grid', colours: colours }, this.props.appState))];
+                {
+                    style: {
+                        width: '100%',
+                        display: 'grid',
+                        gridColumnGap: '1vw',
+                        gridRowGap: '1vh',
+                        gridTemplateColumns: '375px 300px auto 25px',
+                        gridTemplateRows: 'auto',
+                        gridTemplateAreas: this.props.appState.debug.debugIsVisible ? '\'controls1 cpicker . dtab\'\n                           \'controls2 cpicker . dtab\'\n                           \'controls3 cpicker . dtab\'\n                           \'grid grid grid grid\'' : '\'controls1 cpicker . dtab\'\n                           \'controls2 cpicker . dtab\'\n                           \'controls3 cpicker . dtab\'\n\t\t\t   \'grid grid grid grid\'',
+                        alignItems: 'center'
+                    } },
+                _react2.default.createElement(_controls2.default, _extends({ colours: colours }, this.props.appState)),
+                _react2.default.createElement(_grid2.default, _extends({ colours: colours }, this.props.appState)),
+                this.props.appState.debug.debugIsVisible && _react2.default.createElement(_debugger2.default, this.props.appState)
+            );
         }
     }]);
 

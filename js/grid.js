@@ -5,7 +5,9 @@ class Grid extends React.Component {
         return (
             <table
                 style={{
+                    margin: '1vh 0',
                     tableLayout: 'fixed',
+                    gridColumn: 'grid / span 4',
                     pointerEvents: this.props.debug.inDebugMode ? 'none' : 'auto',
                 }}
                 onMouseOut={() => this.props.setCellInFocus(null)}>

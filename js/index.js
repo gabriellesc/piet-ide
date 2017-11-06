@@ -388,29 +388,31 @@ class App extends React.Component {
     }
 
     render() {
-        if (this.props.appState.debug.debugIsVisible) {
-            return [
-                <div
-                    key="main-container"
-                    style={{
-                        float: 'left',
-                        marginBottom: '1vh',
-                        marginRight: '1vw',
-                        width: 'calc(100% - 1vw - 300px)',
-                    }}>
-                    <Controls colours={colours} {...this.props.appState} />
-                    <Grid colours={colours} {...this.props.appState} />
-                </div>,
-                <Debugger key="debugger" {...this.props.appState} />,
-            ];
-        }
-
-        return [
-            <div key="top-container" style={{ marginBottom: '1vh' }}>
+        return (
+            <div
+                style={{
+                    width: '100%',
+                    display: 'grid',
+                    gridColumnGap: '1vw',
+                    gridRowGap: '1vh',
+                    gridTemplateColumns: '375px 300px auto 25px',
+                    gridTemplateRows: 'auto',
+                    gridTemplateAreas: this.props.appState.debug.debugIsVisible
+                        ? `'controls1 cpicker . dtab'
+                           'controls2 cpicker . dtab'
+                           'controls3 cpicker . dtab'
+                           'grid grid grid grid'`
+                        : `'controls1 cpicker . dtab'
+                           'controls2 cpicker . dtab'
+                           'controls3 cpicker . dtab'
+			   'grid grid grid grid'`,
+                    alignItems: 'center',
+                }}>
                 <Controls colours={colours} {...this.props.appState} />
-            </div>,
-            <Grid key="grid" colours={colours} {...this.props.appState} />,
-        ];
+                <Grid colours={colours} {...this.props.appState} />
+                {this.props.appState.debug.debugIsVisible && <Debugger {...this.props.appState} />}
+            </div>
+        );
     }
 }
 
