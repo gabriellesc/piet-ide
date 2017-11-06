@@ -398,7 +398,7 @@ class App extends React.Component {
                     gridTemplateColumns: this.props.appState.debug.debugIsVisible
                         ? '375px 300px auto 300px'
                         : '375px 300px auto 25px',
-                    gridTemplateRows: 'auto',
+                    gridTemplateRows: '35px 35px 35px auto',
                     gridTemplateAreas: this.props.appState.debug.debugIsVisible
                         ? `'controls1 cpicker . debug'
                            'controls2 cpicker . debug'

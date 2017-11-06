@@ -8,6 +8,7 @@ class Grid extends React.Component {
                     margin: '1vh 0',
                     tableLayout: 'fixed',
                     gridColumn: 'grid / span ' + (this.props.debug.debugIsVisible ? '3' : '4'),
+                    alignSelf: 'start',
                     pointerEvents: this.props.debug.inDebugMode ? 'none' : 'auto',
                 }}
                 onMouseOut={() => this.props.setCellInFocus(null)}>

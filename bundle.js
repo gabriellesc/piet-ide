@@ -632,6 +632,7 @@ var Grid = function (_React$Component) {
                         margin: '1vh 0',
                         tableLayout: 'fixed',
                         gridColumn: 'grid / span ' + (this.props.debug.debugIsVisible ? '3' : '4'),
+                        alignSelf: 'start',
                         pointerEvents: this.props.debug.inDebugMode ? 'none' : 'auto'
                     },
                     onMouseOut: function onMouseOut() {
@@ -1112,7 +1113,7 @@ var App = function (_React$Component) {
                         gridColumnGap: '1vw',
                         gridRowGap: '1vh',
                         gridTemplateColumns: this.props.appState.debug.debugIsVisible ? '375px 300px auto 300px' : '375px 300px auto 25px',
-                        gridTemplateRows: 'auto',
+                        gridTemplateRows: '35px 35px 35px auto',
                         gridTemplateAreas: this.props.appState.debug.debugIsVisible ? '\'controls1 cpicker . debug\'\n                           \'controls2 cpicker . debug\'\n                           \'controls3 cpicker . debug\'\n                           \'grid grid grid debug\'' : '\'controls1 cpicker . dtab\'\n                           \'controls2 cpicker . dtab\'\n                           \'controls3 cpicker . dtab\'\n\t\t\t   \'grid grid grid grid\'',
                         alignItems: 'center'
                     } },
