@@ -79,9 +79,12 @@ export default function* step(commands, grid, blockSizes, getInput) {
 
     // terminate compiler when bounce count reaches 8
     while (bounceCount < 8) {
+	// save the previous block size in case it will be pushed to the stack
+	let pushVal = blockSizes[row][col];
+	
         // find next colour block
-        let [nextRow, nextCol] = getNextColour(grid, row, col, DP, CC);
-        let nextColour = grid[nextRow][nextCol];
+        let [row, col] = getNextColour(grid, row, col, DP, CC);
+        let nextColour = grid[row][col];
 
         if (nextColour == 18) {
             // white block
@@ -238,7 +241,7 @@ export default function* step(commands, grid, blockSizes, getInput) {
                 /* Pushes the value of the colour block just exited on to the stack */
                 case 'push':
                     var newStack = stack.slice();
-                    newStack.push(blockSizes[row][col]);
+                    newStack.push(pushVal);
 
                     yield { stack: newStack };
                     continue;
