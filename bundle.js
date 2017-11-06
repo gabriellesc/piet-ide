@@ -385,12 +385,13 @@ var Debugger = function Debugger(props) {
         'div',
         {
             style: {
-                height: '100%',
+                gridColumn: 'debug',
+                gridRow: '1 / 5',
+                alignSelf: 'start',
                 width: '300px',
                 border: '1px solid black',
                 borderRadius: '5px',
                 padding: '0 5px 5px',
-                float: 'right',
                 background: 'white'
             } },
         _react2.default.createElement(
@@ -630,7 +631,7 @@ var Grid = function (_React$Component) {
                     style: {
                         margin: '1vh 0',
                         tableLayout: 'fixed',
-                        gridColumn: 'grid / span 4',
+                        gridColumn: 'grid / span ' + (this.props.debug.debugIsVisible ? '3' : '4'),
                         pointerEvents: this.props.debug.inDebugMode ? 'none' : 'auto'
                     },
                     onMouseOut: function onMouseOut() {
@@ -1110,9 +1111,9 @@ var App = function (_React$Component) {
                         display: 'grid',
                         gridColumnGap: '1vw',
                         gridRowGap: '1vh',
-                        gridTemplateColumns: '375px 300px auto 25px',
+                        gridTemplateColumns: this.props.appState.debug.debugIsVisible ? '375px 300px auto 300px' : '375px 300px auto 25px',
                         gridTemplateRows: 'auto',
-                        gridTemplateAreas: this.props.appState.debug.debugIsVisible ? '\'controls1 cpicker . dtab\'\n                           \'controls2 cpicker . dtab\'\n                           \'controls3 cpicker . dtab\'\n                           \'grid grid grid grid\'' : '\'controls1 cpicker . dtab\'\n                           \'controls2 cpicker . dtab\'\n                           \'controls3 cpicker . dtab\'\n\t\t\t   \'grid grid grid grid\'',
+                        gridTemplateAreas: this.props.appState.debug.debugIsVisible ? '\'controls1 cpicker . debug\'\n                           \'controls2 cpicker . debug\'\n                           \'controls3 cpicker . debug\'\n                           \'grid grid grid debug\'' : '\'controls1 cpicker . dtab\'\n                           \'controls2 cpicker . dtab\'\n                           \'controls3 cpicker . dtab\'\n\t\t\t   \'grid grid grid grid\'',
                         alignItems: 'center'
                     } },
                 _react2.default.createElement(_controls2.default, _extends({ colours: colours }, this.props.appState)),

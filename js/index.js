@@ -395,13 +395,15 @@ class App extends React.Component {
                     display: 'grid',
                     gridColumnGap: '1vw',
                     gridRowGap: '1vh',
-                    gridTemplateColumns: '375px 300px auto 25px',
+                    gridTemplateColumns: this.props.appState.debug.debugIsVisible
+                        ? '375px 300px auto 300px'
+                        : '375px 300px auto 25px',
                     gridTemplateRows: 'auto',
                     gridTemplateAreas: this.props.appState.debug.debugIsVisible
-                        ? `'controls1 cpicker . dtab'
-                           'controls2 cpicker . dtab'
-                           'controls3 cpicker . dtab'
-                           'grid grid grid grid'`
+                        ? `'controls1 cpicker . debug'
+                           'controls2 cpicker . debug'
+                           'controls3 cpicker . debug'
+                           'grid grid grid debug'`
                         : `'controls1 cpicker . dtab'
                            'controls2 cpicker . dtab'
                            'controls3 cpicker . dtab'

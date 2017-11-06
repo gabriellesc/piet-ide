@@ -4,12 +4,13 @@ import React from 'react';
 const Debugger = props => (
     <div
         style={{
-            height: '100%',
+	    gridColumn: 'debug',
+	    gridRow: '1 / 5',
+	    alignSelf: 'start',
             width: '300px',
             border: '1px solid black',
             borderRadius: '5px',
             padding: '0 5px 5px',
-            float: 'right',
             background: 'white',
         }}>
         <button
