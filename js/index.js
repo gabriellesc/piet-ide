@@ -6,7 +6,8 @@ import Controls from './controls.js';
 import Grid from './grid.js';
 import Debugger from './debugger.js';
 
-import step from './interpreter.js';
+import { compile } from './interpreter.js';
+import { commands } from './orderedCommands.js';
 
 const colours = [
     '#FFC0C0', // light red
@@ -31,29 +32,9 @@ const colours = [
     '#000000', // black
 ];
 
-// initial ordering of commands to match colours
-const initCommands = [
-    '',
-    '+',
-    '/',
-    '>',
-    'dup',
-    'in(char)',
-    'push',
-    '-',
-    'mod',
-    'pointer',
-    'roll',
-    'out(num)',
-    'pop',
-    '*',
-    'not',
-    'switch',
-    'in(num)',
-    'out(char)',
-];
-
-// re-order commands to correspond to colours order based on currently-selected colour
+/* re-order commands to correspond to colours order based on currently-selected colour
+ * NOTE: this was used to compute all command orders, which were saved to be re-used;
+ * the function is no longer in use
 const mapCommandsToColours = baseColour => {
     const rotateArray = (array, pivot) => array.slice(-pivot).concat(array.slice(0, -pivot));
 
@@ -69,6 +50,7 @@ const mapCommandsToColours = baseColour => {
     map = rotateArray(map, lShift);
     return [...map[0], ...map[1], ...map[2]];
 };
+*/
 
 const HEIGHT = 10, // initial height
     WIDTH = 10; // initial width
@@ -90,7 +72,7 @@ const appState = {
 
     selectedColour: 0,
 
-    commands: initCommands,
+    commands: commands[0],
 
     paintMode: 0, // 0 (brush) or 1 (fill); use brush paint mode initially
 
@@ -125,7 +107,7 @@ const appState = {
             // colour is white or black
             appState.commands = [];
         } else {
-            appState.commands = mapCommandsToColours(colour);
+            appState.commands = commands[colour];
         }
 
         appState.notify();

@@ -1,3 +1,5 @@
+import { commands } from './orderedCommands.js';
+
 // find the next colour block visited by the compiler, from [row, col]
 function getNextColour(grid, row, col, DP, CC) {
     let height = grid.length,
@@ -65,7 +67,64 @@ function getNextColour(grid, row, col, DP, CC) {
     return farEdge;
 }
 
-export default function* step(commands, grid, blockSizes, getInput) {
+// start at top left cell, bounceCount of 0, DP and CC of 0, by default
+// (bounceCount: number of consecutive times that the compiler has tried to move off the current
+// block and hit an edge or black block)
+// (DP: index into [right, down, left, up], direction pointer initially points right)
+// (CC: index into [left, right], codel chooser initially points left)
+function compile({ grid, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bounceCount = 0 }) {
+    let commandList = [];
+
+    // terminate compiler when bounce count reaches 8
+    while (bounceCount < 8) {
+        // save the current colour to use for indexing into the command list
+        let colour = grid[row][col];
+        // save the previous block size in case it will be pushed to the stack
+        let pushVal = blockSizes[row][col];
+
+        // find next colour block
+        let [row, col] = getNextColour(grid, row, col, DP, CC);
+        let nextColour = grid[row][col];
+
+        if (nextColour == 18) {
+            // white block
+        } else if (nextColour == 19) {
+            // black block
+            bounceCount++; // increment bounceCount
+
+            if (bounceCount % 2 != 0) {
+                // move DP clockwise 1 step
+                DP = (DP + 1) % 4;
+            } else {
+                // toggle CC
+                CC = (CC + 1) % 2;
+            }
+        } else {
+            bounceCount = 0; // we can move, so reset the bounce count
+
+            let command = commands[colour][nextColour]; // match colour transition to command
+            if (command == 'push') {
+                commandList.push(command.toUpper() + ' ' + pushVal);
+            } else if (command == 'pointer') {
+                // if the next command is POINTER, we should examine all possible DP values
+                commandList.push(compile({ grid, blockSizes, row, col, DP: 0, CC, bounceCount }));
+                commandList.push(compile({ grid, blockSizes, row, col, DP: 1, CC, bounceCount }));
+                commandList.push(compile({ grid, blockSizes, row, col, DP: 2, CC, bounceCount }));
+                commandList.push(compile({ grid, blockSizes, row, col, DP: 3, CC, bounceCount }));
+            } else if (command == 'switch') {
+                // if the next command is SWITCH, we should examine all possible CC values
+                commandList.push(compile({ grid, blockSizes, row, col, DP, CC: 0, bounceCount }));
+                commandList.push(compile({ grid, blockSizes, row, col, DP, CC: 1, bounceCount }));
+            } else {
+                commandList.push(command.toUpper());
+            }
+        }
+    }
+
+    return commandList;
+}
+
+function* run(commands, grid, blockSizes, getInput) {
     // start at top left cell
     let row = 0,
         col = 0,
@@ -79,9 +138,9 @@ export default function* step(commands, grid, blockSizes, getInput) {
 
     // terminate compiler when bounce count reaches 8
     while (bounceCount < 8) {
-	// save the previous block size in case it will be pushed to the stack
-	let pushVal = blockSizes[row][col];
-	
+        // save the previous block size in case it will be pushed to the stack
+        let pushVal = blockSizes[row][col];
+
         // find next colour block
         let [row, col] = getNextColour(grid, row, col, DP, CC);
         let nextColour = grid[row][col];
@@ -359,3 +418,5 @@ export default function* step(commands, grid, blockSizes, getInput) {
 
     return; // terminate compiler
 }
+
+export { compile, run };
