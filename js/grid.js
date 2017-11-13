@@ -9,6 +9,7 @@ class Grid extends React.Component {
                     tableLayout: 'fixed',
                     gridColumn: 'grid / span ' + (this.props.debug.debugIsVisible ? '3' : '4'),
                     alignSelf: 'start',
+                    justifySelf: 'start',
                     pointerEvents: this.props.debug.inDebugMode ? 'none' : 'auto',
                 }}
                 onMouseOut={() => this.props.setCellInFocus(null)}>
@@ -18,7 +19,7 @@ class Grid extends React.Component {
                             {row.map((cell, j) => (
                                 <td
                                     key={'cell-' + i + '-' + j}
-                                    title={'(' + i + ',' + j + ')'}
+                                    title={'(' + j + ',' + i + ')'}
                                     style={{
                                         maxHeight: '30px',
                                         maxWidth: '30px',
