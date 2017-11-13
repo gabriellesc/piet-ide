@@ -4,10 +4,10 @@ import React from 'react';
 const Debugger = props => (
     <div
         style={{
-	    gridColumn: 'debug',
-	    gridRow: '1 / 5',
-	    alignSelf: 'start',
-            width: '300px',
+            gridColumn: 'debug',
+            gridRow: '1 / 5',
+            alignSelf: 'start',
+            width: '200px',
             border: '1px solid black',
             borderRadius: '5px',
             padding: '0 5px 5px',
@@ -20,22 +20,54 @@ const Debugger = props => (
             onClick={() => props.toggleDebugger()}>
             <span aria-hidden="true">&times;</span>
         </button>
+        <Compiler {...props.debug} />
         <DebugControls {...props.debug} />
-        <Stack {...props.debug} />
         <Pointers {...props.debug} />
+        <Stack {...props.debug} />
         <IO {...props.debug} />
     </div>
 );
 
+const Compiler = ({ compile, commandList }) => [
+    <button
+        key="compile-button"
+        type="button"
+        className="btn btn-info"
+        title="Compile"
+        onClick={() => compile()}
+        style={{ width: '80%', marginTop: '5px', position: 'relative', left: '10%' }}>
+        Compile
+    </button>,
+    <div
+        key="command-list"
+        style={{
+            margin: '10px auto',
+            padding: '5px',
+            maxHeight: '40vh',
+            width: '100%',
+            overflow: 'auto',
+            fontFamily: 'monospace',
+            fontSize: '11pt',
+            whiteSpace: 'pre',
+            backgroundColor: '#f5f5f5',
+            border: '1px solid #ccc',
+        }}>
+        {commandList.join('\n')}
+    </div>,
+];
+
 // run/step/stop control buttons
-const DebugControls = ({ start, stop }) => (
-    <div className="btn-group" role="group" style={{ width: '100%' }}>
+const DebugControls = ({ start, step, stop }) => (
+    <div
+        className="btn-group"
+        role="group"
+        style={{ width: '100%', marginBottom: '1vh', marginLeft: '2px' }}>
         <button
             type="button"
             className="btn btn-success"
             title="Run"
             style={{ width: '33%' }}
-            onClick={() => start('run')}>
+            onClick={() => start()}>
             <i className="glyphicon glyphicon-forward" />
         </button>
         <button
@@ -43,7 +75,7 @@ const DebugControls = ({ start, stop }) => (
             className="btn btn-primary"
             title="Step"
             style={{ width: '33%' }}
-            onClick={() => start('step')}>
+            onClick={() => step()}>
             <i className="glyphicon glyphicon-play" />
         </button>
         <button
@@ -92,7 +124,7 @@ const IO = ({ output, input, inDebugMode, receiveInput }) => [
 
 // visual representation of stack
 const Stack = ({ stack }) => (
-    <table style={{ margin: 'auto auto 1vh' }}>
+    <table style={{ margin: 'auto auto 1vh', width: '100%' }}>
         <thead>
             <tr>
                 <td>
@@ -101,12 +133,12 @@ const Stack = ({ stack }) => (
             </tr>
         </thead>
         <tbody>
-            {stack.map(val => (
+            {stack.concat('⮟').map(val => (
                 <tr
                     style={{
                         border: '1px solid black',
-                        width: '200px',
-                        height: '2em',
+                        width: '100%',
+                        height: '2ex',
                         textAlign: 'center',
                         verticalAlign: 'center',
                         fontFamily: 'monospace',
@@ -115,21 +147,16 @@ const Stack = ({ stack }) => (
                     <td>{val}</td>
                 </tr>
             ))}
-            <tr>
-                <td style={{ border: '1px solid black', width: '200px', height: '2em' }} />
-            </tr>
         </tbody>
     </table>
 );
 
 // visual representation of program pointers
 const Pointers = ({ DP, CC }) => (
-    <dl className="dl-horizontal">
-        <dt>Direction Pointer:</dt>
-        <dd style={{ fontSize: '12pt' }}>{['🡺', '🡻', '🡸', '🡹'][DP]}</dd>
-        <dt>Codel Chooser:</dt>
-        <dd style={{ fontSize: '12pt' }}>{['🡸', '🡺'][CC]}</dd>
-    </dl>
+    <div style={{ width: '100%', textAlign: 'center', fontWeight: 'bold' }}>
+        DP:&nbsp;<span style={{ fontSize: '12pt' }}>{['🡺', '🡻', '🡸', '🡹'][DP]}</span>&emsp;
+        CC:&nbsp;<span style={{ fontSize: '12pt' }}>{['🡸', '🡺'][CC]}</span>
+    </div>
 );
 
 export default Debugger;

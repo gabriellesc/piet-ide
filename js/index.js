@@ -6,7 +6,7 @@ import Controls from './controls.js';
 import Grid from './grid.js';
 import Debugger from './debugger.js';
 
-import { compile } from './interpreter.js';
+import { compile, run } from './compiler.js';
 import { commands } from './orderedCommands.js';
 
 const colours = [
@@ -278,12 +278,14 @@ const appState = {
     toggleDebugger: (() => {
         appState.debug.debugIsVisible = !appState.debug.debugIsVisible;
 
-        // update cell dimensions ********
+        // update cell dimensions ******
 
         appState.notify();
     }).bind(this),
 
     debug: {
+        commandList: [],
+
         debugIsVisible: false, // initially, debugger is not visible
         inDebugMode: false, // currently debugging
 
@@ -311,42 +313,14 @@ const appState = {
             return appState.debug.input[appState.debug.inputPtr++];
         }).bind(this),
 
-        // start debugging, and either run debugger or take step
-        start: (mode => {
-            let stepGen; //***********
-            if (!appState.debug.inDebugMode) {
-                stepGen = step(
-                    appState.commands,
-                    appState.grid,
-                    appState.blockSizes,
-                    appState.debug.getInput
-                );
-            }
-
-            let callStepAndUpdate = () => {
-                var nextStep = step.next();
-
-                // update values
-                for (var val in nextStep) {
-                    appState.debug[val] = nextStep[val];
-                }
-
-                return nextStep.done;
-            };
-
-            switch (mode) {
-                case 'run':
-                    appState.debug.inDebugMode = true;
-                    while (!callStepAndUpdate()); // call step and update until done
-                    appState.debug.inDebugMode = false;
-                    break;
-                case 'step':
-                    callStepAndUpdate(); // call step and update once
-                    break;
-            }
-
+        compile: (() => {
+            appState.debug.commandList = compile(appState.grid, appState.blockSizes);
             appState.notify();
         }).bind(this),
+
+        start: (() => {}).bind(this),
+
+        step: (() => {}).bind(this),
 
         // stop debugging (and reset debugger values)
         stop: (() => {
@@ -374,11 +348,12 @@ class App extends React.Component {
             <div
                 style={{
                     width: '100%',
+                    marginBottom: '1vh',
                     display: 'grid',
                     gridColumnGap: '1vw',
                     gridRowGap: '1vh',
                     gridTemplateColumns: this.props.appState.debug.debugIsVisible
-                        ? '375px 300px auto 300px'
+                        ? '375px 300px auto 200px'
                         : '375px 300px auto 25px',
                     gridTemplateRows: '35px 35px 35px auto',
                     gridTemplateAreas: this.props.appState.debug.debugIsVisible

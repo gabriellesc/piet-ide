@@ -5,7 +5,7 @@ class Grid extends React.Component {
         return (
             <table
                 style={{
-                    margin: '1vh 0',
+                    margin: '1vh 0 0 0',
                     tableLayout: 'fixed',
                     gridColumn: 'grid / span ' + (this.props.debug.debugIsVisible ? '3' : '4'),
                     alignSelf: 'start',

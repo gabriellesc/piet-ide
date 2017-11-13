@@ -12,6 +12,7 @@
     "watchify": "^3.9.0"
   },
   "devDependencies": {
+    "babel-plugin-transform-es2015-parameters": "^6.24.1",
     "babel-plugin-transform-regenerator": "^6.26.0",
     "babel-preset-env": "^1.6.0",
     "babel-preset-react": "^6.24.1"

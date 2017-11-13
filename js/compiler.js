@@ -1,18 +1,26 @@
 import { commands } from './orderedCommands.js';
 
-// find the next colour block visited by the compiler, from [row, col]
-function getNextColour(grid, row, col, DP, CC) {
-    let height = grid.length,
-        width = grid[0].length,
-        origColour = grid[row][col],
+// find the edge of the current colour block (containing [row, col]) which is furthest
+// in the direction of the DP and furthest to the CC's direction of the DP's direction of travel
+// (returns the [row, cell] in the next block, over this edge)
+function getNextColour(grid, height, width, row, col, DP, CC) {
+    let origColour = grid[row][col],
         visited = Array(height)
             .fill(0)
             .map(_ => Array(width).fill(false)),
-        farEdge = [0, 0];
+        farEdge = undefined;
 
     (function visitCell(row, col) {
-        // if we have already visited this cell or it is not part of the current block, skip it
-        if (visited[row][col] || grid[row][col] != origColour) {
+        // if this cell is outside the grid, we have already visited this cell, or it is not part
+        // of the current block, skip it
+        if (
+            row < 0 ||
+            col < 0 ||
+            row >= height ||
+            col >= width ||
+            visited[row][col] ||
+            grid[row][col] != origColour
+        ) {
             return;
         }
         visited[row][col] = true; // mark this cell as visited
@@ -21,37 +29,69 @@ function getNextColour(grid, row, col, DP, CC) {
         switch (DP) {
             // right
             case 0:
-                if (col + 1 < width && grid[row][col + 1] != origColour) {
-                    // right => lowermost block, or left => uppermost block
-                    if ((CC && row > farEdge[0]) || (!CC && row < farEdge[0])) {
-                        farEdge = [row, col];
+                if (col + 1 == width || grid[row][col + 1] != origColour) {
+                    if (
+                        // no edge previously found
+                        !farEdge ||
+                        // this edge is further than the previous in the direction of DP
+                        col + 1 > farEdge[1] ||
+                        // same distance in direction of DP, and further in direction of CC
+                        // (right => uppermost block, or left => lowermost block)
+                        (col + 1 == farEdge[1] &&
+                            ((CC && row > farEdge[0]) || (!CC && row < farEdge[0])))
+                    ) {
+                        farEdge = [row, col + 1];
                     }
                 }
                 break;
             // down
             case 1:
-                if (row + 1 < height && grid[row + 1][col] != origColour) {
-                    // right => leftmost block, or left => rightmost block
-                    if ((CC && col < farEdge[1]) || (!CC && col > farEdge[1])) {
-                        farEdge = [row, col];
+                if (row + 1 == height || grid[row + 1][col] != origColour) {
+                    if (
+                        // no edge previously found
+                        !farEdge ||
+                        // this edge is further than the previous in the direction of DP
+                        row + 1 > farEdge[0] ||
+                        // same distance in direction of DP, and further in direction of CC
+                        // (right => leftmost block, or left => rightmost block)
+                        (row + 1 == farEdge[0] &&
+                            ((CC && col < farEdge[1]) || (!CC && col > farEdge[1])))
+                    ) {
+                        farEdge = [row + 1, col];
                     }
                 }
                 break;
             // left
             case 2:
-                if (col - 1 > 0 && grid[row][col - 1] != origColour) {
-                    // right => uppermost block, or left => lowermost block
-                    if ((CC && row < farEdge[0]) || (!CC && row > farEdge[0])) {
-                        farEdge = [row, col];
+                if (col == 0 || grid[row][col - 1] != origColour) {
+                    if (
+                        // no edge previously found
+                        !farEdge ||
+                        // this edge is further than the previous in the direction of DP
+                        col - 1 < farEdge[1] ||
+                        // same distance in direction of DP, and further in direction of CC
+                        // (right => uppermost block, or left => lowermost block)
+                        (col - 1 == farEdge[1] &&
+                            ((CC && row < farEdge[0]) || (!CC && row > farEdge[0])))
+                    ) {
+                        farEdge = [row, col - 1];
                     }
                 }
                 break;
             // up
             case 3:
-                if (row - 1 > 0 && grid[row - 1][col] != origColour) {
-                    // right => rightmost block, or left => leftmost block
-                    if ((CC && col > farEdge[1]) || (!CC && col < farEdge[1])) {
-                        farEdge = [row, col];
+                if (row == 0 || grid[row - 1][col] != origColour) {
+                    if (
+                        // no edge previously found
+                        !farEdge ||
+                        // this edge is further than the previous in the direction of DP
+                        row - 1 < farEdge[0] ||
+                        // same distance in direction of DP, and further in direction of CC
+                        // (right => rightmost block, or left => leftmost block)
+                        (row - 1 == farEdge[0] &&
+                            ((CC && col > farEdge[1]) || (!CC && col < farEdge[1])))
+                    ) {
+                        farEdge = [row - 1, col];
                     }
                 }
                 break;
@@ -72,51 +112,79 @@ function getNextColour(grid, row, col, DP, CC) {
 // block and hit an edge or black block)
 // (DP: index into [right, down, left, up], direction pointer initially points right)
 // (CC: index into [left, right], codel chooser initially points left)
-function compile({ grid, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bounceCount = 0 }) {
-    let commandList = [];
+function compile(grid, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bounceCount = 0) {
+    let height = grid.length,
+        width = grid[0].length,
+        commandList = [],
+        loopCounter = 0;
+
+    // slide across a white block
+    function slide() {}
+
+    // bounce off an outer edge or black block
+    function bounce() {
+        bounceCount++; // increment bounceCount
+
+        if (bounceCount % 2 != 0) {
+            // toggle CC
+            CC = (CC + 1) % 2;
+        } else {
+            // move DP clockwise 1 step
+            DP = (DP + 1) % 4;
+        }
+    }
 
     // terminate compiler when bounce count reaches 8
     while (bounceCount < 8) {
+        // if we have looped more than 100 times, this might be an infinite loop
+        if (loopCounter++ > 100) {
+            commandList.push('TIMEOUT');
+            return commandList;
+        }
+
         // save the current colour to use for indexing into the command list
         let colour = grid[row][col];
         // save the previous block size in case it will be pushed to the stack
         let pushVal = blockSizes[row][col];
 
         // find next colour block
-        let [row, col] = getNextColour(grid, row, col, DP, CC);
-        let nextColour = grid[row][col];
-
-        if (nextColour == 18) {
-            // white block
-        } else if (nextColour == 19) {
-            // black block
-            bounceCount++; // increment bounceCount
-
-            if (bounceCount % 2 != 0) {
-                // move DP clockwise 1 step
-                DP = (DP + 1) % 4;
-            } else {
-                // toggle CC
-                CC = (CC + 1) % 2;
-            }
+        let [nextRow, nextCol] = getNextColour(grid, height, width, row, col, DP, CC);
+        // we hit an outer edge or a black block
+        if (
+            nextRow < 0 ||
+            nextRow >= height ||
+            nextCol < 0 ||
+            nextCol >= width ||
+            grid[nextRow][nextCol] == 19
+        ) {
+            bounce();
         } else {
-            bounceCount = 0; // we can move, so reset the bounce count
+            // we found the next block, so update the row/col
+            [row, col] = [nextRow, nextCol];
+            let nextColour = grid[row][col];
 
-            let command = commands[colour][nextColour]; // match colour transition to command
-            if (command == 'push') {
-                commandList.push(command.toUpper() + ' ' + pushVal);
-            } else if (command == 'pointer') {
-                // if the next command is POINTER, we should examine all possible DP values
-                commandList.push(compile({ grid, blockSizes, row, col, DP: 0, CC, bounceCount }));
-                commandList.push(compile({ grid, blockSizes, row, col, DP: 1, CC, bounceCount }));
-                commandList.push(compile({ grid, blockSizes, row, col, DP: 2, CC, bounceCount }));
-                commandList.push(compile({ grid, blockSizes, row, col, DP: 3, CC, bounceCount }));
-            } else if (command == 'switch') {
-                // if the next command is SWITCH, we should examine all possible CC values
-                commandList.push(compile({ grid, blockSizes, row, col, DP, CC: 0, bounceCount }));
-                commandList.push(compile({ grid, blockSizes, row, col, DP, CC: 1, bounceCount }));
+            if (nextColour == 18) {
+                // white block
+                slide();
             } else {
-                commandList.push(command.toUpper());
+                bounceCount = 0; // we can move, so reset the bounce count
+
+                let command = commands[colour][nextColour]; // match colour transition to command
+                if (command == 'push') {
+                    commandList.push(command.toUpperCase() + ' ' + pushVal);
+                } else if (command == 'pointer') {
+                    // if the next command is POINTER, we should examine all possible DP values
+                    commandList.push(compile(grid, blockSizes, row, col, 0, CC, bounceCount));
+                    commandList.push(compile(grid, blockSizes, row, col, 1, CC, bounceCount));
+                    commandList.push(compile(grid, blockSizes, row, col, 2, CC, bounceCount));
+                    commandList.push(compile(grid, blockSizes, row, col, 3, CC, bounceCount));
+                } else if (command == 'switch') {
+                    // if the next command is SWITCH, we should examine all possible CC values
+                    commandList.push(compile(grid, blockSizes, row, col, DP, 0, bounceCount));
+                    commandList.push(compile(grid, blockSizes, row, col, DP, 1, bounceCount));
+                } else {
+                    commandList.push(command.toUpperCase());
+                }
             }
         }
     }
