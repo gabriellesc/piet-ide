@@ -45,6 +45,10 @@ const appState = {
         .fill(0)
         .map(_ => Array(WIDTH).fill(WHITE)), // fill grid with white initially
 
+    blocks: Array(HEIGHT)
+        .fill(0)
+        .map(_ => Array(WIDTH).fill(0)),
+
     blockSizes: Array(HEIGHT)
         .fill(0)
         .map(_ => Array(WIDTH).fill(HEIGHT * WIDTH)),
@@ -123,8 +127,10 @@ const appState = {
             }
         }
 
-        // recompute block sizes
-        appState.blockSizes = appState.computeBlockSizes();
+        // recompute blocks and block sizes
+        let blocks = appState.computeBlocks();
+        appState.blocks = blocks.blockMap;
+        appState.blockSizes = blocks.blockSizes;
 
         appState.notify();
     }).bind(this),
@@ -200,8 +206,10 @@ const appState = {
                     }
                 });
 
-                // compute block sizes
-                appState.blockSizes = appState.computeBlockSizes();
+                // compute blocks and block sizes
+                let blocks = appState.computeBlocks();
+                appState.blocks = blocks.blockMap;
+                appState.blockSizes = blocks.blockSizes;
 
                 appState.notify();
             });
@@ -209,16 +217,20 @@ const appState = {
         reader.readAsArrayBuffer(file);
     },
 
-    // return the number of cells in the colour block that contains each cell
-    computeBlockSizes: (() => {
-        let blockSizes = Array(appState.height)
-            .fill(0)
-            .map(_ => Array(appState.width).fill(-1));
+    // return the colour blocks in the current grid, with arbitrary unique labels, and the number
+    // of cells in each colour block
+    computeBlocks: (() => {
+        let blockMap = Array(appState.height)
+                .fill(0)
+                .map(_ => Array(appState.width).fill(-1)),
+            blockSizes = Array(appState.height)
+                .fill(0)
+                .map(_ => Array(appState.width));
 
         function labelBlock(row, col, blockColour, label) {
             // cell has not yet been examined and is part of the current block
-            if (blockSizes[row][col] == -1 && appState.grid[row][col] == blockColour) {
-                blockSizes[row][col] = label;
+            if (blockMap[row][col] == -1 && appState.grid[row][col] == blockColour) {
+                blockMap[row][col] = label;
 
                 return (
                     1 +
@@ -236,21 +248,21 @@ const appState = {
         let labelMap = [];
         for (var i = 0; i < appState.height; i++) {
             for (var j = 0; j < appState.width; j++) {
-                // block size has not yet been calculated for this cell
-                if (blockSizes[i][j] == -1) {
+                // cell has not yet been labeled
+                if (blockMap[i][j] == -1) {
                     labelMap.push(labelBlock(i, j, appState.grid[i][j], labelMap.length));
                 }
             }
         }
 
-        // replace labels with block sizes
+        // map block labels to block sizes
         for (var i = 0; i < appState.height; i++) {
             for (var j = 0; j < appState.width; j++) {
-                blockSizes[i][j] = labelMap[blockSizes[i][j]];
+                blockSizes[i][j] = labelMap[blockMap[i][j]];
             }
         }
 
-        return blockSizes;
+        return { blockMap, blockSizes };
     }).bind(this),
 
     // toggle debugger visibility
