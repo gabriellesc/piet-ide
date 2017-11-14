@@ -1141,7 +1141,6 @@ var DebugControls = function DebugControls(_ref2) {
 var IO = function IO(_ref3) {
     var output = _ref3.output,
         input = _ref3.input,
-        inDebugMode = _ref3.inDebugMode,
         receiveInput = _ref3.receiveInput;
     return [_react2.default.createElement(
         'b',
@@ -1150,7 +1149,7 @@ var IO = function IO(_ref3) {
     ), _react2.default.createElement('br', { key: 'br-1' }), _react2.default.createElement('textarea', {
         key: 'in',
         id: 'in',
-        readOnly: !inDebugMode,
+        readOnly: false,
         style: {
             width: '100%',
             maxWidth: '100%',
@@ -1676,10 +1675,10 @@ var appState = {
     }.bind(undefined),
 
     debug: {
-        commandList: [],
-
         debugIsVisible: false, // initially, debugger is not visible
-        inDebugMode: false, // currently debugging
+
+        commandList: [],
+        runner: null,
 
         DP: 0, // index into [right, down, left, up], direction pointer initially points right
         CC: 0, // index into [left, right], codel chooser initially points left
@@ -1688,6 +1687,7 @@ var appState = {
 
         input: '',
         inputPtr: 0, // pointer into input stream
+
         currInst: null, // current instruction (in step mode)
 
         // receive input from user
@@ -1714,19 +1714,37 @@ var appState = {
             appState.debug.commandList = (0, _compiler.compile)(appState.grid, appState.blockSizes);
             appState.notify();
 
-            var runner = (0, _compiler.run)(appState.debug.commandList);
+            appState.debug.runner = (0, _compiler.run)(appState.debug.commandList);
+
             var step = void 0;
-            while (!(step = runner.next()).done) {
-                console.log(step.value);
+            while (!(step = appState.debug.runner.next()).done) {
                 for (var prop in step.value) {
                     appState.debug[prop] = step.value[prop];
-
-                    appState.notify();
                 }
+                appState.notify();
             }
+
+            appState.debug.runner = null; // finished running so clear runner
         }.bind(undefined),
 
-        step: function () {}.bind(undefined),
+        step: function () {
+            if (!appState.debug.runner) {
+                appState.debug.commandList = (0, _compiler.compile)(appState.grid, appState.blockSizes);
+                appState.notify();
+
+                appState.debug.runner = (0, _compiler.run)(appState.debug.commandList);
+            }
+
+            var step = appState.debug.runner.next();
+            if (!step.done) {
+                for (var prop in step.value) {
+                    appState.debug[prop] = step.value[prop];
+                }
+                appState.notify();
+            } else {
+                appState.debug.runner = null; // finished running so clear runner
+            }
+        }.bind(undefined),
 
         // stop debugging (and reset debugger values)
         stop: function () {

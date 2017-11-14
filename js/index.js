@@ -284,10 +284,10 @@ const appState = {
     }).bind(this),
 
     debug: {
-        commandList: [],
-
         debugIsVisible: false, // initially, debugger is not visible
-        inDebugMode: false, // currently debugging
+
+        commandList: [],
+        runner: null,
 
         DP: 0, // index into [right, down, left, up], direction pointer initially points right
         CC: 0, // index into [left, right], codel chooser initially points left
@@ -296,6 +296,7 @@ const appState = {
 
         input: '',
         inputPtr: 0, // pointer into input stream
+
         currInst: null, // current instruction (in step mode)
 
         // receive input from user
@@ -322,19 +323,37 @@ const appState = {
             appState.debug.commandList = compile(appState.grid, appState.blockSizes);
             appState.notify();
 
-            let runner = run(appState.debug.commandList);
+            appState.debug.runner = run(appState.debug.commandList);
+
             let step;
-            while (!(step = runner.next()).done) {
-                console.log(step.value);
+            while (!(step = appState.debug.runner.next()).done) {
                 for (var prop in step.value) {
                     appState.debug[prop] = step.value[prop];
-
-                    appState.notify();
                 }
+                appState.notify();
             }
+
+            appState.debug.runner = null; // finished running so clear runner
         }).bind(this),
 
-        step: (() => {}).bind(this),
+        step: (() => {
+            if (!appState.debug.runner) {
+                appState.debug.commandList = compile(appState.grid, appState.blockSizes);
+                appState.notify();
+
+                appState.debug.runner = run(appState.debug.commandList);
+            }
+
+            let step = appState.debug.runner.next();
+            if (!step.done) {
+                for (var prop in step.value) {
+                    appState.debug[prop] = step.value[prop];
+                }
+                appState.notify();
+            } else {
+                appState.debug.runner = null; // finished running so clear runner
+            }
+        }).bind(this),
 
         // stop debugging (and reset debugger values)
         stop: (() => {

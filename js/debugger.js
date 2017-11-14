@@ -92,13 +92,13 @@ const DebugControls = ({ start, step, stop }) => (
 );
 
 // IO visual containers
-const IO = ({ output, input, inDebugMode, receiveInput }) => [
+const IO = ({ output, input, receiveInput }) => [
     <b key="input-label">Input</b>,
     <br key="br-1" />,
     <textarea
         key="in"
         id="in"
-        readOnly={!inDebugMode}
+        readOnly={false}
         style={{
             width: '100%',
             maxWidth: '100%',
