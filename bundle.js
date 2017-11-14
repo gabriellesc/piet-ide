@@ -1181,52 +1181,69 @@ var Compiler = function Compiler(_ref) {
     )];
 };
 
-// run/step/stop control buttons
+// run/step/continue/stop control buttons
 var DebugControls = function DebugControls(_ref2) {
     var start = _ref2.start,
         step = _ref2.step,
+        cont = _ref2.cont,
         stop = _ref2.stop;
     return _react2.default.createElement(
         'div',
-        {
-            className: 'btn-group',
-            role: 'group',
-            style: { width: '100%', marginBottom: '1vh', marginLeft: '2px' } },
+        { className: 'btn-toolbar', role: 'toolbar', style: { width: '100%', margin: '0 0 1vh' } },
         _react2.default.createElement(
             'button',
             {
                 type: 'button',
                 className: 'btn btn-success',
                 title: 'Run',
-                style: { width: '33%' },
+                style: { width: 'calc((100% - 5px) / 4)', marginLeft: '2px' },
                 onClick: function onClick() {
                     return start();
-                } },
-            _react2.default.createElement('i', { className: 'glyphicon glyphicon-forward' })
-        ),
-        _react2.default.createElement(
-            'button',
-            {
-                type: 'button',
-                className: 'btn btn-primary',
-                title: 'Step',
-                style: { width: '33%' },
-                onClick: function onClick() {
-                    return step();
                 } },
             _react2.default.createElement('i', { className: 'glyphicon glyphicon-play' })
         ),
         _react2.default.createElement(
-            'button',
+            'div',
             {
-                type: 'button',
-                className: 'btn btn-danger',
-                title: 'Stop',
-                style: { width: '33%' },
-                onClick: function onClick() {
-                    return stop();
-                } },
-            _react2.default.createElement('i', { className: 'glyphicon glyphicon-stop' })
+                className: 'btn-group',
+                role: 'group',
+                style: { width: 'calc((100% - 5px) / 4 * 3 - 2px)' } },
+            _react2.default.createElement(
+                'button',
+                {
+                    type: 'button',
+                    className: 'btn btn-info',
+                    title: 'Step',
+                    style: { width: '33%' },
+                    onClick: function onClick() {
+                        return step();
+                    } },
+                _react2.default.createElement('i', { className: 'glyphicon glyphicon-step-forward' })
+            ),
+            _react2.default.createElement(
+                'button',
+                {
+                    type: 'button',
+                    className: 'btn btn-primary',
+                    title: 'Continue',
+                    style: { width: '33%' },
+                    onClick: function onClick() {
+                        return cont();
+                    } },
+                _react2.default.createElement('i', { className: 'glyphicon glyphicon-fast-forward' })
+            ),
+            _react2.default.createElement(
+                'button',
+                {
+                    type: 'button',
+                    className: 'btn btn-danger',
+                    title: 'Stop',
+                    style: { width: '33%' },
+                    onClick: function onClick() {
+                        return stop();
+                    } },
+                _react2.default.createElement('i', { className: 'glyphicon glyphicon-stop' })
+            )
         )
     );
 };
@@ -1838,16 +1855,8 @@ var appState = {
             // create generator
             appState.debug.runner = (0, _compiler.run)(appState.debug.commandList);
 
-            // call generator until done
-            var step = void 0;
-            while (!(step = appState.debug.runner.next()).done) {
-                for (var prop in step.value) {
-                    appState.debug[prop] = step.value[prop];
-                }
-                appState.notify();
-            }
-
-            appState.debug.runner = null; // finished running so clear runner
+            // "continue" from the starting point
+            appState.debug.cont();
         }.bind(undefined),
 
         // step through program
@@ -1866,12 +1875,32 @@ var appState = {
             var step = appState.debug.runner.next();
             if (!step.done) {
                 appState.debug.currInst++;
-
+                // update state of debugger based on result of current step
                 for (var prop in step.value) {
                     appState.debug[prop] = step.value[prop];
                 }
                 appState.notify();
             } else {
+                appState.debug.runner = null; // finished running so clear runner
+            }
+        }.bind(undefined),
+
+        // continue running after stepping through the program (run the rest of the program
+        // starting from the current step)
+        cont: function () {
+            // if we were not already stepping through the program, this function does nothing
+            if (appState.debug.runner) {
+                // call generator until done
+                var step = void 0;
+                while (!(step = appState.debug.runner.next()).done) {
+                    appState.debug.currInst++;
+                    // update state of debugger based on result of current step
+                    for (var prop in step.value) {
+                        appState.debug[prop] = step.value[prop];
+                    }
+                    appState.notify();
+                }
+
                 appState.debug.runner = null; // finished running so clear runner
             }
         }.bind(undefined),

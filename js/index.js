@@ -320,16 +320,8 @@ const appState = {
             // create generator
             appState.debug.runner = run(appState.debug.commandList);
 
-            // call generator until done
-            let step;
-            while (!(step = appState.debug.runner.next()).done) {
-                for (var prop in step.value) {
-                    appState.debug[prop] = step.value[prop];
-                }
-                appState.notify();
-            }
-
-            appState.debug.runner = null; // finished running so clear runner
+            // "continue" from the starting point
+            appState.debug.cont();
         }).bind(this),
 
         // step through program
@@ -348,12 +340,32 @@ const appState = {
             let step = appState.debug.runner.next();
             if (!step.done) {
                 appState.debug.currInst++;
-
+                // update state of debugger based on result of current step
                 for (var prop in step.value) {
                     appState.debug[prop] = step.value[prop];
                 }
                 appState.notify();
             } else {
+                appState.debug.runner = null; // finished running so clear runner
+            }
+        }).bind(this),
+
+        // continue running after stepping through the program (run the rest of the program
+        // starting from the current step)
+        cont: (() => {
+            // if we were not already stepping through the program, this function does nothing
+            if (appState.debug.runner) {
+                // call generator until done
+                let step;
+                while (!(step = appState.debug.runner.next()).done) {
+                    appState.debug.currInst++;
+                    // update state of debugger based on result of current step
+                    for (var prop in step.value) {
+                        appState.debug[prop] = step.value[prop];
+                    }
+                    appState.notify();
+                }
+
                 appState.debug.runner = null; // finished running so clear runner
             }
         }).bind(this),

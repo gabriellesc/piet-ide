@@ -69,36 +69,46 @@ const Compiler = ({ compile, commandList, currInst }) => [
     </div>,
 ];
 
-// run/step/stop control buttons
-const DebugControls = ({ start, step, stop }) => (
-    <div
-        className="btn-group"
-        role="group"
-        style={{ width: '100%', marginBottom: '1vh', marginLeft: '2px' }}>
+// run/step/continue/stop control buttons
+const DebugControls = ({ start, step, cont, stop }) => (
+    <div className="btn-toolbar" role="toolbar" style={{ width: '100%', margin: '0 0 1vh' }}>
         <button
             type="button"
             className="btn btn-success"
             title="Run"
-            style={{ width: '33%' }}
+            style={{ width: 'calc((100% - 5px) / 4)', marginLeft: '2px' }}
             onClick={() => start()}>
-            <i className="glyphicon glyphicon-forward" />
-        </button>
-        <button
-            type="button"
-            className="btn btn-primary"
-            title="Step"
-            style={{ width: '33%' }}
-            onClick={() => step()}>
             <i className="glyphicon glyphicon-play" />
         </button>
-        <button
-            type="button"
-            className="btn btn-danger"
-            title="Stop"
-            style={{ width: '33%' }}
-            onClick={() => stop()}>
-            <i className="glyphicon glyphicon-stop" />
-        </button>
+        <div
+            className="btn-group"
+            role="group"
+            style={{ width: 'calc((100% - 5px) / 4 * 3 - 2px)' }}>
+            <button
+                type="button"
+                className="btn btn-info"
+                title="Step"
+                style={{ width: '33%' }}
+                onClick={() => step()}>
+                <i className="glyphicon glyphicon-step-forward" />
+            </button>
+            <button
+                type="button"
+                className="btn btn-primary"
+                title="Continue"
+                style={{ width: '33%' }}
+                onClick={() => cont()}>
+                <i className="glyphicon glyphicon-fast-forward" />
+            </button>
+            <button
+                type="button"
+                className="btn btn-danger"
+                title="Stop"
+                style={{ width: '33%' }}
+                onClick={() => stop()}>
+                <i className="glyphicon glyphicon-stop" />
+            </button>
+        </div>
     </div>
 );
 
