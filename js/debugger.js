@@ -24,7 +24,7 @@ const Debugger = props => (
         <DebugControls {...props.debug} />
         <Pointers {...props.debug} />
         <Stack {...props.debug} />
-        <IO {...props.debug} />
+        <IO {...props} {...props.debug} />
     </div>
 );
 
@@ -92,13 +92,13 @@ const DebugControls = ({ start, step, stop }) => (
 );
 
 // IO visual containers
-const IO = ({ output, input, receiveInput }) => [
+const IO = ({ isRunning, output, input, receiveInput }) => [
     <b key="input-label">Input</b>,
     <br key="br-1" />,
     <textarea
         key="in"
         id="in"
-        readOnly={false}
+        readOnly={!isRunning}
         style={{
             width: '100%',
             maxWidth: '100%',

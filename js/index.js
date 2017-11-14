@@ -7,30 +7,9 @@ import Grid from './grid.js';
 import Debugger from './debugger.js';
 
 import { compile, run } from './compiler.js';
-import { commands } from './orderedCommands.js';
 
-const colours = [
-    '#FFC0C0', // light red
-    '#FFFFC0', // light yellow
-    '#C0FFC0', // light green
-    '#C0FFFF', // light cyan
-    '#C0C0FF', // light blue
-    '#FFC0FF', // light magenta
-    '#FF0000', // red
-    '#FFFF00', // yellow
-    '#00FF00', // green
-    '#00FFFF', // cyan
-    '#0000FF', // blue
-    '#FF00FF', // magenta
-    '#C00000', // dark red
-    '#C0C000', // dark yellow
-    '#00C000', // dark green
-    '#00C0C0', // dark cyan
-    '#0000C0', // dark blue
-    '#C000C0', // dark magenta
-    '#FFFFFF', // white
-    '#000000', // black
-];
+import { commands } from './orderedCommands.js';
+import { colours, WHITE, BLACK } from './colours.js';
 
 /* re-order commands to correspond to colours order based on currently-selected colour
  * NOTE: this was used to compute all command orders, which were saved to be re-used;
@@ -64,7 +43,7 @@ const appState = {
 
     grid: Array(HEIGHT)
         .fill(0)
-        .map(_ => Array(WIDTH).fill(18)), // fill grid with white initially
+        .map(_ => Array(WIDTH).fill(WHITE)), // fill grid with white initially
 
     blockSizes: Array(HEIGHT)
         .fill(0)
@@ -90,7 +69,7 @@ const appState = {
 
         appState.grid = Array(height)
             .fill(0)
-            .map(_ => Array(width).fill(18));
+            .map(_ => Array(width).fill(WHITE));
 
         appState.blockSizes = Array(height)
             .fill(0)
@@ -103,7 +82,7 @@ const appState = {
         appState.selectedColour = colour;
 
         // reorder commands
-        if (colour == 18 || colour == 19) {
+        if (colour == WHITE || colour == BLACK) {
             // colour is white or black
             appState.commands = [];
         } else {
@@ -215,7 +194,7 @@ const appState = {
                     var colour = img.getPixelColor(x, y);
                     // treat non-standard colour as white
                     if (colourMap[colour] == undefined) {
-                        appState.grid[y][x] = 18;
+                        appState.grid[y][x] = WHITE;
                     } else {
                         appState.grid[y][x] = colourMap[colour];
                     }
@@ -319,12 +298,16 @@ const appState = {
             appState.notify();
         }).bind(this),
 
+        // start running program
         start: (() => {
+            // re-compile
             appState.debug.commandList = compile(appState.grid, appState.blockSizes);
             appState.notify();
 
+            // create generator
             appState.debug.runner = run(appState.debug.commandList);
 
+            // call generator until done
             let step;
             while (!(step = appState.debug.runner.next()).done) {
                 for (var prop in step.value) {
@@ -336,7 +319,10 @@ const appState = {
             appState.debug.runner = null; // finished running so clear runner
         }).bind(this),
 
+        // step through program
         step: (() => {
+            // if generator does not already exist (i.e. we have not already started stepping
+            // through program), re-compile program and create new generator
             if (!appState.debug.runner) {
                 appState.debug.commandList = compile(appState.grid, appState.blockSizes);
                 appState.notify();
@@ -344,6 +330,7 @@ const appState = {
                 appState.debug.runner = run(appState.debug.commandList);
             }
 
+            // get next step from generator
             let step = appState.debug.runner.next();
             if (!step.done) {
                 for (var prop in step.value) {
@@ -363,8 +350,9 @@ const appState = {
             appState.debug.output = '';
             appState.debug.input = ''; // update UI to reflect cleared input???
             appState.debug.inputPtr = 0;
-            appState.debug.inDebugMode = false;
             appState.debug.currInst = null;
+
+            appState.debug.runner = null; // finished running so clear runner
 
             appState.notify();
         }).bind(this),
@@ -400,9 +388,14 @@ class App extends React.Component {
 			   'grid grid grid grid'`,
                     alignItems: 'center',
                 }}>
-                <Controls colours={colours} {...this.props.appState} />
-                <Grid colours={colours} {...this.props.appState} />
-                {this.props.appState.debug.debugIsVisible && <Debugger {...this.props.appState} />}
+                <Controls {...this.props.appState} />
+                <Grid {...this.props.appState} />
+                {this.props.appState.debug.debugIsVisible && (
+                    <Debugger
+                        isRunning={this.props.appState.debug.runner != null}
+                        {...this.props.appState}
+                    />
+                )}
             </div>
         );
     }

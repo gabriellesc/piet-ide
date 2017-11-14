@@ -1,12 +1,13 @@
 import React from 'react';
+import { colours, WHITE, BLACK } from './colours.js';
 
 const ColourPicker = props => (
     <table style={{ gridColumn: 'cpicker', gridRow: '1 / 4' }}>
         <tbody>
             {[
-                props.colours.slice(0, 6),
-                props.colours.slice(6, 12),
-                props.colours.slice(12, 18),
+                colours.slice(0, 6),
+                colours.slice(6, 12),
+                colours.slice(12, 18),
             ].map((colourRow, i) => (
                 <tr key={'colour-row-' + i}>
                     {colourRow.map((colour, j) => (
@@ -20,8 +21,8 @@ const ColourPicker = props => (
             ))}
 
             <tr>
-                <ColourCell colSpan="3" cellColour={18} {...props} />
-                <ColourCell colSpan="3" cellColour={19} {...props} />
+                <ColourCell colSpan="3" cellColour={WHITE} {...props} />
+                <ColourCell colSpan="3" cellColour={BLACK} {...props} />
             </tr>
         </tbody>
     </table>
@@ -34,7 +35,7 @@ const ColourCell = props => (
             width: '32px',
             height: '32px',
             padding: '5px',
-            backgroundColor: props.colours[props.cellColour],
+            backgroundColor: colours[props.cellColour],
             border:
                 props.selectedColour == props.cellColour ? '4px double black' : '1px solid black',
             color: 'white',
