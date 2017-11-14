@@ -351,7 +351,7 @@ const appState = {
             appState.debug.CC = 0;
             appState.debug.stack = [];
             appState.debug.output = '';
-            appState.debug.input = ''; // update UI to reflect cleared input???
+            appState.debug.input = '';
             appState.debug.inputPtr = 0;
             appState.debug.currInst = -1;
 

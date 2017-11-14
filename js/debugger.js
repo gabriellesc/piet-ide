@@ -58,7 +58,7 @@ const Compiler = ({ compile, commandList, currInst }) => [
                         key={'command-' + i}
                         style={{
                             padding: '0 5px',
-                            backgroundColor: i == currInst ? '#337ab7' : 'transparent',
+                            backgroundColor: i == currInst ? '#337ab7' : 'none',
                             color: i == currInst ? 'white' : 'black',
                         }}>
                         {command}
@@ -103,37 +103,49 @@ const DebugControls = ({ start, step, stop }) => (
 );
 
 // IO visual containers
-const IO = ({ isRunning, output, input, receiveInput }) => [
-    <b key="input-label">Input</b>,
-    <br key="br-1" />,
-    <textarea
-        key="in"
-        id="in"
-        readOnly={!isRunning}
-        style={{
-            width: '100%',
-            maxWidth: '100%',
-            fontFamily: 'monospace',
-            fontSize: '12pt',
-        }}
-        onKeyPress={event => receiveInput(event.charCode)}
-    />,
-    <br key="br-2" />,
-    <b key="output-label">Output</b>,
-    <br key="br-3" />,
-    <textarea
-        key="out"
-        id="out"
-        readOnly
-        style={{
-            width: '100%',
-            maxWidth: '100%',
-            fontFamily: 'monospace',
-            fontSize: '12pt',
-        }}
-        value={output}
-    />,
-];
+class IO extends React.Component {
+    // manually update input value when it is changed from appState (eg. when input is cleared)
+    componentWillReceiveProps(newProps) {
+        if (this.input.value != newProps.input) {
+            this.input.value = newProps.input;
+        }
+    }
+
+    render() {
+        return [
+            <b key="input-label">Input</b>,
+            <br key="br-1" />,
+            <textarea
+                key="in"
+                id="in"
+                ref={input => (this.input = input)}
+                readOnly={!this.props.isRunning}
+                style={{
+                    width: '100%',
+                    maxWidth: '100%',
+                    fontFamily: 'monospace',
+                    fontSize: '12pt',
+                }}
+                onKeyPress={event => this.props.receiveInput(event.charCode)}
+            />,
+            <br key="br-2" />,
+            <b key="output-label">Output</b>,
+            <br key="br-3" />,
+            <textarea
+                key="out"
+                id="out"
+                readOnly
+                style={{
+                    width: '100%',
+                    maxWidth: '100%',
+                    fontFamily: 'monospace',
+                    fontSize: '12pt',
+                }}
+                value={this.props.output}
+            />,
+        ];
+    }
+}
 
 // visual representation of stack
 const Stack = ({ stack }) => (
