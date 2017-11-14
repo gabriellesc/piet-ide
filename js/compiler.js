@@ -119,8 +119,32 @@ function compile(grid, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bounceCount
         commandList = [],
         loopCounter = 0;
 
-    // slide across a white block
-    function slide() {}
+    // slide across a white block in a straight line
+    function slide(row, col) {
+        let nextRow = row,
+            nextCol = col;
+
+        switch (DP) {
+            // right
+            case 0:
+                for (; nextCol < width && grid[row][nextCol] == WHITE; nextCol++);
+                break;
+            // down
+            case 1:
+                for (; nextRow < height && grid[nextRow][col] == WHITE; nextRow++);
+                break;
+            // left
+            case 2:
+                for (; nextCol >= 0 && grid[row][nextCol] == WHITE; nextCol--);
+                break;
+            // up
+            case 3:
+                for (; nextRow >= 0 && grid[nextRow][col] == WHITE; nextRow--);
+                break;
+        }
+
+        return [nextRow, nextCol];
+    }
 
     // bounce off an outer edge or black block
     function bounce() {
@@ -163,7 +187,8 @@ function compile(grid, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bounceCount
             // we hit an outer edge or a black block, so bounce off it (toggle DP/CC)
             bounce();
         } else if (grid[nextRow][nextCol] == WHITE) {
-            // we hit a white block, so slide through it
+            // we hit a white block, so slide across it
+            [row, col] = slide(nextRow, nextCol);
         } else {
             // we found the next block, so update the row/col
             [row, col] = [nextRow, nextCol];
@@ -215,7 +240,7 @@ function* run(commandList, getInput) {
             /* Pushes the value of the colour block just exited on to the stack */
 
             var [_, pushVal] = command.split(' '); // extract value from command
-            stack.push(pushVal);
+            stack.push(parseInt(pushVal));
 
             yield { stack };
         } else if (['+', '/', '>', '-', 'MOD', '*', 'ROLL'].includes(command)) {

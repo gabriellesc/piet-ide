@@ -230,8 +230,32 @@ function compile(grid, blockSizes) {
         commandList = [],
         loopCounter = 0;
 
-    // slide across a white block
-    function slide() {}
+    // slide across a white block in a straight line
+    function slide(row, col) {
+        var nextRow = row,
+            nextCol = col;
+
+        switch (DP) {
+            // right
+            case 0:
+                for (; nextCol < width && grid[row][nextCol] == _colours.WHITE; nextCol++) {}
+                break;
+            // down
+            case 1:
+                for (; nextRow < height && grid[nextRow][col] == _colours.WHITE; nextRow++) {}
+                break;
+            // left
+            case 2:
+                for (; nextCol >= 0 && grid[row][nextCol] == _colours.WHITE; nextCol--) {}
+                break;
+            // up
+            case 3:
+                for (; nextRow >= 0 && grid[nextRow][col] == _colours.WHITE; nextRow--) {}
+                break;
+        }
+
+        return [nextRow, nextCol];
+    }
 
     // bounce off an outer edge or black block
     function bounce() {
@@ -272,7 +296,14 @@ function compile(grid, blockSizes) {
             // we hit an outer edge or a black block, so bounce off it (toggle DP/CC)
             bounce();
         } else if (grid[nextRow][nextCol] == _colours.WHITE) {
-            // we hit a white block, so slide through it
+            var _slide = slide(nextRow, nextCol);
+            // we hit a white block, so slide across it
+
+
+            var _slide2 = _slicedToArray(_slide, 2);
+
+            row = _slide2[0];
+            col = _slide2[1];
         } else {
             row = nextRow;
             // we found the next block, so update the row/col
@@ -371,7 +402,7 @@ function run(commandList, getInput) {
 
                     _command$split = command.split(' '), _command$split2 = _slicedToArray(_command$split, 2), _ = _command$split2[0], pushVal = _command$split2[1]; // extract value from command
 
-                    stack.push(pushVal);
+                    stack.push(parseInt(pushVal));
 
                     _context.next = 25;
                     return { stack: stack };
