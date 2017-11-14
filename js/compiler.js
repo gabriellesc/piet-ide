@@ -143,6 +143,7 @@ function compile(grid, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bounceCount
                 break;
         }
 
+        commandList.push('SLIDE');
         return [nextRow, nextCol];
     }
 

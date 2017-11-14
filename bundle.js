@@ -254,6 +254,7 @@ function compile(grid, blockSizes) {
                 break;
         }
 
+        commandList.push('SLIDE');
         return [nextRow, nextCol];
     }
 
@@ -1126,7 +1127,8 @@ var Debugger = function Debugger(props) {
 
 var Compiler = function Compiler(_ref) {
     var compile = _ref.compile,
-        commandList = _ref.commandList;
+        commandList = _ref.commandList,
+        currInst = _ref.currInst;
     return [_react2.default.createElement(
         'button',
         {
@@ -1151,13 +1153,23 @@ var Compiler = function Compiler(_ref) {
                 overflow: 'auto',
                 fontFamily: 'monospace',
                 fontSize: '11pt',
-                whiteSpace: 'pre',
                 backgroundColor: '#f5f5f5',
                 border: '1px solid #ccc'
             } },
-        commandList.filter(function (command) {
-            return !(command.startsWith('CC') || command.startsWith('DP'));
-        }).join('\n')
+        commandList.map(function (command, i) {
+            return !(command.startsWith('CC') || command.startsWith('DP') || command == 'SLIDE') && _react2.default.createElement(
+                'div',
+                {
+                    key: 'command-' + i,
+                    style: {
+                        padding: '0 5px',
+                        backgroundColor: i == currInst ? '#337ab7' : 'transparent',
+                        color: i == currInst ? 'white' : 'black'
+                    } },
+                command,
+                _react2.default.createElement('br', null)
+            );
+        })
     )];
 };
 
@@ -1746,7 +1758,7 @@ var appState = {
         input: '',
         inputPtr: 0, // pointer into input stream
 
-        currInst: null, // current instruction (in step mode)
+        currInst: -1, // current instruction (in step mode)
 
         // receive input from user
         receiveInput: function (input) {
@@ -1798,11 +1810,14 @@ var appState = {
                 appState.notify();
 
                 appState.debug.runner = (0, _compiler.run)(appState.debug.commandList);
+                appState.debug.currInst;
             }
 
             // get next step from generator
             var step = appState.debug.runner.next();
             if (!step.done) {
+                appState.debug.currInst++;
+
                 for (var prop in step.value) {
                     appState.debug[prop] = step.value[prop];
                 }
@@ -1820,7 +1835,7 @@ var appState = {
             appState.debug.output = '';
             appState.debug.input = ''; // update UI to reflect cleared input???
             appState.debug.inputPtr = 0;
-            appState.debug.currInst = null;
+            appState.debug.currInst = -1;
 
             appState.debug.runner = null; // finished running so clear runner
 

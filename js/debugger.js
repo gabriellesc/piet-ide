@@ -28,7 +28,7 @@ const Debugger = props => (
     </div>
 );
 
-const Compiler = ({ compile, commandList }) => [
+const Compiler = ({ compile, commandList, currInst }) => [
     <button
         key="compile-button"
         type="button"
@@ -48,13 +48,24 @@ const Compiler = ({ compile, commandList }) => [
             overflow: 'auto',
             fontFamily: 'monospace',
             fontSize: '11pt',
-            whiteSpace: 'pre',
             backgroundColor: '#f5f5f5',
             border: '1px solid #ccc',
         }}>
-        {commandList
-            .filter(command => !(command.startsWith('CC') || command.startsWith('DP')))
-            .join('\n')}
+        {commandList.map(
+            (command, i) =>
+                !(command.startsWith('CC') || command.startsWith('DP') || command == 'SLIDE') && (
+                    <div
+                        key={'command-' + i}
+                        style={{
+                            padding: '0 5px',
+                            backgroundColor: i == currInst ? '#337ab7' : 'transparent',
+                            color: i == currInst ? 'white' : 'black',
+                        }}>
+                        {command}
+                        <br />
+                    </div>
+                )
+        )}
     </div>,
 ];
 

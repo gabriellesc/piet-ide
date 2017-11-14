@@ -276,7 +276,7 @@ const appState = {
         input: '',
         inputPtr: 0, // pointer into input stream
 
-        currInst: null, // current instruction (in step mode)
+        currInst: -1, // current instruction (in step mode)
 
         // receive input from user
         receiveInput: (input => {
@@ -328,11 +328,14 @@ const appState = {
                 appState.notify();
 
                 appState.debug.runner = run(appState.debug.commandList);
+                appState.debug.currInst;
             }
 
             // get next step from generator
             let step = appState.debug.runner.next();
             if (!step.done) {
+                appState.debug.currInst++;
+
                 for (var prop in step.value) {
                     appState.debug[prop] = step.value[prop];
                 }
@@ -350,7 +353,7 @@ const appState = {
             appState.debug.output = '';
             appState.debug.input = ''; // update UI to reflect cleared input???
             appState.debug.inputPtr = 0;
-            appState.debug.currInst = null;
+            appState.debug.currInst = -1;
 
             appState.debug.runner = null; // finished running so clear runner
 
