@@ -288,7 +288,8 @@ const appState = {
         input: '',
         inputPtr: 0, // pointer into input stream
 
-        currInst: -1, // current instruction (in step mode)
+        currBlock: null, // current block (in step mode)
+        currCommand: -1, // current instruction (in step mode)
 
         // reset the debugger to its initial state (but ignore the current command list)
         resetDebugger: (() => {
@@ -298,7 +299,8 @@ const appState = {
             appState.debug.output = '';
             appState.debug.input = '';
             appState.debug.inputPtr = 0;
-            appState.debug.currInst = -1;
+            appState.debug.currBlock = null;
+            appState.debug.currCommand = -1;
             appState.debug.runner = null;
         }).bind(this),
 
@@ -318,14 +320,22 @@ const appState = {
         }).bind(this),
 
         compile: (() => {
-            appState.debug.commandList = compile(appState.grid, appState.blockSizes);
+            appState.debug.commandList = compile(
+                appState.grid,
+                appState.blocks,
+                appState.blockSizes
+            );
             appState.notify();
         }).bind(this),
 
         // start running program
         start: (() => {
             // re-compile
-            appState.debug.commandList = compile(appState.grid, appState.blockSizes);
+            appState.debug.commandList = compile(
+                appState.grid,
+                appState.blocks,
+                appState.blockSizes
+            );
             appState.debug.resetDebugger();
             appState.notify();
 
@@ -341,7 +351,11 @@ const appState = {
             // if generator does not already exist (i.e. we have not already started stepping
             // through program), re-compile program and create new generator
             if (!appState.debug.runner) {
-                appState.debug.commandList = compile(appState.grid, appState.blockSizes);
+                appState.debug.commandList = compile(
+                    appState.grid,
+                    appState.blocks,
+                    appState.blockSizes
+                );
                 appState.debug.resetDebugger();
                 appState.notify();
 
@@ -351,7 +365,11 @@ const appState = {
             // get next step from generator
             let step = appState.debug.runner.next();
             if (!step.done) {
-                appState.debug.currInst++;
+                // update current command and block
+                appState.debug.currCommand++;
+                var [block] = appState.debug.commandList[appState.debug.currCommand].split(' ', 1);
+                appState.debug.currBlock = block;
+
                 // update state of debugger based on result of current step
                 for (var prop in step.value) {
                     appState.debug[prop] = step.value[prop];
@@ -370,7 +388,14 @@ const appState = {
                 // call generator until done
                 let step;
                 while (!(step = appState.debug.runner.next()).done) {
-                    appState.debug.currInst++;
+                    // update current command and block
+                    appState.debug.currCommand++;
+                    var [block] = appState.debug.commandList[appState.debug.currCommand].split(
+                        ' ',
+                        1
+                    );
+                    appState.debug.currBlock = block;
+
                     // update state of debugger based on result of current step
                     for (var prop in step.value) {
                         appState.debug[prop] = step.value[prop];

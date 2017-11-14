@@ -113,7 +113,7 @@ function getNextColour(grid, height, width, row, col, DP, CC) {
 // block and hit an edge or black block)
 // (DP: index into [right, down, left, up], direction pointer initially points right)
 // (CC: index into [left, right], codel chooser initially points left)
-function compile(grid, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bounceCount = 0) {
+function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bounceCount = 0) {
     let height = grid.length,
         width = grid[0].length,
         commandList = [],
@@ -143,7 +143,7 @@ function compile(grid, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bounceCount
                 break;
         }
 
-        commandList.push('SLIDE');
+        commandList.push(blocks[row][col] + ' SLIDE');
         return [nextRow, nextCol];
     }
 
@@ -154,11 +154,11 @@ function compile(grid, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bounceCount
         if (bounceCount % 2 != 0) {
             // toggle CC
             CC = (CC + 1) % 2;
-            commandList.push('CC ' + CC);
+            commandList.push(blocks[row][col] + ' CC');
         } else {
             // move DP clockwise 1 step
             DP = (DP + 1) % 4;
-            commandList.push('DP ' + DP);
+            commandList.push(blocks[row][col] + ' DP');
         }
     }
 
@@ -166,7 +166,7 @@ function compile(grid, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bounceCount
     while (bounceCount < 8) {
         // if we have looped more than 100 times, this might be an infinite loop
         if (loopCounter++ > 100) {
-            commandList.push('TIMEOUT');
+            commandList.push(blocks[row][col] + ' TIMEOUT');
             return commandList;
         }
 
@@ -199,7 +199,7 @@ function compile(grid, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bounceCount
 
             let command = commands[colour][nextColour]; // match colour transition to command
             if (command == 'push') {
-                commandList.push(command.toUpperCase() + ' ' + pushVal);
+                commandList.push(blocks[row][col] + ' ' + command.toUpperCase() + ' ' + pushVal);
             } else if (command == 'pointer') {
                 // if the next command is POINTER, we should examine all possible DP values
                 commandList.push(compile(grid, blockSizes, row, col, 0, CC, bounceCount));
@@ -211,7 +211,7 @@ function compile(grid, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bounceCount
                 commandList.push(compile(grid, blockSizes, row, col, DP, 0, bounceCount));
                 commandList.push(compile(grid, blockSizes, row, col, DP, 1, bounceCount));
             } else {
-                commandList.push(command.toUpperCase());
+                commandList.push(blocks[row][col] + ' ' + command.toUpperCase());
             }
         }
     }
@@ -226,25 +226,10 @@ function* run(commandList, getInput) {
         output = '';
 
     // iterate over commands
-    for (var command of commandList) {
-        if (command.startsWith('CC')) {
-            /* toggle CC */
+    for (var item of commandList) {
+        var [block, command, val] = item.split(' ');
 
-            CC = (CC + 1) % 2;
-            yield { CC };
-        } else if (command.startsWith('DP')) {
-            /* move DP clockwise 1 step */
-
-            DP = (DP + 1) % 4;
-            yield { DP };
-        } else if (command.startsWith('PUSH')) {
-            /* Pushes the value of the colour block just exited on to the stack */
-
-            var [_, pushVal] = command.split(' '); // extract value from command
-            stack.push(parseInt(pushVal));
-
-            yield { stack };
-        } else if (['+', '/', '>', '-', 'MOD', '*', 'ROLL'].includes(command)) {
+        if (['+', '/', '>', '-', 'MOD', '*', 'ROLL'].includes(command)) {
             /* binary stack operations */
 
             var op1 = stack.pop(),
@@ -355,11 +340,34 @@ function* run(commandList, getInput) {
             /* remaining commands */
 
             switch (command) {
+                /* internal command: toggle CC */
+                case 'CC':
+                    CC = (CC + 1) % 2;
+                    yield { CC };
+                    break;
+
+                /* internal command: move DP clockwise 1 step */
+                case 'DP':
+                    DP = (DP + 1) % 4;
+                    yield { DP };
+                    break;
+
+                /* internal command: slide across white block */
+                case 'SLIDE':
+                    break;
+
+                /* Pushes the value of the colour block just exited on to the stack */
+                case 'PUSH':
+                    stack.push(parseInt(val));
+                    yield { stack };
+                    break;
+
                 /* Pops the top value off the stack and discards it */
                 case 'POP':
                     // ignore stack underflow
                     stack.pop();
                     yield { stack };
+                    break;
 
                 /* Replaces the top value of the stack with 0 if it is non-zero, and 1 if 
 		   it is zero */

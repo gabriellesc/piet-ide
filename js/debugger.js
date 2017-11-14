@@ -28,7 +28,7 @@ const Debugger = props => (
     </div>
 );
 
-const Compiler = ({ compile, commandList, currInst }) => [
+const Compiler = ({ compile, commandList, currCommand }) => [
     <button
         key="compile-button"
         type="button"
@@ -51,15 +51,15 @@ const Compiler = ({ compile, commandList, currInst }) => [
             backgroundColor: '#f5f5f5',
             border: '1px solid #ccc',
         }}>
-        {commandList.map(
+        {commandList.map(command => command.split(' ')[1]).map(
             (command, i) =>
-                !(command.startsWith('CC') || command.startsWith('DP') || command == 'SLIDE') && (
+                !(command == 'CC' || command == 'DP' || command == 'SLIDE') && (
                     <div
                         key={'command-' + i}
                         style={{
                             padding: '0 5px',
-                            backgroundColor: i == currInst ? '#337ab7' : 'transparent',
-                            color: i == currInst ? 'white' : 'black',
+                            backgroundColor: i == currCommand ? '#337ab7' : 'transparent',
+                            color: i == currCommand ? 'white' : 'black',
                         }}>
                         {command}
                         <br />

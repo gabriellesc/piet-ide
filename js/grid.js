@@ -28,7 +28,14 @@ class Grid extends React.Component {
                                         height: this.props.cellDim + 'px',
                                         width: this.props.cellDim + 'px',
                                         border: '1px solid black',
-                                        backgroundColor: colours[cell],
+                                        background:
+                                            this.props.blocks[i][j] == this.props.debug.currBlock
+                                                ? 'repeating-linear-gradient(45deg, ' +
+                                                  colours[cell] +
+                                                  ', ' +
+                                                  colours[cell] +
+                                                  ' 2px, white 2px, white 4px)'
+                                                : colours[cell],
                                         color: 'white',
                                         fontSize: '11px',
                                         textShadow: '1px 1px 1px black',
