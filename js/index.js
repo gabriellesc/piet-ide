@@ -318,7 +318,21 @@ const appState = {
             appState.notify();
         }).bind(this),
 
-        start: (() => {}).bind(this),
+        start: (() => {
+            appState.debug.commandList = compile(appState.grid, appState.blockSizes);
+            appState.notify();
+
+            let runner = run(appState.debug.commandList);
+            let step;
+            while (!(step = runner.next()).done) {
+                console.log(step.value);
+                for (var prop in step.value) {
+                    appState.debug[prop] = step.value[prop];
+
+                    appState.notify();
+                }
+            }
+        }).bind(this),
 
         step: (() => {}).bind(this),
 

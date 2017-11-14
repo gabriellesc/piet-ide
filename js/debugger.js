@@ -52,7 +52,9 @@ const Compiler = ({ compile, commandList }) => [
             backgroundColor: '#f5f5f5',
             border: '1px solid #ccc',
         }}>
-        {commandList.join('\n')}
+        {commandList
+            .filter(command => !(command.startsWith('CC') || command.startsWith('DP')))
+            .join('\n')}
     </div>,
 ];
 
@@ -133,8 +135,9 @@ const Stack = ({ stack }) => (
             </tr>
         </thead>
         <tbody>
-            {stack.concat('⮟').map(val => (
+            {stack.concat('⮟').map((val, i) => (
                 <tr
+                    key={'val-' + i}
                     style={{
                         border: '1px solid black',
                         width: '100%',

@@ -128,9 +128,11 @@ function compile(grid, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bounceCount
         if (bounceCount % 2 != 0) {
             // toggle CC
             CC = (CC + 1) % 2;
+            commandList.push('CC ' + CC);
         } else {
             // move DP clockwise 1 step
             DP = (DP + 1) % 4;
+            commandList.push('DP ' + DP);
         }
     }
 
@@ -192,170 +194,152 @@ function compile(grid, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bounceCount
     return commandList;
 }
 
-function* run(commands, grid, blockSizes, getInput) {
-    // start at top left cell
-    let row = 0,
-        col = 0,
-        // number of consecutive times that the compiler has tried to move off the current
-        // block and hit an edge or black block
-        bounceCount = 0,
-        DP = 0, // index into [right, down, left, up], direction pointer initially points right
+function* run(commandList, getInput) {
+    let DP = 0, // index into [right, down, left, up], direction pointer initially points right
         CC = 0, // index into [left, right], codel chooser initially points left
         stack = [],
         output = '';
 
-    // terminate compiler when bounce count reaches 8
-    while (bounceCount < 8) {
-        // save the previous block size in case it will be pushed to the stack
-        let pushVal = blockSizes[row][col];
+    for (var command of commandList) {
+        if (command.startsWith('CC')) {
+            // toggle CC
+            CC = (CC + 1) % 2;
+            yield { CC: CC };
+        } else if (command.startsWith('DP')) {
+            // move DP clockwise 1 step
+            DP = (DP + 1) % 4;
+            yield { DP: DP };
+        } else if (command.startsWith('PUSH')) {
+            /* Pushes the value of the colour block just exited on to the stack */
+            var [_, pushVal] = command.split(' ');
+            var newStack = stack.slice();
+            newStack.push(pushVal);
 
-        // find next colour block
-        let [row, col] = getNextColour(grid, row, col, DP, CC);
-        let nextColour = grid[row][col];
-
-        if (nextColour == 18) {
-            // white block
-        } else if (nextColour == 19) {
-            // black block
-            bounceCount++; // increment bounceCount
-
-            if (bounceCount % 2 != 0) {
-                // move DP clockwise 1 step
-                yield { DP: (DP + 1) % 4 };
-            } else {
-                // toggle CC
-                yield { CC: (CC + 1) % 2 };
-            }
-        } else {
-            bounceCount = 0; // we can move, so reset the bounce count
-
-            let inst = commands[nextColour]; // match colour transition to command
-
+            yield { stack: newStack };
+        } else if (['+', '/', '>', '-', 'MOD', '*', 'ROLL'].includes(command)) {
             // binary stack operations
-            if (['+', '/', '>', '-', 'mod', '*', 'roll'].includes(inst)) {
-                var newStack = stack.slice();
-                var op1 = newStack.pop(),
-                    op2 = newStack.pop();
+            var newStack = stack.slice();
+            var op1 = newStack.pop(),
+                op2 = newStack.pop();
 
-                // ignore stack underflow
-                if (op1 == undefined || op2 == undefined) {
-                    yield { stack: stack };
-                    continue;
-                }
-
-                switch (inst) {
-                    /* Pops the top two values off the stack, adds them, and pushes the 
-			   result back on the stack */
-                    case '+':
-                        newStack.push(op1 + op2);
-                        break;
-
-                    /* Pops the top two values off the stack, calculates the integer 
-			   division of the second top value by the top value, and pushes the 
-			   result back on the stack */
-                    case '/':
-                        // ignore divide by zero instruction
-                        if (op1 == 0) {
-                            newStack.push(op2);
-                            newStack.push(op1);
-                        } else {
-                            newStack.push(Math.floor(op2 / op1));
-                        }
-                        break;
-
-                    /* Pops the top two values off the stack, and pushes 1 on to the stack 
-			   if the second top value is greater than the top value, and pushes 0 
-			   if it is not greater */
-                    case '>':
-                        newStack.push(op2 > op1 ? 1 : 0);
-                        break;
-
-                    /* Pops the top two values off the stack, calculates the second top value
-			   minus the top value, and pushes the result back on the stack */
-                    case '-':
-                        newStack.push(op2 - op1);
-                        break;
-
-                    /* Pops the top two values off the stack, calculates the second top value
-			   modulo the top value, and pushes the result back on the stack. The 
-			   result has the same sign as the divisor (the top value). */
-                    case 'mod':
-                        // divide by 0 error; instruction is ignored
-                        if (op1 == 0) {
-                            newStack.push(op2);
-                            newStack.push(op1);
-                            yield { error: 'Divide by zero', stack: stack };
-                        }
-
-                        newStack.push(op2 - op1 * Math.floor(op2 / op1));
-                        break;
-
-                    /* Pops the top two values off the stack, multiplies them, and pushes 
-			   the result back on the stack */
-                    case '*':
-                        newStack.push(op1 * op2);
-                        break;
-
-                    /* Pops the top two values off the stack and "rolls" the remaining stack
-			   entries to a depth equal to the second value popped, by a number of 
-			   rolls equal to the first value popped. 
-			   A single roll to depth n is defined as burying the top value on the 
-			   stack n deep and bringing all values above it up by 1 place. 
-			   A negative number of rolls rolls in the opposite direction. */
-                    case 'roll':
-                        // negative depth error; instruction is ignored
-                        if (op2 < 0) {
-                            newStack.push(op2);
-                            newStack.push(op1);
-                            yield { error: 'Negative depth', stack: stack };
-                        }
-
-                        // depth argument is greater than current stack depth, so use the current
-                        // depth instead
-                        if (op2 > newStack.length) {
-                            op2 = newStack.length;
-                        }
-
-                        if (op1 > 0) {
-                            for (var roll = 0; roll < op1; roll++) {
-                                // put top value into stack at depth
-                                newStack.splice(-op2, 0, newStack[newStack.length - 1]);
-                                // remove original top value from top of stack
-                                newStack.pop();
-                            }
-                        } else {
-                            // negative rolls
-                            for (var roll = 0; roll > op1; roll--) {
-                                // put nth value onto top of stack and remove original nth value
-                                newStack.push(...newStack.splice(-op2, 1));
-                            }
-                        }
-                        break;
-                }
-
-                yield { stack: newStack };
+            // ignore stack underflow
+            if (op1 == undefined || op2 == undefined) {
+                yield { stack: stack };
                 continue;
             }
 
-            switch (inst) {
+            switch (command) {
+                /* Pops the top two values off the stack, adds them, and pushes the 
+		   result back on the stack */
+                case '+':
+                    newStack.push(op1 + op2);
+                    break;
+
+                /* Pops the top two values off the stack, calculates the integer 
+		   division of the second top value by the top value, and pushes the 
+		   result back on the stack */
+                case '/':
+                    // ignore divide by zero instruction
+                    if (op1 == 0) {
+                        newStack.push(op2);
+                        newStack.push(op1);
+                    } else {
+                        newStack.push(Math.floor(op2 / op1));
+                    }
+                    break;
+
+                /* Pops the top two values off the stack, and pushes 1 on to the stack 
+		   if the second top value is greater than the top value, and pushes 0 
+		   if it is not greater */
+                case '>':
+                    newStack.push(op2 > op1 ? 1 : 0);
+                    break;
+
+                /* Pops the top two values off the stack, calculates the second top value
+		   minus the top value, and pushes the result back on the stack */
+                case '-':
+                    newStack.push(op2 - op1);
+                    break;
+
+                /* Pops the top two values off the stack, calculates the second top value
+		   modulo the top value, and pushes the result back on the stack. The 
+		   result has the same sign as the divisor (the top value). */
+                case 'MOD':
+                    // divide by 0 error; instruction is ignored
+                    if (op1 == 0) {
+                        newStack.push(op2);
+                        newStack.push(op1);
+                        yield { error: 'Divide by zero', stack: stack };
+                    }
+
+                    newStack.push(op2 - op1 * Math.floor(op2 / op1));
+                    break;
+
+                /* Pops the top two values off the stack, multiplies them, and pushes 
+		   the result back on the stack */
+                case '*':
+                    newStack.push(op1 * op2);
+                    break;
+
+                /* Pops the top two values off the stack and "rolls" the remaining stack
+		   entries to a depth equal to the second value popped, by a number of 
+		   rolls equal to the first value popped. 
+		   A single roll to depth n is defined as burying the top value on the 
+		   stack n deep and bringing all values above it up by 1 place. 
+		   A negative number of rolls rolls in the opposite direction. */
+                case 'ROLL':
+                    // negative depth error; instruction is ignored
+                    if (op2 < 0) {
+                        newStack.push(op2);
+                        newStack.push(op1);
+                        yield { error: 'Negative depth', stack: stack };
+                        break;
+                    }
+
+                    // depth argument is greater than current stack depth, so use the current
+                    // depth instead
+                    if (op2 > newStack.length) {
+                        op2 = newStack.length;
+                    }
+
+                    if (op1 > 0) {
+                        for (var roll = 0; roll < op1; roll++) {
+                            // put top value into stack at depth
+                            newStack.splice(-op2, 0, newStack[newStack.length - 1]);
+                            // remove original top value from top of stack
+                            newStack.pop();
+                        }
+                    } else {
+                        // negative rolls
+                        for (var roll = 0; roll > op1; roll--) {
+                            // put nth value onto top of stack and remove original nth value
+                            newStack.push(...newStack.splice(-op2, 1));
+                        }
+                    }
+                    break;
+            }
+
+            yield { stack: newStack };
+        } else {
+            switch (command) {
                 /* Pushes a copy of the top value on the stack on to the stack */
-                case 'dup':
+                case 'DUP':
                     var newStack = stack.slice();
                     var val = newStack.pop();
 
                     // ignore stack underflow
                     if (val == undefined) {
                         yield { stack: stack };
-                        continue;
+                        break;
                     }
                     newStack.push(val);
                     newStack.push(val);
 
                     yield { stack: newStack };
-                    continue;
+                    break;
 
                 /* Reads a value from STDIN as a character and pushes it on to the stack. */
-                case 'in(char)':
+                case 'IN(CHAR)':
                     // If no input is waiting on STDIN, this is an error and the command is ignored.
                     var newChar = getInput();
 
@@ -363,99 +347,91 @@ function* run(commands, grid, blockSizes, getInput) {
                     newStack.push(newChar.charCodeAt());
 
                     yield { stack: newStack };
-                    continue;
-
-                /* Pushes the value of the colour block just exited on to the stack */
-                case 'push':
-                    var newStack = stack.slice();
-                    newStack.push(pushVal);
-
-                    yield { stack: newStack };
-                    continue;
+                    break;
 
                 /* Pops the top value off the stack and rotates the DP clockwise that many 
-		       steps (anticlockwise if negative) */
-                case 'pointer':
+		   steps (anticlockwise if negative) */
+                case 'POINTER':
                     var newStack = stack.slice();
                     var val = newStack.pop();
 
                     // ignore stack underflow
                     if (val == undefined) {
                         yield { stack: stack };
-                        continue;
+                        break;
                     }
 
                     if (val > 0) {
                         yield { stack: newStack, DP: (DP + val) % 4 };
-                        continue;
+                        break;
                     }
                     // negative rotation (anticlockwise)
                     yield { stack: newStack, DP: (DP - val) % 4 };
-                    continue;
+                    break;
 
                 /* Pops the top value off the stack and prints it to STDOUT as a number */
-                case 'out(num)':
+                case 'OUT(NUM)':
                     var newStack = stack.slice();
                     var val = newStack.pop();
 
                     // ignore stack underflow
                     if (val == undefined) {
                         yield { stack: stack };
-                        continue;
+                        break;
                     }
                     yield { stack: newStack, output: output + val };
-                    continue;
+                    break;
 
                 /* Pops the top value off the stack and discards it */
-                case 'pop':
+                case 'POP':
                     var newStack = stack.slice();
                     // ignore stack underflow
                     if (newStack.pop() == undefined) {
                         yield { stack: stack };
-                        continue;
+                        break;
                     }
                     yield { stack: newStack };
-                    continue;
+                    break;
 
                 /* Replaces the top value of the stack with 0 if it is non-zero, and 1 if 
-		       it is zero */
-                case 'not':
+		   it is zero */
+                case 'NOT':
                     var newStack = stack.slice();
                     var val = newStack.pop();
 
                     // ignore stack underflow
                     if (val == undefined) {
                         yield { stack: stack };
-                        continue;
+                        break;
                     }
                     newStack.push(val == 0);
 
                     yield { stack: newStack };
-                    continue;
+                    break;
 
                 /* Pops the top value off the stack and toggles the CC that many times (the
-		       absolute value of that many times if negative) */
-                case 'switch':
+		   absolute value of that many times if negative) */
+                case 'SWITCH':
                     var newStack = stack.slice();
                     var val = newStack.pop();
 
                     // ignore stack underflow
                     if (val == undefined) {
                         yield { stack: stack };
-                        continue;
+                        break;
                     }
 
                     if (val > 0) {
                         yield { stack: newStack, CC: (CC + val) % 2 };
-                        continue;
+                        break;
                     }
                     // negative toggle times
                     yield { stack: newStack, CC: (CC - val) % 2 };
-                    continue;
+                    break;
 
                 /* Reads a value from STDIN as a number and pushes it on to the stack. */
                 // This reads a single character as a number - should parse more intelligently?
-                case 'in(num)':
+                case 'IN(NUM)':
                     // If no input is waiting on STDIN, this is an error and the command is ignored.
                     //  If an integer read does not receive an integer value, this is an error and the command is ignored
                     var newNum = getInput();
@@ -464,27 +440,23 @@ function* run(commands, grid, blockSizes, getInput) {
                     newStack.push(parseInt(newNum));
 
                     yield { stack: newStack };
-                    continue;
-
                     break;
 
                 /* Pops the top value off the stack and prints it to STDOUT as a character */
-                case 'out(char)':
+                case 'OUT(CHAR)':
                     var newStack = stack.slice();
                     var val = newStack.pop();
 
                     // ignore stack underflow
                     if (val == undefined) {
                         yield { stack: stack };
-                        continue;
+                        break;
                     }
                     yield { stack: newStack, output: output + String.fromCharCode(val) };
-                    continue;
+                    break;
             }
         }
     }
-
-    return; // terminate compiler
 }
 
 export { compile, run };
