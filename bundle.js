@@ -1171,7 +1171,7 @@ var Compiler = function Compiler(_ref) {
                     key: 'command-' + i,
                     style: {
                         padding: '0 5px',
-                        backgroundColor: i == currInst ? '#337ab7' : 'none',
+                        backgroundColor: i == currInst ? '#337ab7' : 'transparent',
                         color: i == currInst ? 'white' : 'black'
                     } },
                 command,
