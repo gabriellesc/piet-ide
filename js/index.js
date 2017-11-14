@@ -421,6 +421,8 @@ class App extends React.Component {
     }
 
     render() {
+        let isRunning = this.props.appState.debug.runner != null;
+
         return (
             <div
                 style={{
@@ -443,17 +445,12 @@ class App extends React.Component {
                            'controls3 cpicker . dtab'
 			   'grid grid grid grid'`,
                     alignItems: 'center',
+                    pointerEvents: isRunning ? 'none' : 'auto',
                 }}>
                 <Controls {...this.props.appState} />
-                <Grid
-                    isRunning={this.props.appState.debug.runner != null}
-                    {...this.props.appState}
-                />
+                <Grid {...this.props.appState} />
                 {this.props.appState.debug.debugIsVisible && (
-                    <Debugger
-                        isRunning={this.props.appState.debug.runner != null}
-                        {...this.props.appState}
-                    />
+                    <Debugger isRunning={isRunning} {...this.props.appState} />
                 )}
             </div>
         );

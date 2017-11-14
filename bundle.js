@@ -1088,7 +1088,8 @@ var Debugger = function Debugger(props) {
                 border: '1px solid black',
                 borderRadius: '5px',
                 padding: '0 5px 5px',
-                background: 'white'
+                background: 'white',
+                pointerEvents: 'auto'
             } },
         _react2.default.createElement(
             'button',
@@ -1419,8 +1420,7 @@ var Grid = function (_React$Component) {
                         tableLayout: 'fixed',
                         gridColumn: 'grid / span ' + (this.props.debug.debugIsVisible ? '3' : '4'),
                         alignSelf: 'start',
-                        justifySelf: 'start',
-                        pointerEvents: this.props.isRunning ? 'none' : 'auto'
+                        justifySelf: 'start'
                     },
                     onMouseOut: function onMouseOut() {
                         return _this2.props.setCellInFocus(null);
@@ -1944,6 +1944,8 @@ var App = function (_React$Component) {
     }, {
         key: 'render',
         value: function render() {
+            var isRunning = this.props.appState.debug.runner != null;
+
             return _react2.default.createElement(
                 'div',
                 {
@@ -1956,15 +1958,12 @@ var App = function (_React$Component) {
                         gridTemplateColumns: this.props.appState.debug.debugIsVisible ? '375px 300px auto 200px' : '375px 300px auto 25px',
                         gridTemplateRows: '35px 35px 35px auto',
                         gridTemplateAreas: this.props.appState.debug.debugIsVisible ? '\'controls1 cpicker . debug\'\n                           \'controls2 cpicker . debug\'\n                           \'controls3 cpicker . debug\'\n                           \'grid grid grid debug\'' : '\'controls1 cpicker . dtab\'\n                           \'controls2 cpicker . dtab\'\n                           \'controls3 cpicker . dtab\'\n\t\t\t   \'grid grid grid grid\'',
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        pointerEvents: isRunning ? 'none' : 'auto'
                     } },
                 _react2.default.createElement(_controls2.default, this.props.appState),
-                _react2.default.createElement(_grid2.default, _extends({
-                    isRunning: this.props.appState.debug.runner != null
-                }, this.props.appState)),
-                this.props.appState.debug.debugIsVisible && _react2.default.createElement(_debugger2.default, _extends({
-                    isRunning: this.props.appState.debug.runner != null
-                }, this.props.appState))
+                _react2.default.createElement(_grid2.default, this.props.appState),
+                this.props.appState.debug.debugIsVisible && _react2.default.createElement(_debugger2.default, _extends({ isRunning: isRunning }, this.props.appState))
             );
         }
     }]);

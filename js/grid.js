@@ -12,7 +12,6 @@ class Grid extends React.Component {
                     gridColumn: 'grid / span ' + (this.props.debug.debugIsVisible ? '3' : '4'),
                     alignSelf: 'start',
                     justifySelf: 'start',
-                    pointerEvents: this.props.isRunning ? 'none' : 'auto',
                 }}
                 onMouseOut={() => this.props.setCellInFocus(null)}>
                 <tbody>
