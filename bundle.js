@@ -1421,7 +1421,7 @@ var Grid = function (_React$Component) {
                         gridColumn: 'grid / span ' + (this.props.debug.debugIsVisible ? '3' : '4'),
                         alignSelf: 'start',
                         justifySelf: 'start',
-                        pointerEvents: this.props.debug.inDebugMode ? 'none' : 'auto'
+                        pointerEvents: this.props.isRunning ? 'none' : 'auto'
                     },
                     onMouseOut: function onMouseOut() {
                         return _this2.props.setCellInFocus(null);
@@ -1912,7 +1912,9 @@ var App = function (_React$Component) {
                         alignItems: 'center'
                     } },
                 _react2.default.createElement(_controls2.default, this.props.appState),
-                _react2.default.createElement(_grid2.default, this.props.appState),
+                _react2.default.createElement(_grid2.default, _extends({
+                    isRunning: this.props.appState.debug.runner != null
+                }, this.props.appState)),
                 this.props.appState.debug.debugIsVisible && _react2.default.createElement(_debugger2.default, _extends({
                     isRunning: this.props.appState.debug.runner != null
                 }, this.props.appState))

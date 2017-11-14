@@ -392,7 +392,10 @@ class App extends React.Component {
                     alignItems: 'center',
                 }}>
                 <Controls {...this.props.appState} />
-                <Grid {...this.props.appState} />
+                <Grid
+                    isRunning={this.props.appState.debug.runner != null}
+                    {...this.props.appState}
+                />
                 {this.props.appState.debug.debugIsVisible && (
                     <Debugger
                         isRunning={this.props.appState.debug.runner != null}
