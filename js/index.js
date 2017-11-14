@@ -278,6 +278,18 @@ const appState = {
 
         currInst: -1, // current instruction (in step mode)
 
+        // reset the debugger to its initial state (but ignore the current command list)
+        resetDebugger: (() => {
+            appState.debug.DP = 0;
+            appState.debug.CC = 0;
+            appState.debug.stack = [];
+            appState.debug.output = '';
+            appState.debug.input = '';
+            appState.debug.inputPtr = 0;
+            appState.debug.currInst = -1;
+            appState.debug.runner = null;
+        }).bind(this),
+
         // receive input from user
         receiveInput: (input => {
             appState.debug.input += String.fromCharCode(input);
@@ -302,6 +314,7 @@ const appState = {
         start: (() => {
             // re-compile
             appState.debug.commandList = compile(appState.grid, appState.blockSizes);
+            appState.debug.resetDebugger();
             appState.notify();
 
             // create generator
@@ -325,10 +338,10 @@ const appState = {
             // through program), re-compile program and create new generator
             if (!appState.debug.runner) {
                 appState.debug.commandList = compile(appState.grid, appState.blockSizes);
+                appState.debug.resetDebugger();
                 appState.notify();
 
                 appState.debug.runner = run(appState.debug.commandList);
-                appState.debug.currInst;
             }
 
             // get next step from generator
@@ -347,16 +360,7 @@ const appState = {
 
         // stop debugging (and reset debugger values)
         stop: (() => {
-            appState.debug.DP = 0;
-            appState.debug.CC = 0;
-            appState.debug.stack = [];
-            appState.debug.output = '';
-            appState.debug.input = '';
-            appState.debug.inputPtr = 0;
-            appState.debug.currInst = -1;
-
-            appState.debug.runner = null; // finished running so clear runner
-
+            appState.debug.resetDebugger();
             appState.notify();
         }).bind(this),
     },

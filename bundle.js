@@ -1796,6 +1796,18 @@ var appState = {
 
         currInst: -1, // current instruction (in step mode)
 
+        // reset the debugger to its initial state (but ignore the current command list)
+        resetDebugger: function () {
+            appState.debug.DP = 0;
+            appState.debug.CC = 0;
+            appState.debug.stack = [];
+            appState.debug.output = '';
+            appState.debug.input = '';
+            appState.debug.inputPtr = 0;
+            appState.debug.currInst = -1;
+            appState.debug.runner = null;
+        }.bind(undefined),
+
         // receive input from user
         receiveInput: function (input) {
             appState.debug.input += String.fromCharCode(input);
@@ -1820,6 +1832,7 @@ var appState = {
         start: function () {
             // re-compile
             appState.debug.commandList = (0, _compiler.compile)(appState.grid, appState.blockSizes);
+            appState.debug.resetDebugger();
             appState.notify();
 
             // create generator
@@ -1843,10 +1856,10 @@ var appState = {
             // through program), re-compile program and create new generator
             if (!appState.debug.runner) {
                 appState.debug.commandList = (0, _compiler.compile)(appState.grid, appState.blockSizes);
+                appState.debug.resetDebugger();
                 appState.notify();
 
                 appState.debug.runner = (0, _compiler.run)(appState.debug.commandList);
-                appState.debug.currInst;
             }
 
             // get next step from generator
@@ -1865,16 +1878,7 @@ var appState = {
 
         // stop debugging (and reset debugger values)
         stop: function () {
-            appState.debug.DP = 0;
-            appState.debug.CC = 0;
-            appState.debug.stack = [];
-            appState.debug.output = '';
-            appState.debug.input = '';
-            appState.debug.inputPtr = 0;
-            appState.debug.currInst = -1;
-
-            appState.debug.runner = null; // finished running so clear runner
-
+            appState.debug.resetDebugger();
             appState.notify();
         }.bind(undefined)
     }
