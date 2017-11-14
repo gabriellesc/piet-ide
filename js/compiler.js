@@ -204,27 +204,28 @@ function* run(commandList, getInput) {
         if (command.startsWith('CC')) {
             // toggle CC
             CC = (CC + 1) % 2;
-            yield { CC: CC };
+            yield { CC };
         } else if (command.startsWith('DP')) {
             // move DP clockwise 1 step
             DP = (DP + 1) % 4;
-            yield { DP: DP };
+            yield { DP };
         } else if (command.startsWith('PUSH')) {
             /* Pushes the value of the colour block just exited on to the stack */
             var [_, pushVal] = command.split(' ');
-            var newStack = stack.slice();
-            newStack.push(pushVal);
+            stack.push(pushVal);
 
-            yield { stack: newStack };
+            yield { stack };
         } else if (['+', '/', '>', '-', 'MOD', '*', 'ROLL'].includes(command)) {
             // binary stack operations
-            var newStack = stack.slice();
-            var op1 = newStack.pop(),
-                op2 = newStack.pop();
+            var op1 = stack.pop(),
+                op2 = stack.pop();
 
             // ignore stack underflow
             if (op1 == undefined || op2 == undefined) {
-                yield { stack: stack };
+                stack.push(op2);
+                stack.push(op1);
+
+                yield { stack };
                 continue;
             }
 
@@ -232,7 +233,7 @@ function* run(commandList, getInput) {
                 /* Pops the top two values off the stack, adds them, and pushes the 
 		   result back on the stack */
                 case '+':
-                    newStack.push(op1 + op2);
+                    stack.push(op1 + op2);
                     break;
 
                 /* Pops the top two values off the stack, calculates the integer 
@@ -241,10 +242,10 @@ function* run(commandList, getInput) {
                 case '/':
                     // ignore divide by zero instruction
                     if (op1 == 0) {
-                        newStack.push(op2);
-                        newStack.push(op1);
+                        stack.push(op2);
+                        stack.push(op1);
                     } else {
-                        newStack.push(Math.floor(op2 / op1));
+                        stack.push(Math.floor(op2 / op1));
                     }
                     break;
 
@@ -252,13 +253,13 @@ function* run(commandList, getInput) {
 		   if the second top value is greater than the top value, and pushes 0 
 		   if it is not greater */
                 case '>':
-                    newStack.push(op2 > op1 ? 1 : 0);
+                    stack.push(op2 > op1 ? 1 : 0);
                     break;
 
                 /* Pops the top two values off the stack, calculates the second top value
 		   minus the top value, and pushes the result back on the stack */
                 case '-':
-                    newStack.push(op2 - op1);
+                    stack.push(op2 - op1);
                     break;
 
                 /* Pops the top two values off the stack, calculates the second top value
@@ -267,18 +268,18 @@ function* run(commandList, getInput) {
                 case 'MOD':
                     // divide by 0 error; instruction is ignored
                     if (op1 == 0) {
-                        newStack.push(op2);
-                        newStack.push(op1);
-                        yield { error: 'Divide by zero', stack: stack };
+                        stack.push(op2);
+                        stack.push(op1);
+                        yield { error: 'Divide by zero', stack };
                     }
 
-                    newStack.push(op2 - op1 * Math.floor(op2 / op1));
+                    stack.push(op2 - op1 * Math.floor(op2 / op1));
                     break;
 
                 /* Pops the top two values off the stack, multiplies them, and pushes 
 		   the result back on the stack */
                 case '*':
-                    newStack.push(op1 * op2);
+                    stack.push(op1 * op2);
                     break;
 
                 /* Pops the top two values off the stack and "rolls" the remaining stack
@@ -290,52 +291,48 @@ function* run(commandList, getInput) {
                 case 'ROLL':
                     // negative depth error; instruction is ignored
                     if (op2 < 0) {
-                        newStack.push(op2);
-                        newStack.push(op1);
-                        yield { error: 'Negative depth', stack: stack };
+                        stack.push(op2);
+                        stack.push(op1);
+                        yield { error: 'Negative depth', stack };
                         break;
                     }
 
                     // depth argument is greater than current stack depth, so use the current
                     // depth instead
-                    if (op2 > newStack.length) {
-                        op2 = newStack.length;
+                    if (op2 > stack.length) {
+                        op2 = stack.length;
                     }
 
                     if (op1 > 0) {
                         for (var roll = 0; roll < op1; roll++) {
                             // put top value into stack at depth
-                            newStack.splice(-op2, 0, newStack[newStack.length - 1]);
+                            stack.splice(-op2, 0, stack[stack.length - 1]);
                             // remove original top value from top of stack
-                            newStack.pop();
+                            stack.pop();
                         }
                     } else {
                         // negative rolls
                         for (var roll = 0; roll > op1; roll--) {
                             // put nth value onto top of stack and remove original nth value
-                            newStack.push(...newStack.splice(-op2, 1));
+                            stack.push(...stack.splice(-op2, 1));
                         }
                     }
                     break;
             }
 
-            yield { stack: newStack };
+            yield { stack };
         } else {
             switch (command) {
                 /* Pushes a copy of the top value on the stack on to the stack */
                 case 'DUP':
-                    var newStack = stack.slice();
-                    var val = newStack.pop();
+                    var val = stack.pop();
 
                     // ignore stack underflow
-                    if (val == undefined) {
-                        yield { stack: stack };
-                        break;
+                    if (val != undefined) {
+                        stack.push(val);
+                        stack.push(val);
                     }
-                    newStack.push(val);
-                    newStack.push(val);
-
-                    yield { stack: newStack };
+                    yield { stack };
                     break;
 
                 /* Reads a value from STDIN as a character and pushes it on to the stack. */
@@ -343,17 +340,15 @@ function* run(commandList, getInput) {
                     // If no input is waiting on STDIN, this is an error and the command is ignored.
                     var newChar = getInput();
 
-                    var newStack = stack.slice();
-                    newStack.push(newChar.charCodeAt());
+                    stack.push(newChar.charCodeAt());
 
-                    yield { stack: newStack };
+                    yield { stack };
                     break;
 
                 /* Pops the top value off the stack and rotates the DP clockwise that many 
 		   steps (anticlockwise if negative) */
                 case 'POINTER':
-                    var newStack = stack.slice();
-                    var val = newStack.pop();
+                    var val = stack.pop();
 
                     // ignore stack underflow
                     if (val == undefined) {
@@ -361,72 +356,68 @@ function* run(commandList, getInput) {
                         break;
                     }
 
+                    // positive rotation (clockwise)
                     if (val > 0) {
-                        yield { stack: newStack, DP: (DP + val) % 4 };
+                        DP = (DP + val) % 4;
+                        yield { stack, DP };
                         break;
                     }
                     // negative rotation (anticlockwise)
-                    yield { stack: newStack, DP: (DP - val) % 4 };
+                    DP = (DP - val) % 4;
+                    yield { stack, DP };
                     break;
 
                 /* Pops the top value off the stack and prints it to STDOUT as a number */
                 case 'OUT(NUM)':
-                    var newStack = stack.slice();
-                    var val = newStack.pop();
+                    var val = stack.pop();
 
                     // ignore stack underflow
                     if (val == undefined) {
-                        yield { stack: stack };
+                        yield { stack };
                         break;
                     }
-                    yield { stack: newStack, output: output + val };
+
+                    output += val;
+                    yield { stack, output };
                     break;
 
                 /* Pops the top value off the stack and discards it */
                 case 'POP':
-                    var newStack = stack.slice();
                     // ignore stack underflow
-                    if (newStack.pop() == undefined) {
-                        yield { stack: stack };
-                        break;
-                    }
-                    yield { stack: newStack };
-                    break;
+                    stack.pop();
+                    yield { stack };
 
                 /* Replaces the top value of the stack with 0 if it is non-zero, and 1 if 
 		   it is zero */
                 case 'NOT':
-                    var newStack = stack.slice();
-                    var val = newStack.pop();
+                    var val = stack.pop();
 
                     // ignore stack underflow
-                    if (val == undefined) {
-                        yield { stack: stack };
-                        break;
+                    if (val != undefined) {
+                        stack.push(val == 0);
                     }
-                    newStack.push(val == 0);
-
-                    yield { stack: newStack };
+                    yield { stack };
                     break;
 
                 /* Pops the top value off the stack and toggles the CC that many times (the
 		   absolute value of that many times if negative) */
                 case 'SWITCH':
-                    var newStack = stack.slice();
                     var val = newStack.pop();
 
                     // ignore stack underflow
                     if (val == undefined) {
-                        yield { stack: stack };
+                        yield { stack };
                         break;
                     }
 
                     if (val > 0) {
-                        yield { stack: newStack, CC: (CC + val) % 2 };
+                        CC = (CC + val) % 2;
+                        yield { stack, CC };
                         break;
                     }
                     // negative toggle times
-                    yield { stack: newStack, CC: (CC - val) % 2 };
+                    CC = (CC + val) % 2;
+                    yield { stack, CC };
                     break;
 
                 /* Reads a value from STDIN as a number and pushes it on to the stack. */
@@ -436,23 +427,22 @@ function* run(commandList, getInput) {
                     //  If an integer read does not receive an integer value, this is an error and the command is ignored
                     var newNum = getInput();
 
-                    var newStack = stack.slice();
-                    newStack.push(parseInt(newNum));
+                    stack.push(parseInt(newNum));
 
-                    yield { stack: newStack };
+                    yield { stack };
                     break;
 
                 /* Pops the top value off the stack and prints it to STDOUT as a character */
                 case 'OUT(CHAR)':
-                    var newStack = stack.slice();
-                    var val = newStack.pop();
+                    var val = stack.pop();
 
                     // ignore stack underflow
                     if (val == undefined) {
                         yield { stack: stack };
                         break;
                     }
-                    yield { stack: newStack, output: output + String.fromCharCode(val) };
+                    output += String.fromCharCode(val);
+                    yield { stack, output };
                     break;
             }
         }
