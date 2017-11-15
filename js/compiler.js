@@ -143,7 +143,6 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bou
                 break;
         }
 
-        commandList.push(blocks[row][col] + ' SLIDE');
         return [nextRow, nextCol];
     }
 
@@ -200,18 +199,49 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bou
             let command = commands[colour][nextColour]; // match colour transition to command
             if (command == 'push') {
                 commandList.push(blocks[row][col] + ' ' + command.toUpperCase() + ' ' + pushVal);
-            } else if (command == 'pointer') {
-                // if the next command is POINTER, we should examine all possible DP values
-                commandList.push(compile(grid, blockSizes, row, col, 0, CC, bounceCount));
-                commandList.push(compile(grid, blockSizes, row, col, 1, CC, bounceCount));
-                commandList.push(compile(grid, blockSizes, row, col, 2, CC, bounceCount));
-                commandList.push(compile(grid, blockSizes, row, col, 3, CC, bounceCount));
-            } else if (command == 'switch') {
-                // if the next command is SWITCH, we should examine all possible CC values
-                commandList.push(compile(grid, blockSizes, row, col, DP, 0, bounceCount));
-                commandList.push(compile(grid, blockSizes, row, col, DP, 1, bounceCount));
             } else {
                 commandList.push(blocks[row][col] + ' ' + command.toUpperCase());
+
+                if (command == 'pointer') {
+                    // if the next command is POINTER, we should examine all possible DP values
+
+                    // create a placeholder branch commmand and save the current position in the
+                    // command list
+                    let branchCommand = commandList.length;
+                    commandList.push(blocks[row][col] + ' BRANCH');
+
+                    compile(grid, blocks, blockSizes, row, col, 0, CC, bounceCount);
+                    let branch0 = commandList.length;
+
+                    compile(grid, blocks, blockSizes, row, col, 1, CC, bounceCount);
+                    let branch1 = commandList.length;
+
+                    compile(grid, blocks, blockSizes, row, col, 2, CC, bounceCount);
+                    let branch2 = commandList.length;
+
+                    compile(grid, blocks, blockSizes, row, col, 3, CC, bounceCount);
+                    let branch3 = commandList.length;
+
+                    // add branches to branch command
+                    commandList[branchCommand] +=
+                        ' ' + branch0 + ' ' + branch1 + ' ' + branch2 + ' ' + branch3;
+                } else if (command == 'switch') {
+                    // if the next command is SWITCH, we should examine all possible CC values
+
+                    // create a placeholder branch commmand and save the current position in the
+                    // command list
+                    let branchCommand = commandList.length;
+                    commandList.push(blocks[row][col] + ' BRANCH');
+
+                    compile(grid, blocks, blockSizes, row, col, DP, 0, bounceCount);
+                    let branch0 = commandList.length;
+
+                    compile(grid, blocks, blockSizes, row, col, DP, 1, bounceCount);
+                    let branch1 = commandList.length;
+
+                    // add branches to branch command
+                    commandList[branchCommand] += ' ' + branch0 + ' ' + branch1;
+                }
             }
         }
     }
@@ -350,10 +380,6 @@ function* run(commandList, getInput) {
                 case 'DP':
                     DP = (DP + 1) % 4;
                     yield { DP };
-                    break;
-
-                /* internal command: slide across white block */
-                case 'SLIDE':
                     break;
 
                 /* Pushes the value of the colour block just exited on to the stack */

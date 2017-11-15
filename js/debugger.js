@@ -12,7 +12,7 @@ const Debugger = props => (
             borderRadius: '5px',
             padding: '0 5px 5px',
             background: 'white',
-	    pointerEvents: 'auto',
+            pointerEvents: 'auto',
         }}>
         <button
             type="button"
@@ -48,24 +48,33 @@ const Compiler = ({ compile, commandList, currCommand }) => [
             width: '100%',
             overflow: 'auto',
             fontFamily: 'monospace',
-            fontSize: '11pt',
             backgroundColor: '#f5f5f5',
             border: '1px solid #ccc',
+            display: 'grid',
+            gridAutoColumns: 'min-content auto',
+            alignItems: 'center',
+            gridColumnGap: '5px',
         }}>
         {commandList.map(command => command.split(' ')[1]).map(
             (command, i) =>
-                !(command == 'CC' || command == 'DP' || command == 'SLIDE') && (
-                    <div
+                !(command == 'CC' || command == 'DP') && [
+                    <span
+                        key={'label-' + i}
+                        style={{ fontSize: '8pt', gridColumn: '1', justifySelf: 'start' }}>
+                        {i}
+                    </span>,
+                    <span
                         key={'command-' + i}
                         style={{
-                            padding: '0 5px',
+                            fontSize: '11pt',
+                            paddingLeft: '5px',
+                            gridColumn: '2',
                             backgroundColor: i == currCommand ? '#337ab7' : 'transparent',
                             color: i == currCommand ? 'white' : 'black',
                         }}>
                         {command}
-                        <br />
-                    </div>
-                )
+                    </span>,
+                ]
         )}
     </div>,
 ];
