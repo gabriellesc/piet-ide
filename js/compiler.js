@@ -462,7 +462,7 @@ function* run(commandList, getInputNum, getInputChar) {
             /* Pops the top value off the stack and toggles the CC that many times (the
 	       absolute value of that many times if negative) */
             case 'SWITCH':
-                var op = newStack.pop();
+                var op = stack.pop();
 
                 // ignore stack underflow
                 if (op == undefined) {

@@ -624,7 +624,7 @@ function run(commandList, getInputNum, getInputChar) {
                     return _context.abrupt('break', 165);
 
                 case 89:
-                    op = newStack.pop();
+                    op = stack.pop();
 
                     // ignore stack underflow
 
