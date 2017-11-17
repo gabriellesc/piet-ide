@@ -223,11 +223,11 @@ function compile(grid, blocks, blockSizes) {
     var col = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
     var DP = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 0;
     var CC = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : 0;
-    var bounceCount = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : 0;
 
     var height = grid.length,
         width = grid[0].length,
         commandList = [],
+        bounceCount = 0,
         loopCounter = 0;
 
     // slide across a white block in a straight line
@@ -348,7 +348,7 @@ function compile(grid, blocks, blockSizes) {
         }
 
         // save the current colour to use for indexing into the command list
-        var colour = grid[row][col];
+        var colour = grid[row][col]; // WE ARE SAVING BLACK HERE FOR SOME REASON
         // save the previous block size in case it will be pushed to the stack
         var pushVal = blockSizes[row][col];
 
@@ -364,7 +364,7 @@ function compile(grid, blocks, blockSizes) {
             bounce();
         } else if (grid[nextRow][nextCol] == _colours.WHITE) {
             // we hit a white block, so slide across it
-            var out = slideOut(nextRow, nextCol);
+            var out = slide(nextRow, nextCol);
 
             // we are trapped in a white block
             if (out == null) {
@@ -403,16 +403,16 @@ function compile(grid, blocks, blockSizes) {
                     commandList.push({ block: blocks[row][col], inst: 'BRANCH-DP' });
 
                     var branch0 = commandList.length;
-                    commandList.concat(compile(grid, blocks, blockSizes, row, col, 0, CC, bounceCount));
+                    commandList.concat(compile(grid, blocks, blockSizes, row, col, 0, CC));
 
                     var branch1 = commandList.length;
-                    commandList.concat(compile(grid, blocks, blockSizes, row, col, 1, CC, bounceCount));
+                    commandList.concat(compile(grid, blocks, blockSizes, row, col, 1, CC));
 
                     var branch2 = commandList.length;
-                    commandList.concat(compile(grid, blocks, blockSizes, row, col, 2, CC, bounceCount));
+                    commandList.concat(compile(grid, blocks, blockSizes, row, col, 2, CC));
 
                     var branch3 = commandList.length;
-                    commandList.concat(compile(grid, blocks, blockSizes, row, col, 3, CC, bounceCount));
+                    commandList.concat(compile(grid, blocks, blockSizes, row, col, 3, CC));
 
                     commandList[currCommand].val = [branch0, branch1, branch2, branch3];
 
@@ -425,10 +425,10 @@ function compile(grid, blocks, blockSizes) {
                     commandList.push({ block: blocks[row][col], inst: 'BRANCH-CC' });
 
                     var _branch = commandList.length;
-                    commandList.concat(compile(grid, blocks, blockSizes, row, col, DP, 0, bounceCount));
+                    commandList.concat(compile(grid, blocks, blockSizes, row, col, DP, 0));
 
                     var _branch2 = commandList.length;
-                    commandList.concat(compile(grid, blocks, blockSizes, row, col, DP, 1, bounceCount));
+                    commandList.concat(compile(grid, blocks, blockSizes, row, col, DP, 1));
 
                     commandList[_currCommand].val = [_branch, _branch2];
 
