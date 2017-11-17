@@ -298,7 +298,7 @@ const appState = {
             appState.debug.stack = [];
             appState.debug.output = '';
             appState.debug.inputPtr = 0;
-            appState.debug.currBlock = null;
+            appState.debug.block = null;
             appState.debug.currCommand = -1;
             appState.debug.runner = null;
         }).bind(this),

@@ -291,12 +291,12 @@ function* run(commandList, getInputNum, getInputChar) {
             /* internal command: branch after pointer instruction */
             case 'BRANCH-DP':
                 currCommand = val[DP];
-                break;
+                continue;
 
             /* internal command: branch after switch instruction */
             case 'BRANCH-CC':
                 currCommand = val[CC];
-                break;
+                continue;
 
             /* Pushes the value of the colour block just exited on to the stack */
             case 'PUSH':
@@ -318,8 +318,8 @@ function* run(commandList, getInputNum, getInputChar) {
                     op2 = stack.pop();
 
                 // ignore stack underflow
-                if (op1 == undefined || op2 == undefined) {
-                    stack.push(op2);
+                if (op1 == undefined) {
+                } else if (op2 == undefined) {
                     stack.push(op1);
                 } else {
                     stack.push(op1 + op2);
@@ -335,8 +335,8 @@ function* run(commandList, getInputNum, getInputChar) {
                     op2 = stack.pop();
 
                 // ignore stack underflow
-                if (op1 == undefined || op2 == undefined) {
-                    stack.push(op2);
+                if (op1 == undefined) {
+                } else if (op2 == undefined) {
                     stack.push(op1);
                 } else {
                     stack.push(op2 - op1);
@@ -352,8 +352,8 @@ function* run(commandList, getInputNum, getInputChar) {
                     op2 = stack.pop();
 
                 // ignore stack underflow
-                if (op1 == undefined || op2 == undefined) {
-                    stack.push(op2);
+                if (op1 == undefined) {
+                } else if (op2 == undefined) {
                     stack.push(op1);
                 } else {
                     stack.push(op1 * op2);
@@ -370,8 +370,8 @@ function* run(commandList, getInputNum, getInputChar) {
                     op2 = stack.pop();
 
                 // ignore stack underflow
-                if (op1 == undefined || op2 == undefined) {
-                    stack.push(op2);
+                if (op1 == undefined) {
+                } else if (op2 == undefined) {
                     stack.push(op1);
                 } else if (op1 == 0) {
                     // ignore divide by zero instruction
@@ -392,8 +392,8 @@ function* run(commandList, getInputNum, getInputChar) {
                     op2 = stack.pop();
 
                 // ignore stack underflow
-                if (op1 == undefined || op2 == undefined) {
-                    stack.push(op2);
+                if (op1 == undefined) {
+                } else if (op2 == undefined) {
                     stack.push(op1);
                 } else if (op1 == 0) {
                     // divide by 0 error; instruction is ignored
@@ -427,8 +427,8 @@ function* run(commandList, getInputNum, getInputChar) {
                     op2 = stack.pop();
 
                 // ignore stack underflow
-                if (op1 == undefined || op2 == undefined) {
-                    stack.push(op2);
+                if (op1 == undefined) {
+                } else if (op2 == undefined) {
                     stack.push(op1);
                 } else {
                     stack.push(op2 > op1 ? 1 : 0);
@@ -503,8 +503,8 @@ function* run(commandList, getInputNum, getInputChar) {
                     op2 = stack.pop();
 
                 // ignore stack underflow
-                if (op1 == undefined || op2 == undefined) {
-                    stack.push(op2);
+                if (op1 == undefined) {
+                } else if (op2 == undefined) {
                     stack.push(op1);
                 } else if (op2 < 0) {
                     // negative depth error; instruction is ignored
