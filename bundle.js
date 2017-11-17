@@ -1270,7 +1270,7 @@ var Compiler = function Compiler(_ref) {
                     onClick: function onClick() {
                         return toggleBP(i);
                     } },
-                breakpoints.includes(i) ? _react2.default.createElement('i', { className: 'glyphicon glyphicon-exclamation-sign' }) : i
+                breakpoints.includes(i) ? _react2.default.createElement('i', { className: 'glyphicon glyphicon-pause' }) : i
             ), _react2.default.createElement(
                 'span',
                 {

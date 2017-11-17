@@ -66,11 +66,7 @@ const Compiler = ({ compile, getCommandList, currCommand, breakpoints, toggleBP 
                 }}
                 title="Toggle breakpoint"
                 onClick={() => toggleBP(i)}>
-                {breakpoints.includes(i) ? (
-                    <i className="glyphicon glyphicon-exclamation-sign" />
-                ) : (
-                    i
-                )}
+                {breakpoints.includes(i) ? <i className="glyphicon glyphicon-pause" /> : i}
             </span>,
             <span
                 key={'command-' + i}
