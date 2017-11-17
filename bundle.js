@@ -1218,7 +1218,9 @@ var Debugger = function Debugger(props) {
 var Compiler = function Compiler(_ref) {
     var compile = _ref.compile,
         getCommandList = _ref.getCommandList,
-        currCommand = _ref.currCommand;
+        currCommand = _ref.currCommand,
+        breakpoints = _ref.breakpoints,
+        toggleBP = _ref.toggleBP;
     return [_react2.default.createElement(
         'button',
         {
@@ -1258,8 +1260,17 @@ var Compiler = function Compiler(_ref) {
                 'span',
                 {
                     key: 'label-' + i,
-                    style: { fontSize: '8pt', gridColumn: '1', justifySelf: 'start' } },
-                i
+                    style: {
+                        fontSize: '8pt',
+                        gridColumn: '1',
+                        justifySelf: 'start',
+                        cursor: 'pointer'
+                    },
+                    title: 'Toggle breakpoint',
+                    onClick: function onClick() {
+                        return toggleBP(i);
+                    } },
+                breakpoints.includes(i) ? _react2.default.createElement('i', { className: 'glyphicon glyphicon-exclamation-sign' }) : i
             ), _react2.default.createElement(
                 'span',
                 {
@@ -1356,6 +1367,7 @@ var IO = function IO(_ref5) {
         key: 'in',
         id: 'in',
         placeholder: 'Enter input before running program',
+        title: 'Tip: Whitespace before a numerical value is ignored',
         readOnly: isRunning,
         style: {
             width: '100%',
@@ -1877,6 +1889,7 @@ var appState = {
 
         commandList: [],
         runner: null,
+        breakpoints: [],
 
         DP: 0, // index into [right, down, left, up], direction pointer initially points right
         CC: 0, // index into [left, right], codel chooser initially points left
@@ -2056,15 +2069,36 @@ var appState = {
                         appState.debug[prop] = step.value[prop];
                     }
                     appState.notify();
+
+                    // stop if breakpoint reached
+                    if (appState.debug.breakpoints.includes(step.value.currCommand)) {
+                        break;
+                    }
                 }
 
-                appState.debug.runner = null; // finished running so clear runner
+                if (step.done) {
+                    appState.debug.runner = null; // finished running so clear runner
+                }
             }
         }.bind(undefined),
 
         // stop debugging (and reset debugger values)
         stop: function () {
             appState.debug.resetDebugger();
+            appState.notify();
+        }.bind(undefined),
+
+        // add/remove a breakpoint
+        toggleBP: function (command) {
+            var i = appState.debug.breakpoints.indexOf(command);
+
+            if (i == -1) {
+                // add breakpoint
+                appState.debug.breakpoints.push(command);
+            } else {
+                appState.debug.breakpoints.splice(i, 1);
+            }
+
             appState.notify();
         }.bind(undefined)
     }

@@ -279,6 +279,7 @@ const appState = {
 
         commandList: [],
         runner: null,
+        breakpoints: [],
 
         DP: 0, // index into [right, down, left, up], direction pointer initially points right
         CC: 0, // index into [left, right], codel chooser initially points left
@@ -465,15 +466,36 @@ const appState = {
                         appState.debug[prop] = step.value[prop];
                     }
                     appState.notify();
+
+                    // stop if breakpoint reached
+                    if (appState.debug.breakpoints.includes(step.value.currCommand)) {
+                        break;
+                    }
                 }
 
-                appState.debug.runner = null; // finished running so clear runner
+                if (step.done) {
+                    appState.debug.runner = null; // finished running so clear runner
+                }
             }
         }).bind(this),
 
         // stop debugging (and reset debugger values)
         stop: (() => {
             appState.debug.resetDebugger();
+            appState.notify();
+        }).bind(this),
+
+        // add/remove a breakpoint
+        toggleBP: (command => {
+            let i = appState.debug.breakpoints.indexOf(command);
+
+            if (i == -1) {
+                // add breakpoint
+                appState.debug.breakpoints.push(command);
+            } else {
+                appState.debug.breakpoints.splice(i, 1);
+            }
+
             appState.notify();
         }).bind(this),
     },

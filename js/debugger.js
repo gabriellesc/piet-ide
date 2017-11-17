@@ -29,7 +29,7 @@ const Debugger = props => (
     </div>
 );
 
-const Compiler = ({ compile, getCommandList, currCommand }) => [
+const Compiler = ({ compile, getCommandList, currCommand, breakpoints, toggleBP }) => [
     <button
         key="compile-button"
         type="button"
@@ -58,8 +58,19 @@ const Compiler = ({ compile, getCommandList, currCommand }) => [
         {getCommandList().map(([i, command]) => [
             <span
                 key={'label-' + i}
-                style={{ fontSize: '8pt', gridColumn: '1', justifySelf: 'start' }}>
-                {i}
+                style={{
+                    fontSize: '8pt',
+                    gridColumn: '1',
+                    justifySelf: 'start',
+                    cursor: 'pointer',
+                }}
+                title="Toggle breakpoint"
+                onClick={() => toggleBP(i)}>
+                {breakpoints.includes(i) ? (
+                    <i className="glyphicon glyphicon-exclamation-sign" />
+                ) : (
+                    i
+                )}
             </span>,
             <span
                 key={'command-' + i}
@@ -127,6 +138,7 @@ const IO = ({ output, isRunning }) => [
         key="in"
         id="in"
         placeholder="Enter input before running program"
+        title="Tip: Whitespace before a numerical value is ignored"
         readOnly={isRunning}
         style={{
             width: '100%',
