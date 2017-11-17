@@ -146,6 +146,68 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bou
         return [nextRow, nextCol];
     }
 
+    // attempt to exit a white block
+    function slideOut(row, col) {
+        // check if the first half of an array is identical to the second half
+        function arrayIsDoubled(array) {
+            let len = array.length;
+            let first = array.slice(0, len / 2),
+                second = array.slice(len / 2);
+
+            return len % 2 == 0 && first.every((elem, i) => elem == second[i]);
+        }
+
+        let [nextRow, nextCol] = slide(row, col);
+
+        let whiteRoute = [];
+        // check if we have retraced our route
+        while (!arrayIsDoubled(whiteRoute)) {
+            // we hit an outer edge or a black block
+            if (
+                nextRow < 0 ||
+                nextRow >= height ||
+                nextCol < 0 ||
+                nextCol >= width ||
+                grid[nextRow][nextCol] == BLACK
+            ) {
+                // step backwards into the white block
+                switch (DP) {
+                    // right
+                    case 0:
+                        nextCol--;
+                        break;
+                    // down
+                    case 1:
+                        nextRow--;
+                        break;
+                    // left
+                    case 2:
+                        nextCol++;
+                        break;
+                    // up
+                    case 3:
+                        nextRow;
+                        break;
+                }
+
+                // keep track of current position
+                whiteRoute.push([nextRow, nextCol]);
+
+                // bounce twice (toggle CC and DP)
+                bounce();
+                bounce();
+
+                // try sliding again
+                [nextRow, nextCol] = slide(nextRow, nextCol);
+            } else {
+                return [nextRow, nextCol];
+            }
+        }
+
+        // we could not find a way out
+        return null;
+    }
+
     // bounce off an outer edge or black block
     function bounce() {
         bounceCount++; // increment bounceCount
@@ -188,7 +250,13 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bou
             bounce();
         } else if (grid[nextRow][nextCol] == WHITE) {
             // we hit a white block, so slide across it
-            [row, col] = slide(nextRow, nextCol);
+            let out = slideOut(nextRow, nextCol);
+
+            // we are trapped in a white block
+            if (out == null) {
+                return commandList;
+            }
+            [row, col] = out;
         } else {
             // we found the next block, so update the row/col
             [row, col] = [nextRow, nextCol];
@@ -414,7 +482,7 @@ function* run(commandList, getInputNum, getInputChar) {
 
                 // ignore stack underflow
                 if (op != undefined) {
-                    stack.push(op == 0);
+                    stack.push(op == 0 ? 1 : 0);
                 }
                 yield { block, currCommand, stack };
                 break;
