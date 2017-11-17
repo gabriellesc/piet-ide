@@ -277,7 +277,7 @@ const appState = {
     debug: {
         debugIsVisible: false, // initially, debugger is not visible
 
-        commandList: null,
+        commandList: [],
         runner: null,
 
         DP: 0, // index into [right, down, left, up], direction pointer initially points right
@@ -288,29 +288,62 @@ const appState = {
         input: '',
         inputPtr: 0, // pointer into input stream
 
-        currBlock: null, // current block (in step mode)
-        currCommand: -1, // current instruction (in step mode)
+        block: null, // current block (in step mode)
+        currCommand: -1, // current command (in step mode)
 
-        // reset the debugger to its initial state (but ignore the current command list)
+        // reset the debugger to its initial state (but ignore the current command list and input)
         resetDebugger: (() => {
             appState.debug.DP = 0;
             appState.debug.CC = 0;
             appState.debug.stack = [];
             appState.debug.output = '';
-            appState.debug.input = '';
             appState.debug.inputPtr = 0;
             appState.debug.currBlock = null;
             appState.debug.currCommand = -1;
             appState.debug.runner = null;
         }).bind(this),
 
-        // receive input from user
-        receiveInput: (input => {
-            appState.debug.input += String.fromCharCode(input);
+        // get the current value of the input
+        receiveInput: (() => {
+            appState.debug.input = document.getElementById('in').value;
+        }).bind(this),
+
+        // get one input number (could be multiple characters) from "input stream"
+        // (then increment pointer into stream)
+        getInputNum: (() => {
+            // insufficient number of chars in input stream
+            if (appState.debug.input.length < appState.debug.inputPtr) {
+                return null;
+            }
+
+            // discard leading whitespace (this allows multiple numbers to be entered
+            // consecutively, separated by whitespace)
+            for (
+                var c = appState.debug.input[appState.debug.inputPtr];
+                appState.debug.inputPtr < appState.debug.input.length && /\s/.test(c);
+                c = appState.debug.input[++appState.debug.inputPtr]
+            );
+
+            // grab next consecutive digits
+            let num = '';
+            for (
+                var c = appState.debug.input[appState.debug.inputPtr];
+                appState.debug.inputPtr < appState.debug.input.length && /[0-9]/.test(c);
+                c = appState.debug.input[++appState.debug.inputPtr]
+            ) {
+                num += c;
+            }
+
+            // input is not an integer value
+            if (num.length == 0) {
+                return null;
+            }
+
+            return parseInt(num);
         }).bind(this),
 
         // get one input character from "input stream" (then increment pointer into stream)
-        getInput: (() => {
+        getInputChar: (() => {
             // insufficient number of chars in input stream
             if (appState.debug.input.length < appState.debug.inputPtr) {
                 return null;
@@ -319,16 +352,35 @@ const appState = {
             return appState.debug.input[appState.debug.inputPtr++];
         }).bind(this),
 
-        // return the commandList as a list of strings
+        // return the commandList as a list of [index, string]
         getCommandList: (() => {
-            let commandList = [];
+            let commandList = [],
+                index = 0;
 
-            for (var command = appState.debug.commandList; command; command = command.next) {
-                if (command.inst != 'DP' && command.inst != 'CC') {
-                    commandList.push(
-                        command.inst + (command.inst == 'PUSH' ? ' ' + command.pushVal : '')
-                    );
+            for (var command of appState.debug.commandList) {
+                switch (command.inst) {
+                    // do not display internal DP/CC commands
+                    case 'DP':
+                        break;
+                    case 'CC':
+                        break;
+
+                    case 'PUSH':
+                        commandList.push([index, command.inst + ' ' + command.val]);
+                        break;
+
+                    case 'BRANCH-DP':
+                        commandList.push([index, command.inst + ' ' + command.val.join(' ')]);
+                        break;
+
+                    case 'BRANCH-CC':
+                        commandList.push([index, command.inst + ' ' + command.val.join(' ')]);
+                        break;
+
+                    default:
+                        commandList.push([index, command.inst]);
                 }
+                index++;
             }
 
             return commandList;
@@ -352,10 +404,15 @@ const appState = {
                 appState.blockSizes
             );
             appState.debug.resetDebugger();
+            appState.debug.receiveInput();
             appState.notify();
 
             // create generator
-            appState.debug.runner = run(appState.debug.commandList, appState.debug.getInput);
+            appState.debug.runner = run(
+                appState.debug.commandList,
+                appState.debug.getInputNum,
+                appState.debug.getInputChar
+            );
 
             // "continue" from the starting point
             appState.debug.cont();
@@ -371,20 +428,20 @@ const appState = {
                     appState.blocks,
                     appState.blockSizes
                 );
+                appState.debug.receiveInput();
                 appState.debug.resetDebugger();
                 appState.notify();
 
-                appState.debug.runner = run(appState.debug.commandList, appState.debug.getInput);
+                appState.debug.runner = run(
+                    appState.debug.commandList,
+                    appState.debug.getInputNum,
+                    appState.debug.getInputChar
+                );
             }
 
             // get next step from generator
             let step = appState.debug.runner.next();
             if (!step.done) {
-                // update current command and block
-                appState.debug.currCommand++;
-                var [block] = appState.debug.commandList[appState.debug.currCommand].split(' ', 1);
-                appState.debug.currBlock = block;
-
                 // update state of debugger based on result of current step
                 for (var prop in step.value) {
                     appState.debug[prop] = step.value[prop];
@@ -403,14 +460,6 @@ const appState = {
                 // call generator until done
                 let step;
                 while (!(step = appState.debug.runner.next()).done) {
-                    // update current command and block
-                    appState.debug.currCommand++;
-                    var [block] = appState.debug.commandList[appState.debug.currCommand].split(
-                        ' ',
-                        1
-                    );
-                    appState.debug.currBlock = block;
-
                     // update state of debugger based on result of current step
                     for (var prop in step.value) {
                         appState.debug[prop] = step.value[prop];

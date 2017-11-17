@@ -29,7 +29,7 @@ const Debugger = props => (
     </div>
 );
 
-const Compiler = ({ compile, commandList, currCommand }) => [
+const Compiler = ({ compile, getCommandList, currCommand }) => [
     <button
         key="compile-button"
         type="button"
@@ -55,27 +55,24 @@ const Compiler = ({ compile, commandList, currCommand }) => [
             alignItems: 'center',
             gridColumnGap: '5px',
         }}>
-        {commandList.map(command => command.split(' ')[1]).map(
-            (command, i) =>
-                !(command == 'CC' || command == 'DP') && [
-                    <span
-                        key={'label-' + i}
-                        style={{ fontSize: '8pt', gridColumn: '1', justifySelf: 'start' }}>
-                        {i}
-                    </span>,
-                    <span
-                        key={'command-' + i}
-                        style={{
-                            fontSize: '11pt',
-                            paddingLeft: '5px',
-                            gridColumn: '2',
-                            backgroundColor: i == currCommand ? '#337ab7' : 'transparent',
-                            color: i == currCommand ? 'white' : 'black',
-                        }}>
-                        {command}
-                    </span>,
-                ]
-        )}
+        {getCommandList().map(([i, command]) => [
+            <span
+                key={'label-' + i}
+                style={{ fontSize: '8pt', gridColumn: '1', justifySelf: 'start' }}>
+                {i}
+            </span>,
+            <span
+                key={'command-' + i}
+                style={{
+                    fontSize: '11pt',
+                    paddingLeft: '5px',
+                    gridColumn: '2',
+                    backgroundColor: i == currCommand ? '#337ab7' : 'transparent',
+                    color: i == currCommand ? 'white' : 'black',
+                }}>
+                {command}
+            </span>,
+        ])}
     </div>,
 ];
 
@@ -123,49 +120,37 @@ const DebugControls = ({ start, step, cont, stop }) => (
 );
 
 // IO visual containers
-class IO extends React.Component {
-    // manually update input value when it is changed from appState (eg. when input is cleared)
-    componentWillReceiveProps(newProps) {
-        if (this.input.value != newProps.input) {
-            this.input.value = newProps.input;
-        }
-    }
-
-    render() {
-        return [
-            <b key="input-label">Input</b>,
-            <br key="br-1" />,
-            <textarea
-                key="in"
-                id="in"
-                ref={input => (this.input = input)}
-                readOnly={!this.props.isRunning}
-                style={{
-                    width: '100%',
-                    maxWidth: '100%',
-                    fontFamily: 'monospace',
-                    fontSize: '12pt',
-                }}
-                onKeyPress={event => this.props.receiveInput(event.charCode)}
-            />,
-            <br key="br-2" />,
-            <b key="output-label">Output</b>,
-            <br key="br-3" />,
-            <textarea
-                key="out"
-                id="out"
-                readOnly
-                style={{
-                    width: '100%',
-                    maxWidth: '100%',
-                    fontFamily: 'monospace',
-                    fontSize: '12pt',
-                }}
-                value={this.props.output}
-            />,
-        ];
-    }
-}
+const IO = ({ output, isRunning }) => [
+    <b key="input-label">Input</b>,
+    <br key="br-1" />,
+    <textarea
+        key="in"
+        id="in"
+        placeholder="Enter input before running program"
+        readOnly={isRunning}
+        style={{
+            width: '100%',
+            maxWidth: '100%',
+            fontFamily: 'monospace',
+            fontSize: '12pt',
+        }}
+    />,
+    <br key="br-2" />,
+    <b key="output-label">Output</b>,
+    <br key="br-3" />,
+    <textarea
+        key="out"
+        id="out"
+        readOnly
+        style={{
+            width: '100%',
+            maxWidth: '100%',
+            fontFamily: 'monospace',
+            fontSize: '12pt',
+        }}
+        value={output}
+    />,
+];
 
 // visual representation of stack
 const Stack = ({ stack }) => (
