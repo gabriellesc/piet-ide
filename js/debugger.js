@@ -29,7 +29,7 @@ const Debugger = props => (
     </div>
 );
 
-const Compiler = ({ compile, getCommandList, currCommand, breakpoints, toggleBP }) => [
+const Compiler = ({ compile, commandList, currCommand, breakpoints, toggleBP }) => [
     <button
         key="compile-button"
         type="button"
@@ -55,31 +55,47 @@ const Compiler = ({ compile, getCommandList, currCommand, breakpoints, toggleBP 
             alignItems: 'center',
             gridColumnGap: '5px',
         }}>
-        {getCommandList().map(([i, command]) => [
-            <span
-                key={'label-' + i}
-                style={{
-                    fontSize: '8pt',
-                    gridColumn: '1',
-                    justifySelf: 'start',
-                    cursor: 'pointer',
-                }}
-                title="Toggle breakpoint"
-                onClick={() => toggleBP(i)}>
-                {breakpoints.includes(i) ? <i className="glyphicon glyphicon-pause" /> : i}
-            </span>,
-            <span
-                key={'command-' + i}
-                style={{
-                    fontSize: '11pt',
-                    paddingLeft: '5px',
-                    gridColumn: '2',
-                    backgroundColor: i == currCommand ? '#337ab7' : 'transparent',
-                    color: i == currCommand ? 'white' : 'black',
-                }}>
-                {command}
-            </span>,
-        ])}
+        {commandList.map(
+            (command, i) =>
+                command.inst != 'DP' &&
+                command.inst != 'CC' && [
+                    <span
+                        key={'label-' + i}
+                        id={'label-' + i}
+                        style={{
+                            fontSize: '8pt',
+                            gridColumn: '1',
+                            justifySelf: 'start',
+                            cursor: 'pointer',
+                        }}
+                        title="Toggle breakpoint"
+                        onClick={() => toggleBP(i)}>
+                        {breakpoints.includes(i) ? <i className="glyphicon glyphicon-pause" /> : i}
+                    </span>,
+                    <span
+                        key={'command-' + i}
+                        style={{
+                            fontSize: '11pt',
+                            paddingLeft: '5px',
+                            gridColumn: '2',
+                            backgroundColor: i == currCommand ? '#337ab7' : 'transparent',
+                            color: i == currCommand ? 'white' : 'black',
+                        }}>
+                        {command.inst}
+                        {command.inst == 'PUSH' && ' ' + command.val}
+                        {command.inst.startsWith('BRANCH') &&
+                            command.val.map((link, index) => [
+                                ' ',
+                                <a
+                                    key={'link-' + i + '-' + index}
+                                    title={link}
+                                    href={'#label-' + link}>
+                                    {index}
+                                </a>,
+                            ])}
+                    </span>,
+                ]
+        )}
     </div>,
 ];
 

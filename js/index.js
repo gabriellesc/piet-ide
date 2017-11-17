@@ -353,40 +353,6 @@ const appState = {
             return appState.debug.input[appState.debug.inputPtr++];
         }).bind(this),
 
-        // return the commandList as a list of [index, string]
-        getCommandList: (() => {
-            let commandList = [],
-                index = 0;
-
-            for (var command of appState.debug.commandList) {
-                switch (command.inst) {
-                    // do not display internal DP/CC commands
-                    case 'DP':
-                        break;
-                    case 'CC':
-                        break;
-
-                    case 'PUSH':
-                        commandList.push([index, command.inst + ' ' + command.val]);
-                        break;
-
-                    case 'BRANCH-DP':
-                        commandList.push([index, command.inst + ' ' + command.val.join(' ')]);
-                        break;
-
-                    case 'BRANCH-CC':
-                        commandList.push([index, command.inst + ' ' + command.val.join(' ')]);
-                        break;
-
-                    default:
-                        commandList.push([index, command.inst]);
-                }
-                index++;
-            }
-
-            return commandList;
-        }).bind(this),
-
         compile: (() => {
             appState.debug.commandList = compile(
                 appState.grid,

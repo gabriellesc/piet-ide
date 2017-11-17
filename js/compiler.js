@@ -163,8 +163,8 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, bou
 
     // terminate compiler when bounce count reaches 8
     while (bounceCount < 8) {
-        // if we have looped more than 100 times, this might be an infinite loop
-        if (loopCounter++ > 100) {
+        // if we have looped more than 500 times, this might be an infinite loop
+        if (loopCounter++ > 500) {
             commandList.push({ block: blocks[row][col], inst: 'TIMEOUT' });
             return commandList;
         }

@@ -274,8 +274,8 @@ function compile(grid, blocks, blockSizes) {
 
     // terminate compiler when bounce count reaches 8
     while (bounceCount < 8) {
-        // if we have looped more than 100 times, this might be an infinite loop
-        if (loopCounter++ > 100) {
+        // if we have looped more than 500 times, this might be an infinite loop
+        if (loopCounter++ > 500) {
             commandList.push({ block: blocks[row][col], inst: 'TIMEOUT' });
             return commandList;
         }
@@ -1166,8 +1166,6 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 var _react = require('react');
@@ -1217,7 +1215,7 @@ var Debugger = function Debugger(props) {
 
 var Compiler = function Compiler(_ref) {
     var compile = _ref.compile,
-        getCommandList = _ref.getCommandList,
+        commandList = _ref.commandList,
         currCommand = _ref.currCommand,
         breakpoints = _ref.breakpoints,
         toggleBP = _ref.toggleBP;
@@ -1251,15 +1249,12 @@ var Compiler = function Compiler(_ref) {
                 alignItems: 'center',
                 gridColumnGap: '5px'
             } },
-        getCommandList().map(function (_ref2) {
-            var _ref3 = _slicedToArray(_ref2, 2),
-                i = _ref3[0],
-                command = _ref3[1];
-
-            return [_react2.default.createElement(
+        commandList.map(function (command, i) {
+            return command.inst != 'DP' && command.inst != 'CC' && [_react2.default.createElement(
                 'span',
                 {
                     key: 'label-' + i,
+                    id: 'label-' + i,
                     style: {
                         fontSize: '8pt',
                         gridColumn: '1',
@@ -1282,18 +1277,29 @@ var Compiler = function Compiler(_ref) {
                         backgroundColor: i == currCommand ? '#337ab7' : 'transparent',
                         color: i == currCommand ? 'white' : 'black'
                     } },
-                command
+                command.inst,
+                command.inst == 'PUSH' && ' ' + command.val,
+                command.inst.startsWith('BRANCH') && command.val.map(function (link, index) {
+                    return [' ', _react2.default.createElement(
+                        'a',
+                        {
+                            key: 'link-' + i + '-' + index,
+                            title: link,
+                            href: '#label-' + link },
+                        index
+                    )];
+                })
             )];
         })
     )];
 };
 
 // run/step/continue/stop control buttons
-var DebugControls = function DebugControls(_ref4) {
-    var start = _ref4.start,
-        step = _ref4.step,
-        cont = _ref4.cont,
-        stop = _ref4.stop;
+var DebugControls = function DebugControls(_ref2) {
+    var start = _ref2.start,
+        step = _ref2.step,
+        cont = _ref2.cont,
+        stop = _ref2.stop;
     return _react2.default.createElement(
         'div',
         { className: 'btn-toolbar', role: 'toolbar', style: { width: '100%', margin: '0 0 1vh' } },
@@ -1356,9 +1362,9 @@ var DebugControls = function DebugControls(_ref4) {
 };
 
 // IO visual containers
-var IO = function IO(_ref5) {
-    var output = _ref5.output,
-        isRunning = _ref5.isRunning;
+var IO = function IO(_ref3) {
+    var output = _ref3.output,
+        isRunning = _ref3.isRunning;
     return [_react2.default.createElement(
         'b',
         { key: 'input-label' },
@@ -1394,8 +1400,8 @@ var IO = function IO(_ref5) {
 };
 
 // visual representation of stack
-var Stack = function Stack(_ref6) {
-    var stack = _ref6.stack;
+var Stack = function Stack(_ref4) {
+    var stack = _ref4.stack;
     return _react2.default.createElement(
         'table',
         { style: { margin: 'auto auto 1vh', width: '100%' } },
@@ -1445,9 +1451,9 @@ var Stack = function Stack(_ref6) {
 };
 
 // visual representation of program pointers
-var Pointers = function Pointers(_ref7) {
-    var DP = _ref7.DP,
-        CC = _ref7.CC;
+var Pointers = function Pointers(_ref5) {
+    var DP = _ref5.DP,
+        CC = _ref5.CC;
     return _react2.default.createElement(
         'div',
         { style: { width: '100%', textAlign: 'center', fontWeight: 'bold' } },
@@ -1953,61 +1959,6 @@ var appState = {
             }
 
             return appState.debug.input[appState.debug.inputPtr++];
-        }.bind(undefined),
-
-        // return the commandList as a list of [index, string]
-        getCommandList: function () {
-            var commandList = [],
-                index = 0;
-
-            var _iteratorNormalCompletion = true;
-            var _didIteratorError = false;
-            var _iteratorError = undefined;
-
-            try {
-                for (var _iterator = appState.debug.commandList[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                    var command = _step.value;
-
-                    switch (command.inst) {
-                        // do not display internal DP/CC commands
-                        case 'DP':
-                            break;
-                        case 'CC':
-                            break;
-
-                        case 'PUSH':
-                            commandList.push([index, command.inst + ' ' + command.val]);
-                            break;
-
-                        case 'BRANCH-DP':
-                            commandList.push([index, command.inst + ' ' + command.val.join(' ')]);
-                            break;
-
-                        case 'BRANCH-CC':
-                            commandList.push([index, command.inst + ' ' + command.val.join(' ')]);
-                            break;
-
-                        default:
-                            commandList.push([index, command.inst]);
-                    }
-                    index++;
-                }
-            } catch (err) {
-                _didIteratorError = true;
-                _iteratorError = err;
-            } finally {
-                try {
-                    if (!_iteratorNormalCompletion && _iterator.return) {
-                        _iterator.return();
-                    }
-                } finally {
-                    if (_didIteratorError) {
-                        throw _iteratorError;
-                    }
-                }
-            }
-
-            return commandList;
         }.bind(undefined),
 
         compile: function () {
