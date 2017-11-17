@@ -277,7 +277,7 @@ const appState = {
     debug: {
         debugIsVisible: false, // initially, debugger is not visible
 
-        commandList: [],
+        commandList: null,
         runner: null,
 
         DP: 0, // index into [right, down, left, up], direction pointer initially points right
@@ -313,10 +313,25 @@ const appState = {
         getInput: (() => {
             // insufficient number of chars in input stream
             if (appState.debug.input.length < appState.debug.inputPtr) {
-                // ************
+                return null;
             }
 
             return appState.debug.input[appState.debug.inputPtr++];
+        }).bind(this),
+
+        // return the commandList as a list of strings
+        getCommandList: (() => {
+            let commandList = [];
+
+            for (var command = appState.debug.commandList; command; command = command.next) {
+                if (command.inst != 'DP' && command.inst != 'CC') {
+                    commandList.push(
+                        command.inst + (command.inst == 'PUSH' ? ' ' + command.pushVal : '')
+                    );
+                }
+            }
+
+            return commandList;
         }).bind(this),
 
         compile: (() => {
@@ -340,7 +355,7 @@ const appState = {
             appState.notify();
 
             // create generator
-            appState.debug.runner = run(appState.debug.commandList);
+            appState.debug.runner = run(appState.debug.commandList, appState.debug.getInput);
 
             // "continue" from the starting point
             appState.debug.cont();
@@ -359,7 +374,7 @@ const appState = {
                 appState.debug.resetDebugger();
                 appState.notify();
 
-                appState.debug.runner = run(appState.debug.commandList);
+                appState.debug.runner = run(appState.debug.commandList, appState.debug.getInput);
             }
 
             // get next step from generator
