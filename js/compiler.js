@@ -120,6 +120,10 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0) {
         bounceCount = 0,
         loopCounter = 0;
 
+    function addCommand(command, val) {
+        commandList.push({ block: blocks[row][col], inst: command.toUpperCase(), val, DP, CC });
+    }
+
     // slide across a white block in a straight line
     function slide(row, col) {
         let nextRow = row,
@@ -216,11 +220,11 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0) {
         if (bounceCount % 2 != 0) {
             // toggle CC
             CC = (CC + 1) % 2;
-            commandList.push({ block: blocks[row][col], inst: 'CC' });
+            addCommand('CC');
         } else {
             // move DP clockwise 1 step
             DP = (DP + 1) % 4;
-            commandList.push({ block: blocks[row][col], inst: 'DP' });
+            addCommand('DP');
         }
     }
 
@@ -228,7 +232,7 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0) {
     while (bounceCount < 8) {
         // if we have looped more than 500 times, this might be an infinite loop
         if (loopCounter++ > 500) {
-            commandList.push({ block: blocks[row][col], inst: 'TIMEOUT' });
+            addCommand('TIMEOUT');
             return commandList;
         }
 
@@ -267,34 +271,42 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0) {
 
             let command = commands[colour][nextColour]; // match colour transition to command
             if (command == 'push') {
-                commandList.push({
-                    block: blocks[row][col],
-                    inst: command.toUpperCase(),
-                    val: pushVal,
-                });
+                addCommand(command, pushVal);
             } else {
-                commandList.push({ block: blocks[row][col], inst: command.toUpperCase() });
+                addCommand(command);
 
                 if (command == 'pointer') {
                     // if the next command is POINTER, we should examine all possible DP values
 
                     // add placeholder branch command and save current instruction
                     let currCommand = commandList.length;
-                    commandList.push({ block: blocks[row][col], inst: 'BRANCH-DP' });
+                    addCommand('BRANCH-DP');
 
                     let branch0 = commandList.length;
                     commandList.concat(compile(grid, blocks, blockSizes, row, col, 0, CC));
+                    addCommand('BRANCH-END');
 
                     let branch1 = commandList.length;
                     commandList.concat(compile(grid, blocks, blockSizes, row, col, 1, CC));
+                    addCommand('BRANCH-END');
 
                     let branch2 = commandList.length;
                     commandList.concat(compile(grid, blocks, blockSizes, row, col, 2, CC));
+                    addCommand('BRANCH-END');
 
                     let branch3 = commandList.length;
                     commandList.concat(compile(grid, blocks, blockSizes, row, col, 3, CC));
+                    addCommand('BRANCH-END');
 
+                    // update placeholder branch command with 4 branches
                     commandList[currCommand].val = [branch0, branch1, branch2, branch3];
+
+                    // update placeholder branch end commands
+                    let branchEnd = commandList.length;
+                    commandList[branch1 - 1].val = branchEnd;
+                    commandList[branch2 - 1].val = branchEnd;
+                    commandList[branch3 - 1].val = branchEnd;
+                    commandList[branchEnd - 1].val = branchEnd;
 
                     return commandList;
                 } else if (command == 'switch') {
@@ -302,15 +314,23 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0) {
 
                     // add placeholder branch command and save current instruction
                     let currCommand = commandList.length;
-                    commandList.push({ block: blocks[row][col], inst: 'BRANCH-CC' });
+                    addCommand('BRANCH-CC');
 
                     let branch0 = commandList.length;
                     commandList.concat(compile(grid, blocks, blockSizes, row, col, DP, 0));
+                    addCommand('BRANCH-END');
 
                     let branch1 = commandList.length;
                     commandList.concat(compile(grid, blocks, blockSizes, row, col, DP, 1));
+                    addCommand('BRANCH-END');
 
+                    // update placeholder branch command with 4 branches
                     commandList[currCommand].val = [branch0, branch1];
+
+                    // update placeholder branch end commands
+                    let branchEnd = commandList.length;
+                    commandList[branch1 - 1].val = branchEnd;
+                    commandList[branchEnd - 1].val = branchEnd;
 
                     return commandList;
                 }
@@ -353,6 +373,11 @@ function* run(commandList, getInputNum, getInputChar) {
             /* internal command: branch after switch instruction */
             case 'BRANCH-CC':
                 currCommand = val[CC];
+                continue;
+
+            /* internal command: end of a branch */
+            case 'BRANCH-END':
+                currCommand = val;
                 continue;
 
             /* Pushes the value of the colour block just exited on to the stack */
