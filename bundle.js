@@ -218,11 +218,13 @@ function getNextColour(grid, height, width, row, col, DP, CC) {
 // block and hit an edge or black block)
 // (DP: index into [right, down, left, up], direction pointer initially points right)
 // (CC: index into [left, right], codel chooser initially points left)
+// (offset: starting index into commandList, used for recursive calls)
 function compile(grid, blocks, blockSizes) {
     var row = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
     var col = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
     var DP = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 0;
     var CC = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : 0;
+    var offset = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : 0;
 
     var height = grid.length,
         width = grid[0].length,
@@ -343,10 +345,27 @@ function compile(grid, blocks, blockSizes) {
         }
     }
 
+    // detect a loop by searching backwards in the command list for a command corresponding
+    // to this block and the current DP + CC
+    function detectLoop(row, col) {
+        var block = blocks[row][col];
+
+        for (var i = commandList.length - 2; commandList[i]; i--) {
+            var command = commandList[i];
+
+            // loop detected
+            if (command.block == block && command.DP == DP && command.CC == CC) {
+                return i;
+            }
+        }
+
+        return null;
+    }
+
     // terminate compiler when bounce count reaches 8
     while (bounceCount < 8) {
         // if we have looped more than 500 times, this might be an infinite loop
-        if (loopCounter++ > 25) {
+        if (loopCounter++ > 500) {
             addCommand('TIMEOUT');
             return commandList;
         }
@@ -380,10 +399,18 @@ function compile(grid, blocks, blockSizes) {
             row = _out[0];
             col = _out[1];
         } else {
+
+            // check if we are looping
             row = nextRow;
             // we found the next block, so update the row/col
 
             col = nextCol;
+            var loop = detectLoop(row, col);
+            if (loop != null) {
+                console.log(commandList, loop, offset);
+                addCommand('LOOP', loop + offset);
+                return commandList;
+            }
 
             var nextColour = grid[row][col];
 
@@ -399,30 +426,30 @@ function compile(grid, blocks, blockSizes) {
                     // if the next command is POINTER, we should examine all possible DP values
 
                     // add placeholder branch command and save current instruction
-                    var currCommand = commandList.length;
+                    var currCommand = commandList.length + offset;
                     addCommand('BRANCH-DP');
 
-                    var branch0 = commandList.length;
-                    commandList = commandList.concat(compile(grid, blocks, blockSizes, row, col, 0, CC));
+                    var branch0 = commandList.length + offset;
+                    commandList = commandList.concat(compile(grid, blocks, blockSizes, row, col, 0, CC, branch0));
                     addCommand('BRANCH-END');
 
-                    var branch1 = commandList.length;
-                    commandList = commandList.concat(compile(grid, blocks, blockSizes, row, col, 1, CC));
+                    var branch1 = commandList.length + offset;
+                    commandList = commandList.concat(compile(grid, blocks, blockSizes, row, col, 1, CC, branch1));
                     addCommand('BRANCH-END');
 
-                    var branch2 = commandList.length;
-                    commandList = commandList.concat(compile(grid, blocks, blockSizes, row, col, 2, CC));
+                    var branch2 = commandList.length + offset;
+                    commandList = commandList.concat(compile(grid, blocks, blockSizes, row, col, 2, CC, branch2));
                     addCommand('BRANCH-END');
 
-                    var branch3 = commandList.length;
-                    commandList = commandList.concat(compile(grid, blocks, blockSizes, row, col, 3, CC));
+                    var branch3 = commandList.length + offset;
+                    commandList = commandList.concat(compile(grid, blocks, blockSizes, row, col, 3, CC, branch3));
                     addCommand('BRANCH-END');
 
                     // update placeholder branch command with 4 branches
                     commandList[currCommand].val = [branch0, branch1, branch2, branch3];
 
                     // update placeholder branch end commands
-                    var branchEnd = commandList.length;
+                    var branchEnd = commandList.length + offset;
                     commandList[branch1 - 1].val = branchEnd;
                     commandList[branch2 - 1].val = branchEnd;
                     commandList[branch3 - 1].val = branchEnd;
@@ -433,22 +460,22 @@ function compile(grid, blocks, blockSizes) {
                     // if the next command is SWITCH, we should examine all possible CC values
 
                     // add placeholder branch command and save current instruction
-                    var _currCommand = commandList.length;
+                    var _currCommand = commandList.length + offset;
                     addCommand('BRANCH-CC');
 
-                    var _branch = commandList.length;
-                    commandList = commandList.concat(compile(grid, blocks, blockSizes, row, col, DP, 0));
+                    var _branch = commandList.length + offset;
+                    commandList = commandList.concat(compile(grid, blocks, blockSizes, row, col, DP, 0, _branch));
                     addCommand('BRANCH-END');
 
-                    var _branch2 = commandList.length;
-                    commandList = commandList.concat(compile(grid, blocks, blockSizes, row, col, DP, 1));
+                    var _branch2 = commandList.length + offset;
+                    commandList = commandList.concat(compile(grid, blocks, blockSizes, row, col, DP, 1, _branch2));
                     addCommand('BRANCH-END');
 
                     // update placeholder branch command with 4 branches
                     commandList[_currCommand].val = [_branch, _branch2];
 
                     // update placeholder branch end commands
-                    var _branchEnd = commandList.length;
+                    var _branchEnd = commandList.length + offset;
                     commandList[_branch2 - 1].val = _branchEnd;
                     commandList[_branchEnd - 1].val = _branchEnd;
 
@@ -474,13 +501,13 @@ function run(commandList, getInputNum, getInputChar) {
 
                 case 1:
                     if (!commandList[currCommand]) {
-                        _context.next = 170;
+                        _context.next = 172;
                         break;
                     }
 
                     _commandList$currComm = commandList[currCommand], block = _commandList$currComm.block, inst = _commandList$currComm.inst, val = _commandList$currComm.val;
                     _context.t0 = inst;
-                    _context.next = _context.t0 === 'CC' ? 6 : _context.t0 === 'DP' ? 10 : _context.t0 === 'BRANCH-DP' ? 14 : _context.t0 === 'BRANCH-CC' ? 16 : _context.t0 === 'BRANCH-END' ? 18 : _context.t0 === 'PUSH' ? 20 : _context.t0 === 'POP' ? 24 : _context.t0 === '+' ? 28 : _context.t0 === '-' ? 33 : _context.t0 === '*' ? 38 : _context.t0 === '/' ? 43 : _context.t0 === 'MOD' ? 48 : _context.t0 === 'NOT' ? 67 : _context.t0 === '>' ? 72 : _context.t0 === 'POINTER' ? 77 : _context.t0 === 'SWITCH' ? 91 : _context.t0 === 'DUP' ? 105 : _context.t0 === 'ROLL' ? 110 : _context.t0 === 'IN(NUM)' ? 131 : _context.t0 === 'IN(CHAR)' ? 140 : _context.t0 === 'OUT(NUM)' ? 149 : _context.t0 === 'OUT(CHAR)' ? 158 : 167;
+                    _context.next = _context.t0 === 'CC' ? 6 : _context.t0 === 'DP' ? 10 : _context.t0 === 'BRANCH-DP' ? 14 : _context.t0 === 'BRANCH-CC' ? 16 : _context.t0 === 'BRANCH-END' ? 18 : _context.t0 === 'LOOP' ? 20 : _context.t0 === 'PUSH' ? 22 : _context.t0 === 'POP' ? 26 : _context.t0 === '+' ? 30 : _context.t0 === '-' ? 35 : _context.t0 === '*' ? 40 : _context.t0 === '/' ? 45 : _context.t0 === 'MOD' ? 50 : _context.t0 === 'NOT' ? 69 : _context.t0 === '>' ? 74 : _context.t0 === 'POINTER' ? 79 : _context.t0 === 'SWITCH' ? 93 : _context.t0 === 'DUP' ? 107 : _context.t0 === 'ROLL' ? 112 : _context.t0 === 'IN(NUM)' ? 133 : _context.t0 === 'IN(CHAR)' ? 142 : _context.t0 === 'OUT(NUM)' ? 151 : _context.t0 === 'OUT(CHAR)' ? 160 : 169;
                     break;
 
                 case 6:
@@ -489,7 +516,7 @@ function run(commandList, getInputNum, getInputChar) {
                     return { currCommand: currCommand, CC: CC };
 
                 case 9:
-                    return _context.abrupt('break', 167);
+                    return _context.abrupt('break', 169);
 
                 case 10:
                     DP = (DP + 1) % 4;
@@ -497,7 +524,7 @@ function run(commandList, getInputNum, getInputChar) {
                     return { currCommand: currCommand, DP: DP };
 
                 case 13:
-                    return _context.abrupt('break', 167);
+                    return _context.abrupt('break', 169);
 
                 case 14:
                     currCommand = val[DP];
@@ -512,23 +539,27 @@ function run(commandList, getInputNum, getInputChar) {
                     return _context.abrupt('continue', 1);
 
                 case 20:
+                    currCommand = val;
+                    return _context.abrupt('continue', 1);
+
+                case 22:
                     stack.push(val);
-                    _context.next = 23;
+                    _context.next = 25;
                     return { block: block, currCommand: currCommand, stack: stack };
 
-                case 23:
-                    return _context.abrupt('break', 167);
+                case 25:
+                    return _context.abrupt('break', 169);
 
-                case 24:
+                case 26:
                     // ignore stack underflow
                     stack.pop();
-                    _context.next = 27;
+                    _context.next = 29;
                     return { block: block, currCommand: currCommand, stack: stack };
 
-                case 27:
-                    return _context.abrupt('break', 167);
+                case 29:
+                    return _context.abrupt('break', 169);
 
-                case 28:
+                case 30:
                     op1 = stack.pop(), op2 = stack.pop();
 
                     // ignore stack underflow
@@ -539,13 +570,13 @@ function run(commandList, getInputNum, getInputChar) {
                         stack.push(op1 + op2);
                     }
 
-                    _context.next = 32;
+                    _context.next = 34;
                     return { block: block, currCommand: currCommand, stack: stack };
 
-                case 32:
-                    return _context.abrupt('break', 167);
+                case 34:
+                    return _context.abrupt('break', 169);
 
-                case 33:
+                case 35:
                     op1 = stack.pop(), op2 = stack.pop();
 
                     // ignore stack underflow
@@ -556,13 +587,13 @@ function run(commandList, getInputNum, getInputChar) {
                         stack.push(op2 - op1);
                     }
 
-                    _context.next = 37;
+                    _context.next = 39;
                     return { block: block, currCommand: currCommand, stack: stack };
 
-                case 37:
-                    return _context.abrupt('break', 167);
+                case 39:
+                    return _context.abrupt('break', 169);
 
-                case 38:
+                case 40:
                     op1 = stack.pop(), op2 = stack.pop();
 
                     // ignore stack underflow
@@ -573,13 +604,13 @@ function run(commandList, getInputNum, getInputChar) {
                         stack.push(op1 * op2);
                     }
 
-                    _context.next = 42;
+                    _context.next = 44;
                     return { block: block, currCommand: currCommand, stack: stack };
 
-                case 42:
-                    return _context.abrupt('break', 167);
+                case 44:
+                    return _context.abrupt('break', 169);
 
-                case 43:
+                case 45:
                     op1 = stack.pop(), op2 = stack.pop();
 
                     // ignore stack underflow
@@ -594,62 +625,62 @@ function run(commandList, getInputNum, getInputChar) {
                         stack.push(Math.floor(op2 / op1));
                     }
 
-                    _context.next = 47;
+                    _context.next = 49;
                     return { block: block, currCommand: currCommand, stack: stack };
 
-                case 47:
-                    return _context.abrupt('break', 167);
+                case 49:
+                    return _context.abrupt('break', 169);
 
-                case 48:
+                case 50:
                     op1 = stack.pop(), op2 = stack.pop();
 
                     // ignore stack underflow
 
                     if (!(op1 == undefined)) {
-                        _context.next = 52;
+                        _context.next = 54;
                         break;
                     }
 
-                    _context.next = 64;
+                    _context.next = 66;
                     break;
 
-                case 52:
+                case 54:
                     if (!(op2 == undefined)) {
-                        _context.next = 56;
+                        _context.next = 58;
                         break;
                     }
 
                     stack.push(op1);
-                    _context.next = 64;
+                    _context.next = 66;
                     break;
 
-                case 56:
+                case 58:
                     if (!(op1 == 0)) {
-                        _context.next = 63;
+                        _context.next = 65;
                         break;
                     }
 
                     // divide by 0 error; instruction is ignored
                     stack.push(op2);
                     stack.push(op1);
-                    _context.next = 61;
+                    _context.next = 63;
                     return { block: block, currCommand: currCommand, error: 'Divide by zero', stack: stack };
 
-                case 61:
-                    _context.next = 64;
+                case 63:
+                    _context.next = 66;
                     break;
 
-                case 63:
+                case 65:
                     stack.push(op2 - op1 * Math.floor(op2 / op1));
 
-                case 64:
-                    _context.next = 66;
+                case 66:
+                    _context.next = 68;
                     return { block: block, currCommand: currCommand, stack: stack };
 
-                case 66:
-                    return _context.abrupt('break', 167);
+                case 68:
+                    return _context.abrupt('break', 169);
 
-                case 67:
+                case 69:
                     op = stack.pop();
 
                     // ignore stack underflow
@@ -657,13 +688,13 @@ function run(commandList, getInputNum, getInputChar) {
                     if (op != undefined) {
                         stack.push(op == 0 ? 1 : 0);
                     }
-                    _context.next = 71;
+                    _context.next = 73;
                     return { block: block, currCommand: currCommand, stack: stack };
 
-                case 71:
-                    return _context.abrupt('break', 167);
+                case 73:
+                    return _context.abrupt('break', 169);
 
-                case 72:
+                case 74:
                     op1 = stack.pop(), op2 = stack.pop();
 
                     // ignore stack underflow
@@ -674,89 +705,89 @@ function run(commandList, getInputNum, getInputChar) {
                         stack.push(op2 > op1 ? 1 : 0);
                     }
 
-                    _context.next = 76;
+                    _context.next = 78;
                     return { block: block, currCommand: currCommand, stack: stack };
 
-                case 76:
-                    return _context.abrupt('break', 167);
+                case 78:
+                    return _context.abrupt('break', 169);
 
-                case 77:
+                case 79:
                     op = stack.pop();
 
                     // ignore stack underflow
 
                     if (!(op == undefined)) {
-                        _context.next = 82;
+                        _context.next = 84;
                         break;
                     }
 
-                    _context.next = 81;
+                    _context.next = 83;
                     return { block: block, currCommand: currCommand, stack: stack };
 
-                case 81:
-                    return _context.abrupt('break', 167);
+                case 83:
+                    return _context.abrupt('break', 169);
 
-                case 82:
+                case 84:
                     if (!(op > 0)) {
-                        _context.next = 87;
+                        _context.next = 89;
                         break;
                     }
 
                     DP = (DP + op) % 4;
-                    _context.next = 86;
+                    _context.next = 88;
                     return { block: block, currCommand: currCommand, stack: stack, DP: DP };
 
-                case 86:
-                    return _context.abrupt('break', 167);
+                case 88:
+                    return _context.abrupt('break', 169);
 
-                case 87:
+                case 89:
                     // negative rotation (anticlockwise)
                     DP = (DP - op) % 4;
-                    _context.next = 90;
+                    _context.next = 92;
                     return { block: block, currCommand: currCommand, stack: stack, DP: DP };
 
-                case 90:
-                    return _context.abrupt('break', 167);
+                case 92:
+                    return _context.abrupt('break', 169);
 
-                case 91:
+                case 93:
                     op = stack.pop();
 
                     // ignore stack underflow
 
                     if (!(op == undefined)) {
-                        _context.next = 96;
+                        _context.next = 98;
                         break;
                     }
 
-                    _context.next = 95;
+                    _context.next = 97;
                     return { block: block, currCommand: currCommand, stack: stack };
 
-                case 95:
-                    return _context.abrupt('break', 167);
+                case 97:
+                    return _context.abrupt('break', 169);
 
-                case 96:
+                case 98:
                     if (!(op > 0)) {
-                        _context.next = 101;
+                        _context.next = 103;
                         break;
                     }
 
                     CC = (CC + op) % 2;
-                    _context.next = 100;
+                    _context.next = 102;
                     return { block: block, currCommand: currCommand, stack: stack, CC: CC };
 
-                case 100:
-                    return _context.abrupt('break', 167);
+                case 102:
+                    return _context.abrupt('break', 169);
 
-                case 101:
+                case 103:
                     // negative toggle times
                     CC = (CC + op) % 2;
-                    _context.next = 104;
+                    _context.next = 106;
                     return { block: block, currCommand: currCommand, stack: stack, CC: CC };
 
-                case 104:
-                    return _context.abrupt('break', 167);
+                case 106:
+                    return _context.abrupt('break', 169);
 
-                case 105:
+                case 107:
                     op = stack.pop();
 
                     // ignore stack underflow
@@ -765,51 +796,51 @@ function run(commandList, getInputNum, getInputChar) {
                         stack.push(op);
                         stack.push(op);
                     }
-                    _context.next = 109;
+                    _context.next = 111;
                     return { block: block, currCommand: currCommand, stack: stack };
 
-                case 109:
-                    return _context.abrupt('break', 167);
+                case 111:
+                    return _context.abrupt('break', 169);
 
-                case 110:
+                case 112:
                     op1 = stack.pop(), op2 = stack.pop();
 
                     // ignore stack underflow
 
                     if (!(op1 == undefined)) {
-                        _context.next = 114;
+                        _context.next = 116;
                         break;
                     }
 
-                    _context.next = 128;
+                    _context.next = 130;
                     break;
 
-                case 114:
+                case 116:
                     if (!(op2 == undefined)) {
-                        _context.next = 118;
+                        _context.next = 120;
                         break;
                     }
 
                     stack.push(op1);
-                    _context.next = 128;
+                    _context.next = 130;
                     break;
 
-                case 118:
+                case 120:
                     if (!(op2 < 0)) {
-                        _context.next = 126;
+                        _context.next = 128;
                         break;
                     }
 
                     // negative depth error; instruction is ignored
                     stack.push(op2);
                     stack.push(op1);
-                    _context.next = 123;
+                    _context.next = 125;
                     return { block: block, currCommand: currCommand, error: 'Negative depth', stack: stack };
 
-                case 123:
-                    return _context.abrupt('break', 167);
+                case 125:
+                    return _context.abrupt('break', 169);
 
-                case 126:
+                case 128:
                     // depth argument is greater than current stack depth, so use the current
                     // depth instead
                     if (op2 > stack.length) {
@@ -831,120 +862,120 @@ function run(commandList, getInputNum, getInputChar) {
                         }
                     }
 
-                case 128:
-                    _context.next = 130;
+                case 130:
+                    _context.next = 132;
                     return { block: block, currCommand: currCommand, stack: stack };
 
-                case 130:
-                    return _context.abrupt('break', 167);
+                case 132:
+                    return _context.abrupt('break', 169);
 
-                case 131:
+                case 133:
                     newNum = getInputNum();
 
                     // If no input is waiting on STDIN, or if an integer value is not received, this
                     // is an error and the command is ignored
 
                     if (!(newNum == null)) {
-                        _context.next = 136;
+                        _context.next = 138;
                         break;
                     }
 
-                    _context.next = 135;
+                    _context.next = 137;
                     return { block: block, currCommand: currCommand, error: 'Insufficient or invalid numerical input' };
 
-                case 135:
-                    return _context.abrupt('break', 167);
+                case 137:
+                    return _context.abrupt('break', 169);
 
-                case 136:
+                case 138:
                     stack.push(newNum);
 
-                    _context.next = 139;
+                    _context.next = 141;
                     return { block: block, currCommand: currCommand, stack: stack };
 
-                case 139:
-                    return _context.abrupt('break', 167);
+                case 141:
+                    return _context.abrupt('break', 169);
 
-                case 140:
+                case 142:
                     newChar = getInputChar();
 
                     // If no input is waiting on STDIN, this is an error and the command is ignored
 
                     if (!(newChar == null)) {
-                        _context.next = 145;
+                        _context.next = 147;
                         break;
                     }
 
-                    _context.next = 144;
+                    _context.next = 146;
                     return { block: block, currCommand: currCommand, error: 'Insufficient input' };
 
-                case 144:
-                    return _context.abrupt('break', 167);
+                case 146:
+                    return _context.abrupt('break', 169);
 
-                case 145:
+                case 147:
                     stack.push(newChar.charCodeAt());
 
-                    _context.next = 148;
+                    _context.next = 150;
                     return { block: block, currCommand: currCommand, stack: stack };
 
-                case 148:
-                    return _context.abrupt('break', 167);
+                case 150:
+                    return _context.abrupt('break', 169);
 
-                case 149:
+                case 151:
                     op = stack.pop();
 
                     // ignore stack underflow
 
                     if (!(op == undefined)) {
-                        _context.next = 154;
+                        _context.next = 156;
                         break;
                     }
 
-                    _context.next = 153;
+                    _context.next = 155;
                     return { block: block, currCommand: currCommand, stack: stack };
 
-                case 153:
-                    return _context.abrupt('break', 167);
+                case 155:
+                    return _context.abrupt('break', 169);
 
-                case 154:
+                case 156:
 
                     output += op;
-                    _context.next = 157;
+                    _context.next = 159;
                     return { block: block, currCommand: currCommand, stack: stack, output: output };
 
-                case 157:
-                    return _context.abrupt('break', 167);
+                case 159:
+                    return _context.abrupt('break', 169);
 
-                case 158:
+                case 160:
                     op = stack.pop();
 
                     // ignore stack underflow
 
                     if (!(op == undefined)) {
-                        _context.next = 163;
+                        _context.next = 165;
                         break;
                     }
 
-                    _context.next = 162;
+                    _context.next = 164;
                     return { block: block, currCommand: currCommand, stack: stack };
 
-                case 162:
-                    return _context.abrupt('break', 167);
+                case 164:
+                    return _context.abrupt('break', 169);
 
-                case 163:
+                case 165:
                     output += String.fromCharCode(op);
-                    _context.next = 166;
+                    _context.next = 168;
                     return { block: block, currCommand: currCommand, stack: stack, output: output };
 
-                case 166:
-                    return _context.abrupt('break', 167);
+                case 168:
+                    return _context.abrupt('break', 169);
 
-                case 167:
+                case 169:
 
                     currCommand++; // advance to next command
                     _context.next = 1;
                     break;
 
-                case 170:
+                case 172:
                 case 'end':
                     return _context.stop();
             }
@@ -1374,7 +1405,7 @@ var Compiler = function Compiler(_ref) {
                     } },
                 command.inst,
                 command.inst == 'PUSH' && ' ' + command.val,
-                command.inst == 'BRANCH-END' && [' ', _react2.default.createElement(
+                ['LOOP', 'BRANCH-END'].includes(command.inst) && [' ', _react2.default.createElement(
                     'a',
                     { key: 'link-' + i, title: command.val, href: '#label-' + command.val },
                     command.val
@@ -2109,13 +2140,18 @@ var appState = {
 
         // continue running after stepping through the program (run the rest of the program
         // starting from the current step)
+        // if we were not already stepping through the program, this function does nothing
         cont: function () {
-            // if we were not already stepping through the program, this function does nothing
-            if (appState.debug.runner) {
-                // call generator until done
+            // update state of debugger
+            function updateDebugger() {
                 var step = void 0;
-                while (!(step = appState.debug.runner.next()).done) {
-                    // update state of debugger based on result of current step
+                // if the generator has been cleared or is finished, clear the timer
+                if (!appState.debug.runner) {
+                    clearInterval(intervalId);
+                } else if ((step = appState.debug.runner.next()).done) {
+                    // if the generator is finished, clear the runner
+                    appState.debug.runner = null;
+                } else {
                     for (var prop in step.value) {
                         appState.debug[prop] = step.value[prop];
                     }
@@ -2123,14 +2159,13 @@ var appState = {
 
                     // stop if breakpoint reached
                     if (appState.debug.breakpoints.includes(step.value.currCommand)) {
-                        break;
+                        clearInterval(intervalId);
                     }
                 }
-
-                if (step.done) {
-                    appState.debug.runner = null; // finished running so clear runner
-                }
             }
+
+            // call generator and update state of debugger at interval
+            var intervalId = window.setInterval(updateDebugger, 500);
         }.bind(undefined),
 
         // stop debugging (and reset debugger values)

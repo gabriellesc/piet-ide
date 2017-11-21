@@ -83,7 +83,7 @@ const Compiler = ({ compile, commandList, currCommand, breakpoints, toggleBP }) 
                         }}>
                         {command.inst}
                         {command.inst == 'PUSH' && ' ' + command.val}
-                        {command.inst == 'BRANCH-END' && [
+                        {['LOOP', 'BRANCH-END'].includes(command.inst) && [
                             ' ',
                             <a key={'link-' + i} title={command.val} href={'#label-' + command.val}>
                                 {command.val}

@@ -421,13 +421,18 @@ const appState = {
 
         // continue running after stepping through the program (run the rest of the program
         // starting from the current step)
+        // if we were not already stepping through the program, this function does nothing
         cont: (() => {
-            // if we were not already stepping through the program, this function does nothing
-            if (appState.debug.runner) {
-                // call generator until done
+            // update state of debugger
+            function updateDebugger() {
                 let step;
-                while (!(step = appState.debug.runner.next()).done) {
-                    // update state of debugger based on result of current step
+                // if the generator has been cleared or is finished, clear the timer
+                if (!appState.debug.runner) {
+                    clearInterval(intervalId);
+                } else if ((step = appState.debug.runner.next()).done) {
+                    // if the generator is finished, clear the runner
+                    appState.debug.runner = null;
+                } else {
                     for (var prop in step.value) {
                         appState.debug[prop] = step.value[prop];
                     }
@@ -435,14 +440,13 @@ const appState = {
 
                     // stop if breakpoint reached
                     if (appState.debug.breakpoints.includes(step.value.currCommand)) {
-                        break;
+                        clearInterval(intervalId);
                     }
                 }
-
-                if (step.done) {
-                    appState.debug.runner = null; // finished running so clear runner
-                }
             }
+
+            // call generator and update state of debugger at interval
+            let intervalId = window.setInterval(updateDebugger, 500);
         }).bind(this),
 
         // stop debugging (and reset debugger values)
