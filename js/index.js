@@ -279,6 +279,7 @@ const appState = {
 
         commandList: [],
         runner: null,
+        runSpeed: 500, // delay between steps while running, in ms
         breakpoints: [],
 
         DP: 0, // index into [right, down, left, up], direction pointer initially points right
@@ -291,6 +292,12 @@ const appState = {
 
         block: null, // current block (in step mode)
         currCommand: -1, // current command (in step mode)
+
+        setRunSpeed: (speed => {
+            appState.debug.runSpeed = speed;
+
+            appState.notify();
+        }).bind(this),
 
         // reset the debugger to its initial state (but ignore the current command list and input)
         resetDebugger: (() => {
@@ -436,7 +443,7 @@ const appState = {
             }
 
             // call generator and update state of debugger at interval
-            let intervalId = window.setInterval(updateDebugger, 500);
+            let intervalId = window.setInterval(updateDebugger, appState.debug.runSpeed);
         }).bind(this),
 
         // stop debugging (and reset debugger values)

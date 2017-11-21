@@ -1335,7 +1335,7 @@ var Debugger = function Debugger(props) {
             )
         ),
         _react2.default.createElement(Compiler, _extends({}, props, props.debug)),
-        _react2.default.createElement(DebugControls, props.debug),
+        _react2.default.createElement(DebugControls, _extends({}, props, props.debug)),
         _react2.default.createElement(Pointers, props.debug),
         _react2.default.createElement(Stack, props.debug),
         _react2.default.createElement(IO, _extends({}, props, props.debug))
@@ -1431,32 +1431,58 @@ var Compiler = function Compiler(_ref) {
 };
 
 // run/step/continue/stop control buttons
-var DebugControls = function DebugControls(_ref2) {
-    var start = _ref2.start,
-        step = _ref2.step,
-        cont = _ref2.cont,
-        stop = _ref2.stop;
+var DebugControls = function DebugControls(props) {
     return _react2.default.createElement(
         'div',
         { className: 'btn-toolbar', role: 'toolbar', style: { width: '100%', margin: '0 0 1vh' } },
         _react2.default.createElement(
-            'button',
+            'div',
             {
-                type: 'button',
-                className: 'btn btn-success',
-                title: 'Run',
-                style: { width: 'calc((100% - 5px) / 4)', marginLeft: '2px' },
-                onClick: function onClick() {
-                    return start();
-                } },
-            _react2.default.createElement('i', { className: 'glyphicon glyphicon-play' })
+                className: 'btn-group',
+                style: { width: 'calc((100% - 5px) / 4 + 20px)', marginLeft: '2px' } },
+            _react2.default.createElement(
+                'button',
+                {
+                    type: 'button',
+                    className: 'btn btn-success',
+                    title: 'Run',
+                    onClick: function onClick() {
+                        return props.start();
+                    } },
+                _react2.default.createElement('i', { className: 'glyphicon glyphicon-play' })
+            ),
+            _react2.default.createElement(
+                'button',
+                {
+                    type: 'button',
+                    className: 'btn btn-success dropdown-toggle',
+                    'data-toggle': 'dropdown',
+                    'aria-haspopup': 'true',
+                    'aria-expanded': 'false',
+                    style: { paddingLeft: '4px', paddingRight: '4px' } },
+                _react2.default.createElement('span', { className: 'caret' }),
+                _react2.default.createElement(
+                    'span',
+                    { className: 'sr-only' },
+                    'Toggle Dropdown'
+                )
+            ),
+            _react2.default.createElement(
+                'ul',
+                { className: 'dropdown-menu', style: { minWidth: 'auto', whiteSpace: 'nowrap' } },
+                _react2.default.createElement(
+                    'li',
+                    { style: { height: '200px', padding: '0 5px' } },
+                    _react2.default.createElement(RunSpeed, props)
+                )
+            )
         ),
         _react2.default.createElement(
             'div',
             {
                 className: 'btn-group',
                 role: 'group',
-                style: { width: 'calc((100% - 5px) / 4 * 3 - 2px)' } },
+                style: { width: 'calc((100% - 5px) / 4 * 3 - 17px)', marginLeft: '0' } },
             _react2.default.createElement(
                 'button',
                 {
@@ -1465,7 +1491,7 @@ var DebugControls = function DebugControls(_ref2) {
                     title: 'Step',
                     style: { width: '33%' },
                     onClick: function onClick() {
-                        return step();
+                        return props.step();
                     } },
                 _react2.default.createElement('i', { className: 'glyphicon glyphicon-step-forward' })
             ),
@@ -1477,7 +1503,7 @@ var DebugControls = function DebugControls(_ref2) {
                     title: 'Continue',
                     style: { width: '33%' },
                     onClick: function onClick() {
-                        return cont();
+                        return props.cont();
                     } },
                 _react2.default.createElement('i', { className: 'glyphicon glyphicon-fast-forward' })
             ),
@@ -1489,12 +1515,46 @@ var DebugControls = function DebugControls(_ref2) {
                     title: 'Stop',
                     style: { width: '33%' },
                     onClick: function onClick() {
-                        return stop();
+                        return props.stop();
                     } },
                 _react2.default.createElement('i', { className: 'glyphicon glyphicon-stop' })
             )
         )
     );
+};
+
+// slider to select run speed
+var RunSpeed = function RunSpeed(_ref2) {
+    var runSpeed = _ref2.runSpeed,
+        setRunSpeed = _ref2.setRunSpeed,
+        isRunning = _ref2.isRunning;
+    return [_react2.default.createElement(
+        'b',
+        { key: 'fast-label' },
+        'Faster'
+    ), _react2.default.createElement('input', {
+        key: 'run-speed',
+        type: 'range',
+        min: '0',
+        max: '1000',
+        step: '100',
+        value: 1000 - runSpeed,
+        style: {
+            height: '150px',
+            width: '20px',
+            paddingTop: '5px',
+            WebkitAppearance: 'slider-vertical',
+            MozAppearance: 'scale-vertical',
+            margin: '5px auto'
+        },
+        onChange: function onChange(event) {
+            return !isRunning && setRunSpeed(1000 - event.target.value);
+        }
+    }), _react2.default.createElement(
+        'b',
+        { key: 'slow-label' },
+        'Slower'
+    )];
 };
 
 // IO visual containers
@@ -2031,6 +2091,7 @@ var appState = {
 
         commandList: [],
         runner: null,
+        runSpeed: 500, // delay between steps while running, in ms
         breakpoints: [],
 
         DP: 0, // index into [right, down, left, up], direction pointer initially points right
@@ -2043,6 +2104,12 @@ var appState = {
 
         block: null, // current block (in step mode)
         currCommand: -1, // current command (in step mode)
+
+        setRunSpeed: function (speed) {
+            appState.debug.runSpeed = speed;
+
+            appState.notify();
+        }.bind(undefined),
 
         // reset the debugger to its initial state (but ignore the current command list and input)
         resetDebugger: function () {
@@ -2168,7 +2235,7 @@ var appState = {
             }
 
             // call generator and update state of debugger at interval
-            var intervalId = window.setInterval(updateDebugger, 500);
+            var intervalId = window.setInterval(updateDebugger, appState.debug.runSpeed);
         }.bind(undefined),
 
         // stop debugging (and reset debugger values)

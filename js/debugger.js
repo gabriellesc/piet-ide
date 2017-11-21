@@ -22,7 +22,7 @@ const Debugger = props => (
             <span aria-hidden="true">&times;</span>
         </button>
         <Compiler {...props} {...props.debug} />
-        <DebugControls {...props.debug} />
+        <DebugControls {...props} {...props.debug} />
         <Pointers {...props.debug} />
         <Stack {...props.debug} />
         <IO {...props} {...props.debug} />
@@ -107,26 +107,45 @@ const Compiler = ({ compile, commandList, currCommand, breakpoints, toggleBP, is
 ];
 
 // run/step/continue/stop control buttons
-const DebugControls = ({ start, step, cont, stop }) => (
+const DebugControls = props => (
     <div className="btn-toolbar" role="toolbar" style={{ width: '100%', margin: '0 0 1vh' }}>
-        <button
-            type="button"
-            className="btn btn-success"
-            title="Run"
-            style={{ width: 'calc((100% - 5px) / 4)', marginLeft: '2px' }}
-            onClick={() => start()}>
-            <i className="glyphicon glyphicon-play" />
-        </button>
+        <div
+            className="btn-group"
+            style={{ width: 'calc((100% - 5px) / 4 + 20px)', marginLeft: '2px' }}>
+            <button
+                type="button"
+                className="btn btn-success"
+                title="Run"
+                onClick={() => props.start()}>
+                <i className="glyphicon glyphicon-play" />
+            </button>
+            <button
+                type="button"
+                className="btn btn-success dropdown-toggle"
+                data-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false"
+                style={{ paddingLeft: '4px', paddingRight: '4px' }}>
+                <span className="caret" />
+                <span className="sr-only">Toggle Dropdown</span>
+            </button>
+            <ul className="dropdown-menu" style={{ minWidth: 'auto', whiteSpace: 'nowrap' }}>
+                <li style={{ height: '200px', padding: '0 5px' }}>
+                    <RunSpeed {...props} />
+                </li>
+            </ul>
+        </div>
+
         <div
             className="btn-group"
             role="group"
-            style={{ width: 'calc((100% - 5px) / 4 * 3 - 2px)' }}>
+            style={{ width: 'calc((100% - 5px) / 4 * 3 - 17px)', marginLeft: '0' }}>
             <button
                 type="button"
                 className="btn btn-info"
                 title="Step"
                 style={{ width: '33%' }}
-                onClick={() => step()}>
+                onClick={() => props.step()}>
                 <i className="glyphicon glyphicon-step-forward" />
             </button>
             <button
@@ -134,7 +153,7 @@ const DebugControls = ({ start, step, cont, stop }) => (
                 className="btn btn-primary"
                 title="Continue"
                 style={{ width: '33%' }}
-                onClick={() => cont()}>
+                onClick={() => props.cont()}>
                 <i className="glyphicon glyphicon-fast-forward" />
             </button>
             <button
@@ -142,12 +161,35 @@ const DebugControls = ({ start, step, cont, stop }) => (
                 className="btn btn-danger"
                 title="Stop"
                 style={{ width: '33%' }}
-                onClick={() => stop()}>
+                onClick={() => props.stop()}>
                 <i className="glyphicon glyphicon-stop" />
             </button>
         </div>
     </div>
 );
+
+// slider to select run speed
+const RunSpeed = ({ runSpeed, setRunSpeed, isRunning }) => [
+    <b key="fast-label">Faster</b>,
+    <input
+        key="run-speed"
+        type="range"
+        min="0"
+        max="1000"
+        step="100"
+        value={1000 - runSpeed}
+        style={{
+            height: '150px',
+            width: '20px',
+            paddingTop: '5px',
+            WebkitAppearance: 'slider-vertical',
+            MozAppearance: 'scale-vertical',
+            margin: '5px auto',
+        }}
+        onChange={event => !isRunning && setRunSpeed(1000 - event.target.value)}
+    />,
+    <b key="slow-label">Slower</b>,
+];
 
 // IO visual containers
 const IO = ({ output, isRunning }) => [
