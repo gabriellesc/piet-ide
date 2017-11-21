@@ -354,6 +354,7 @@ const appState = {
         }).bind(this),
 
         compile: (() => {
+            console.log('compiling');
             appState.debug.commandList = compile(
                 appState.grid,
                 appState.blocks,
@@ -421,7 +422,7 @@ const appState = {
 
         // continue running after stepping through the program (run the rest of the program
         // starting from the current step)
-        // if we were not already stepping through the program, this function does nothing
+        // if we were not already running/stepping through the program, this function does nothing
         cont: (() => {
             // update state of debugger
             function updateDebugger() {

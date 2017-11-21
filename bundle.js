@@ -1331,7 +1331,7 @@ var Debugger = function Debugger(props) {
                 '\xD7'
             )
         ),
-        _react2.default.createElement(Compiler, props.debug),
+        _react2.default.createElement(Compiler, _extends({}, props, props.debug)),
         _react2.default.createElement(DebugControls, props.debug),
         _react2.default.createElement(Pointers, props.debug),
         _react2.default.createElement(Stack, props.debug),
@@ -1344,7 +1344,8 @@ var Compiler = function Compiler(_ref) {
         commandList = _ref.commandList,
         currCommand = _ref.currCommand,
         breakpoints = _ref.breakpoints,
-        toggleBP = _ref.toggleBP;
+        toggleBP = _ref.toggleBP,
+        isRunning = _ref.isRunning;
     return [_react2.default.createElement(
         'button',
         {
@@ -1352,6 +1353,7 @@ var Compiler = function Compiler(_ref) {
             type: 'button',
             className: 'btn btn-info',
             title: 'Compile',
+            disabled: isRunning ? 'disabled' : '',
             onClick: function onClick() {
                 return compile();
             },
@@ -2093,6 +2095,7 @@ var appState = {
         }.bind(undefined),
 
         compile: function () {
+            console.log('compiling');
             appState.debug.commandList = (0, _compiler.compile)(appState.grid, appState.blocks, appState.blockSizes);
             appState.notify();
         }.bind(undefined),
@@ -2140,7 +2143,7 @@ var appState = {
 
         // continue running after stepping through the program (run the rest of the program
         // starting from the current step)
-        // if we were not already stepping through the program, this function does nothing
+        // if we were not already running/stepping through the program, this function does nothing
         cont: function () {
             // update state of debugger
             function updateDebugger() {

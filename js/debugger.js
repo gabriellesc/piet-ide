@@ -21,7 +21,7 @@ const Debugger = props => (
             onClick={() => props.toggleDebugger()}>
             <span aria-hidden="true">&times;</span>
         </button>
-        <Compiler {...props.debug} />
+        <Compiler {...props} {...props.debug} />
         <DebugControls {...props.debug} />
         <Pointers {...props.debug} />
         <Stack {...props.debug} />
@@ -29,12 +29,13 @@ const Debugger = props => (
     </div>
 );
 
-const Compiler = ({ compile, commandList, currCommand, breakpoints, toggleBP }) => [
+const Compiler = ({ compile, commandList, currCommand, breakpoints, toggleBP, isRunning }) => [
     <button
         key="compile-button"
         type="button"
         className="btn btn-info"
         title="Compile"
+        disabled={isRunning ? 'disabled' : ''}
         onClick={() => compile()}
         style={{ width: '80%', marginTop: '5px', position: 'relative', left: '10%' }}>
         Compile
