@@ -83,7 +83,13 @@ const Compiler = ({ compile, commandList, currCommand, breakpoints, toggleBP }) 
                         }}>
                         {command.inst}
                         {command.inst == 'PUSH' && ' ' + command.val}
-                        {command.inst.startsWith('BRANCH') &&
+                        {command.inst == 'BRANCH-END' && [
+                            ' ',
+                            <a key={'link-' + i} title={command.val} href={'#label-' + command.val}>
+                                {command.val}
+                            </a>,
+                        ]}
+                        {['BRANCH-DP', 'BRANCH-CC'].includes(command.inst) &&
                             command.val.map((link, index) => [
                                 ' ',
                                 <a

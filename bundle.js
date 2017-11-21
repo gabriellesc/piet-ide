@@ -346,7 +346,7 @@ function compile(grid, blocks, blockSizes) {
     // terminate compiler when bounce count reaches 8
     while (bounceCount < 8) {
         // if we have looped more than 500 times, this might be an infinite loop
-        if (loopCounter++ > 500) {
+        if (loopCounter++ > 25) {
             addCommand('TIMEOUT');
             return commandList;
         }
@@ -403,19 +403,19 @@ function compile(grid, blocks, blockSizes) {
                     addCommand('BRANCH-DP');
 
                     var branch0 = commandList.length;
-                    commandList.concat(compile(grid, blocks, blockSizes, row, col, 0, CC));
+                    commandList = commandList.concat(compile(grid, blocks, blockSizes, row, col, 0, CC));
                     addCommand('BRANCH-END');
 
                     var branch1 = commandList.length;
-                    commandList.concat(compile(grid, blocks, blockSizes, row, col, 1, CC));
+                    commandList = commandList.concat(compile(grid, blocks, blockSizes, row, col, 1, CC));
                     addCommand('BRANCH-END');
 
                     var branch2 = commandList.length;
-                    commandList.concat(compile(grid, blocks, blockSizes, row, col, 2, CC));
+                    commandList = commandList.concat(compile(grid, blocks, blockSizes, row, col, 2, CC));
                     addCommand('BRANCH-END');
 
                     var branch3 = commandList.length;
-                    commandList.concat(compile(grid, blocks, blockSizes, row, col, 3, CC));
+                    commandList = commandList.concat(compile(grid, blocks, blockSizes, row, col, 3, CC));
                     addCommand('BRANCH-END');
 
                     // update placeholder branch command with 4 branches
@@ -437,11 +437,11 @@ function compile(grid, blocks, blockSizes) {
                     addCommand('BRANCH-CC');
 
                     var _branch = commandList.length;
-                    commandList.concat(compile(grid, blocks, blockSizes, row, col, DP, 0));
+                    commandList = commandList.concat(compile(grid, blocks, blockSizes, row, col, DP, 0));
                     addCommand('BRANCH-END');
 
                     var _branch2 = commandList.length;
-                    commandList.concat(compile(grid, blocks, blockSizes, row, col, DP, 1));
+                    commandList = commandList.concat(compile(grid, blocks, blockSizes, row, col, DP, 1));
                     addCommand('BRANCH-END');
 
                     // update placeholder branch command with 4 branches
@@ -1374,7 +1374,12 @@ var Compiler = function Compiler(_ref) {
                     } },
                 command.inst,
                 command.inst == 'PUSH' && ' ' + command.val,
-                command.inst.startsWith('BRANCH') && command.val.map(function (link, index) {
+                command.inst == 'BRANCH-END' && [' ', _react2.default.createElement(
+                    'a',
+                    { key: 'link-' + i, title: command.val, href: '#label-' + command.val },
+                    command.val
+                )],
+                ['BRANCH-DP', 'BRANCH-CC'].includes(command.inst) && command.val.map(function (link, index) {
                     return [' ', _react2.default.createElement(
                         'a',
                         {

@@ -231,7 +231,7 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0) {
     // terminate compiler when bounce count reaches 8
     while (bounceCount < 8) {
         // if we have looped more than 500 times, this might be an infinite loop
-        if (loopCounter++ > 500) {
+        if (loopCounter++ > 25) {
             addCommand('TIMEOUT');
             return commandList;
         }
@@ -283,19 +283,27 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0) {
                     addCommand('BRANCH-DP');
 
                     let branch0 = commandList.length;
-                    commandList.concat(compile(grid, blocks, blockSizes, row, col, 0, CC));
+                    commandList = commandList.concat(
+                        compile(grid, blocks, blockSizes, row, col, 0, CC)
+                    );
                     addCommand('BRANCH-END');
 
                     let branch1 = commandList.length;
-                    commandList.concat(compile(grid, blocks, blockSizes, row, col, 1, CC));
+                    commandList = commandList.concat(
+                        compile(grid, blocks, blockSizes, row, col, 1, CC)
+                    );
                     addCommand('BRANCH-END');
 
                     let branch2 = commandList.length;
-                    commandList.concat(compile(grid, blocks, blockSizes, row, col, 2, CC));
+                    commandList = commandList.concat(
+                        compile(grid, blocks, blockSizes, row, col, 2, CC)
+                    );
                     addCommand('BRANCH-END');
 
                     let branch3 = commandList.length;
-                    commandList.concat(compile(grid, blocks, blockSizes, row, col, 3, CC));
+                    commandList = commandList.concat(
+                        compile(grid, blocks, blockSizes, row, col, 3, CC)
+                    );
                     addCommand('BRANCH-END');
 
                     // update placeholder branch command with 4 branches
@@ -317,11 +325,15 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0) {
                     addCommand('BRANCH-CC');
 
                     let branch0 = commandList.length;
-                    commandList.concat(compile(grid, blocks, blockSizes, row, col, DP, 0));
+                    commandList = commandList.concat(
+                        compile(grid, blocks, blockSizes, row, col, DP, 0)
+                    );
                     addCommand('BRANCH-END');
 
                     let branch1 = commandList.length;
-                    commandList.concat(compile(grid, blocks, blockSizes, row, col, DP, 1));
+                    commandList = commandList.concat(
+                        compile(grid, blocks, blockSizes, row, col, DP, 1)
+                    );
                     addCommand('BRANCH-END');
 
                     // update placeholder branch command with 4 branches
