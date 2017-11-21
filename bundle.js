@@ -2053,6 +2053,18 @@ var appState = {
             appState.debug.runner = null;
         }.bind(undefined),
 
+        // initialize the debugger
+        initDebugger: function () {
+            // re-compile
+            appState.debug.commandList = (0, _compiler.compile)(appState.grid, appState.blocks, appState.blockSizes);
+            appState.debug.resetDebugger(); // reset debugger values
+            appState.debug.receiveInput(); // grab input
+            appState.notify();
+
+            // create generator
+            appState.debug.runner = (0, _compiler.run)(appState.debug.commandList, appState.debug.getInputNum, appState.debug.getInputChar);
+        }.bind(undefined),
+
         // get the current value of the input
         receiveInput: function () {
             appState.debug.input = document.getElementById('in').value;
@@ -2095,37 +2107,22 @@ var appState = {
         }.bind(undefined),
 
         compile: function () {
-            console.log('compiling');
             appState.debug.commandList = (0, _compiler.compile)(appState.grid, appState.blocks, appState.blockSizes);
             appState.notify();
         }.bind(undefined),
 
         // start running program
         start: function () {
-            // re-compile
-            appState.debug.commandList = (0, _compiler.compile)(appState.grid, appState.blocks, appState.blockSizes);
-            appState.debug.resetDebugger();
-            appState.debug.receiveInput();
-            appState.notify();
-
-            // create generator
-            appState.debug.runner = (0, _compiler.run)(appState.debug.commandList, appState.debug.getInputNum, appState.debug.getInputChar);
-
-            // "continue" from the starting point
-            appState.debug.cont();
+            appState.debug.initDebugger();
+            appState.debug.cont(); // "continue" from the starting point
         }.bind(undefined),
 
         // step through program
         step: function () {
             // if generator does not already exist (i.e. we have not already started stepping
-            // through program), re-compile program and create new generator
+            // through program), initialize debugger
             if (!appState.debug.runner) {
-                appState.debug.commandList = (0, _compiler.compile)(appState.grid, appState.blocks, appState.blockSizes);
-                appState.debug.receiveInput();
-                appState.debug.resetDebugger();
-                appState.notify();
-
-                appState.debug.runner = (0, _compiler.run)(appState.debug.commandList, appState.debug.getInputNum, appState.debug.getInputChar);
+                appState.debug.initDebugger();
             }
 
             // get next step from generator

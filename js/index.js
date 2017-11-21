@@ -304,6 +304,26 @@ const appState = {
             appState.debug.runner = null;
         }).bind(this),
 
+        // initialize the debugger
+        initDebugger: (() => {
+            // re-compile
+            appState.debug.commandList = compile(
+                appState.grid,
+                appState.blocks,
+                appState.blockSizes
+            );
+            appState.debug.resetDebugger(); // reset debugger values
+            appState.debug.receiveInput(); // grab input
+            appState.notify();
+
+            // create generator
+            appState.debug.runner = run(
+                appState.debug.commandList,
+                appState.debug.getInputNum,
+                appState.debug.getInputChar
+            );
+        }).bind(this),
+
         // get the current value of the input
         receiveInput: (() => {
             appState.debug.input = document.getElementById('in').value;
@@ -354,7 +374,6 @@ const appState = {
         }).bind(this),
 
         compile: (() => {
-            console.log('compiling');
             appState.debug.commandList = compile(
                 appState.grid,
                 appState.blocks,
@@ -365,46 +384,16 @@ const appState = {
 
         // start running program
         start: (() => {
-            // re-compile
-            appState.debug.commandList = compile(
-                appState.grid,
-                appState.blocks,
-                appState.blockSizes
-            );
-            appState.debug.resetDebugger();
-            appState.debug.receiveInput();
-            appState.notify();
-
-            // create generator
-            appState.debug.runner = run(
-                appState.debug.commandList,
-                appState.debug.getInputNum,
-                appState.debug.getInputChar
-            );
-
-            // "continue" from the starting point
-            appState.debug.cont();
+            appState.debug.initDebugger();
+            appState.debug.cont(); // "continue" from the starting point
         }).bind(this),
 
         // step through program
         step: (() => {
             // if generator does not already exist (i.e. we have not already started stepping
-            // through program), re-compile program and create new generator
+            // through program), initialize debugger
             if (!appState.debug.runner) {
-                appState.debug.commandList = compile(
-                    appState.grid,
-                    appState.blocks,
-                    appState.blockSizes
-                );
-                appState.debug.receiveInput();
-                appState.debug.resetDebugger();
-                appState.notify();
-
-                appState.debug.runner = run(
-                    appState.debug.commandList,
-                    appState.debug.getInputNum,
-                    appState.debug.getInputChar
-                );
+                appState.debug.initDebugger();
             }
 
             // get next step from generator
