@@ -2205,6 +2205,7 @@ var appState = {
                 appState.notify();
             } else {
                 appState.debug.runner = null; // finished running so clear runner
+                appState.notify();
             }
         }.bind(undefined),
 
@@ -2221,6 +2222,7 @@ var appState = {
                 } else if ((step = appState.debug.runner.next()).done) {
                     // if the generator is finished, clear the runner
                     appState.debug.runner = null;
+                    appState.notify();
                 } else {
                     for (var prop in step.value) {
                         appState.debug[prop] = step.value[prop];
