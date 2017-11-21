@@ -113,11 +113,9 @@ function getNextColour(grid, height, width, row, col, DP, CC) {
 // block and hit an edge or black block)
 // (DP: index into [right, down, left, up], direction pointer initially points right)
 // (CC: index into [left, right], codel chooser initially points left)
-// (offset: starting index into commandList, used for recursive calls)
-function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, offset = 0) {
+function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, commandList = []) {
     let height = grid.length,
         width = grid[0].length,
-        commandList = [],
         bounceCount = 0,
         loopCounter = 0;
 
@@ -236,9 +234,18 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, off
 
         for (var i = commandList.length - 2; commandList[i]; i--) {
             var command = commandList[i];
-
-            // loop detected
-            if (command.block == block && command.DP == DP && command.CC == CC) {
+            // skip branches that we are not in
+            if (command.inst == 'BRANCH-END') {
+                // find the branch command corresponding to this branch
+                for (
+                    ;
+                    commandList[i] && ['BRANCH-DP', 'BRANCH-CC'].includes(commandList[i].inst);
+                    i--
+                );
+            } else if (['DP', 'CC', 'BRANCH-DP', 'BRANCH-CC', 'LOOP'].includes(command.inst)) {
+                // ignore internal commands
+            } else if (command.block == block && command.DP == DP && command.CC == CC) {
+                // loop detected
                 return i;
             }
         }
@@ -255,7 +262,7 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, off
         }
 
         // save the current colour to use for indexing into the command list
-        let colour = grid[row][col]; // WE ARE SAVING BLACK HERE FOR SOME REASON
+        let colour = grid[row][col];
         // save the previous block size in case it will be pushed to the stack
         let pushVal = blockSizes[row][col];
 
@@ -287,17 +294,17 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, off
             // check if we are looping
             let loop = detectLoop(row, col);
             if (loop != null) {
-                console.log(commandList, loop, offset);
-                addCommand('LOOP', loop + offset);
+                addCommand('LOOP', loop);
                 return commandList;
             }
 
-            let nextColour = grid[row][col];
-
             bounceCount = 0; // we can move, so reset the bounce count
 
-            let command = commands[colour][nextColour]; // match colour transition to command
+            let nextColour = grid[row][col],
+                command = commands[colour][nextColour]; // match colour transition to command
+
             if (command == 'push') {
+                // if the command is PUSH, add the command and the saved pushVal
                 addCommand(command, pushVal);
             } else {
                 addCommand(command);
@@ -306,38 +313,30 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, off
                     // if the next command is POINTER, we should examine all possible DP values
 
                     // add placeholder branch command and save current instruction
-                    let currCommand = commandList.length + offset;
+                    let currCommand = commandList.length;
                     addCommand('BRANCH-DP');
 
-                    let branch0 = commandList.length + offset;
-                    commandList = commandList.concat(
-                        compile(grid, blocks, blockSizes, row, col, 0, CC, branch0)
-                    );
+                    let branch0 = commandList.length;
+                    commandList = compile(grid, blocks, blockSizes, row, col, 0, CC, commandList);
                     addCommand('BRANCH-END');
 
-                    let branch1 = commandList.length + offset;
-                    commandList = commandList.concat(
-                        compile(grid, blocks, blockSizes, row, col, 1, CC, branch1)
-                    );
+                    let branch1 = commandList.length;
+                    commandList = compile(grid, blocks, blockSizes, row, col, 1, CC, commandList);
                     addCommand('BRANCH-END');
 
-                    let branch2 = commandList.length + offset;
-                    commandList = commandList.concat(
-                        compile(grid, blocks, blockSizes, row, col, 2, CC, branch2)
-                    );
+                    let branch2 = commandList.length;
+                    commandList = compile(grid, blocks, blockSizes, row, col, 2, CC, commandList);
                     addCommand('BRANCH-END');
 
-                    let branch3 = commandList.length + offset;
-                    commandList = commandList.concat(
-                        compile(grid, blocks, blockSizes, row, col, 3, CC, branch3)
-                    );
+                    let branch3 = commandList.length;
+                    commandList = compile(grid, blocks, blockSizes, row, col, 3, CC, commandList);
                     addCommand('BRANCH-END');
 
                     // update placeholder branch command with 4 branches
                     commandList[currCommand].val = [branch0, branch1, branch2, branch3];
 
                     // update placeholder branch end commands
-                    let branchEnd = commandList.length + offset;
+                    let branchEnd = commandList.length;
                     commandList[branch1 - 1].val = branchEnd;
                     commandList[branch2 - 1].val = branchEnd;
                     commandList[branch3 - 1].val = branchEnd;
@@ -348,26 +347,22 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, off
                     // if the next command is SWITCH, we should examine all possible CC values
 
                     // add placeholder branch command and save current instruction
-                    let currCommand = commandList.length + offset;
+                    let currCommand = commandList.length;
                     addCommand('BRANCH-CC');
 
-                    let branch0 = commandList.length + offset;
-                    commandList = commandList.concat(
-                        compile(grid, blocks, blockSizes, row, col, DP, 0, branch0)
-                    );
+                    let branch0 = commandList.length;
+                    commandList = compile(grid, blocks, blockSizes, row, col, DP, 0, commandList);
                     addCommand('BRANCH-END');
 
-                    let branch1 = commandList.length + offset;
-                    commandList = commandList.concat(
-                        compile(grid, blocks, blockSizes, row, col, DP, 1, branch1)
-                    );
+                    let branch1 = commandList.length;
+                    commandList = compile(grid, blocks, blockSizes, row, col, DP, 1, commandList);
                     addCommand('BRANCH-END');
 
                     // update placeholder branch command with 4 branches
                     commandList[currCommand].val = [branch0, branch1];
 
                     // update placeholder branch end commands
-                    let branchEnd = commandList.length + offset;
+                    let branchEnd = commandList.length;
                     commandList[branch1 - 1].val = branchEnd;
                     commandList[branchEnd - 1].val = branchEnd;
 
