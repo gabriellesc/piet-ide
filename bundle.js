@@ -350,7 +350,7 @@ function compile(grid, blocks, blockSizes) {
         for (var i = commandList.length - 2; commandList[i]; i--) {
             var command = commandList[i];
             // skip branches that we are not in
-            if (command.inst == 'END-BRANCH') {
+            if (command.inst.startsWith('END-BRANCH')) {
                 // find the branch command corresponding to this branch
                 for (; commandList[i] && ['BRANCH-DP', 'BRANCH-CC'].includes(commandList[i].inst); i--) {}
             } else if (['DP', 'CC', 'BRANCH-DP', 'BRANCH-CC', 'GOTO'].includes(command.inst)) {
@@ -1346,7 +1346,8 @@ var Compiler = function Compiler(_ref) {
         currCommand = _ref.currCommand,
         breakpoints = _ref.breakpoints,
         toggleBP = _ref.toggleBP,
-        isRunning = _ref.isRunning;
+        isRunning = _ref.isRunning,
+        selectBlock = _ref.selectBlock;
     return [_react2.default.createElement(
         'button',
         {
@@ -1409,6 +1410,12 @@ var Compiler = function Compiler(_ref) {
                         gridColumn: '2',
                         backgroundColor: i == currCommand ? '#337ab7' : 'transparent',
                         color: i == currCommand ? 'white' : 'black'
+                    },
+                    onMouseOver: function onMouseOver() {
+                        return !isRunning && selectBlock(command.block);
+                    },
+                    onMouseOut: function onMouseOut() {
+                        return !isRunning && selectBlock(null);
                     } },
                 command.inst,
                 command.inst == 'PUSH' && ' ' + command.val,
@@ -1437,16 +1444,11 @@ var Compiler = function Compiler(_ref) {
                         ['🡸', '🡺'][index]
                     )];
                 }),
-                command.inst == 'END-BRANCH-DP' && [' ', _react2.default.createElement(
+                command.inst == 'END-BRANCH' && [' ', _react2.default.createElement(
                     'a',
                     { key: 'link-' + i, href: '#label-' + command.val[0] },
                     command.val[0]
-                ), ' ', ['🡺', '🡻', '🡸', '🡹'][command.val[1]]],
-                command.inst == 'END-BRANCH-CC' && [' ', _react2.default.createElement(
-                    'a',
-                    { key: 'link-' + i, href: '#label-' + command.val[0] },
-                    command.val[0]
-                ), ' ', ['🡸', '🡺'][command.val[1]]]
+                )]
             )];
         })
     )];
@@ -2129,6 +2131,12 @@ var appState = {
 
         setRunSpeed: function (speed) {
             appState.debug.runSpeed = speed;
+
+            appState.notify();
+        }.bind(undefined),
+
+        selectBlock: function (block) {
+            appState.debug.block = block;
 
             appState.notify();
         }.bind(undefined),

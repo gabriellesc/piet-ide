@@ -29,7 +29,15 @@ const Debugger = props => (
     </div>
 );
 
-const Compiler = ({ compile, commandList, currCommand, breakpoints, toggleBP, isRunning }) => [
+const Compiler = ({
+    compile,
+    commandList,
+    currCommand,
+    breakpoints,
+    toggleBP,
+    isRunning,
+    selectBlock,
+}) => [
     <button
         key="compile-button"
         type="button"
@@ -81,7 +89,9 @@ const Compiler = ({ compile, commandList, currCommand, breakpoints, toggleBP, is
                             gridColumn: '2',
                             backgroundColor: i == currCommand ? '#337ab7' : 'transparent',
                             color: i == currCommand ? 'white' : 'black',
-                        }}>
+                        }}
+                        onMouseOver={() => !isRunning && selectBlock(command.block)}
+                        onMouseOut={() => !isRunning && selectBlock(null)}>
                         {command.inst}
                         {command.inst == 'PUSH' && ' ' + command.val}
                         {command.inst == 'GOTO' && [
@@ -110,21 +120,11 @@ const Compiler = ({ compile, commandList, currCommand, breakpoints, toggleBP, is
                                     {['🡸', '🡺'][index]}
                                 </a>,
                             ])}
-                        {command.inst == 'END-BRANCH-DP' && [
+                        {command.inst == 'END-BRANCH' && [
                             ' ',
                             <a key={'link-' + i} href={'#label-' + command.val[0]}>
                                 {command.val[0]}
                             </a>,
-                            ' ',
-                            ['🡺', '🡻', '🡸', '🡹'][command.val[1]],
-                        ]}
-                        {command.inst == 'END-BRANCH-CC' && [
-                            ' ',
-                            <a key={'link-' + i} href={'#label-' + command.val[0]}>
-                                {command.val[0]}
-                            </a>,
-                            ' ',
-                            ['🡸', '🡺'][command.val[1]],
                         ]}
                     </span>,
                 ]

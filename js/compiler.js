@@ -234,7 +234,7 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, com
         for (var i = commandList.length - 2; commandList[i]; i--) {
             var command = commandList[i];
             // skip branches that we are not in
-            if (command.inst == 'END-BRANCH') {
+            if (command.inst.startsWith('END-BRANCH')) {
                 // find the branch command corresponding to this branch
                 for (
                     ;

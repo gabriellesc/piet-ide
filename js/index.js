@@ -299,6 +299,12 @@ const appState = {
             appState.notify();
         }).bind(this),
 
+        selectBlock: (block => {
+            appState.debug.block = block;
+
+            appState.notify();
+        }).bind(this),
+
         // reset the debugger to its initial state (but ignore the current command list and input)
         resetDebugger: (() => {
             appState.debug.DP = 0;
