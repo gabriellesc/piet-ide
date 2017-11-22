@@ -351,7 +351,7 @@ function compile(grid, blocks, blockSizes) {
             var command = commandList[i];
             // skip branches that we are not in
             if (command.inst.startsWith('END-BRANCH')) {
-                // find the branch command corresponding to this branch
+                // retreat to the branch command corresponding to this branch
                 for (; commandList[i] && ['BRANCH-DP', 'BRANCH-CC'].includes(commandList[i].inst); i--) {}
             } else if (['DP', 'CC', 'BRANCH-DP', 'BRANCH-CC', 'GOTO'].includes(command.inst)) {
                 // ignore internal commands
@@ -427,23 +427,19 @@ function compile(grid, blocks, blockSizes) {
 
                     var branch0 = commandList.length;
                     commandList = compile(grid, blocks, blockSizes, row, col, 0, CC, commandList);
-                    addCommand('END-BRANCH-DP', [currCommand, 0]);
-                    addCommand('GOTO');
+                    addCommand('END-BRANCH-DP');
 
                     var branch1 = commandList.length;
                     commandList = compile(grid, blocks, blockSizes, row, col, 1, CC, commandList);
-                    addCommand('END-BRANCH-DP', [currCommand, 1]);
-                    addCommand('GOTO');
+                    addCommand('END-BRANCH-DP');
 
                     var branch2 = commandList.length;
                     commandList = compile(grid, blocks, blockSizes, row, col, 2, CC, commandList);
-                    addCommand('END-BRANCH-DP', [currCommand, 2]);
-                    addCommand('GOTO');
+                    addCommand('END-BRANCH-DP');
 
                     var branch3 = commandList.length;
                     commandList = compile(grid, blocks, blockSizes, row, col, 3, CC, commandList);
-                    addCommand('END-BRANCH-DP', [currCommand, 3]);
-                    addCommand('GOTO');
+                    addCommand('END-BRANCH-DP');
 
                     // update placeholder branch command with 4 branches
                     commandList[currCommand].val = [branch0, branch1, branch2, branch3];
@@ -465,13 +461,11 @@ function compile(grid, blocks, blockSizes) {
 
                     var _branch = commandList.length;
                     commandList = compile(grid, blocks, blockSizes, row, col, DP, 0, commandList);
-                    addCommand('END-BRANCH-CC', [_currCommand, 0]);
-                    addCommand('GOTO');
+                    addCommand('END-BRANCH-CC');
 
                     var _branch2 = commandList.length;
                     commandList = compile(grid, blocks, blockSizes, row, col, DP, 1, commandList);
-                    addCommand('END-BRANCH-CC', [_currCommand, 1]);
-                    addCommand('GOTO');
+                    addCommand('END-BRANCH-CC');
 
                     // update placeholder branch command with 4 branches
                     commandList[_currCommand].val = [_branch, _branch2];
@@ -1444,10 +1438,10 @@ var Compiler = function Compiler(_ref) {
                         ['🡸', '🡺'][index]
                     )];
                 }),
-                command.inst == 'END-BRANCH' && [' ', _react2.default.createElement(
+                command.inst.startsWith('END-BRANCH') && [' ', _react2.default.createElement(
                     'a',
-                    { key: 'link-' + i, href: '#label-' + command.val[0] },
-                    command.val[0]
+                    { key: 'link-' + i, href: '#label-' + command.val },
+                    command.val
                 )]
             )];
         })

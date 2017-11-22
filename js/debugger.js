@@ -120,10 +120,10 @@ const Compiler = ({
                                     {['🡸', '🡺'][index]}
                                 </a>,
                             ])}
-                        {command.inst == 'END-BRANCH' && [
+                        {command.inst.startsWith('END-BRANCH') && [
                             ' ',
-                            <a key={'link-' + i} href={'#label-' + command.val[0]}>
-                                {command.val[0]}
+                            <a key={'link-' + i} href={'#label-' + command.val}>
+                                {command.val}
                             </a>,
                         ]}
                     </span>,
