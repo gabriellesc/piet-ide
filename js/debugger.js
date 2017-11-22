@@ -7,7 +7,7 @@ const Debugger = props => (
             gridColumn: 'debug',
             gridRow: '1 / 5',
             alignSelf: 'start',
-            width: '200px',
+            width: '250px',
             border: '1px solid black',
             borderRadius: '5px',
             padding: '0 5px 5px',
@@ -84,20 +84,30 @@ const Compiler = ({ compile, commandList, currCommand, breakpoints, toggleBP, is
                         }}>
                         {command.inst}
                         {command.inst == 'PUSH' && ' ' + command.val}
-                        {['LOOP', 'BRANCH-END'].includes(command.inst) && [
+                        {['GOTO', 'BRANCH-END'].includes(command.inst) && [
                             ' ',
-                            <a key={'link-' + i} title={command.val} href={'#label-' + command.val}>
+                            <a title={command.val} href={'#label-' + command.val}>
                                 {command.val}
                             </a>,
                         ]}
-                        {['BRANCH-DP', 'BRANCH-CC'].includes(command.inst) &&
+                        {command.inst == 'BRANCH-DP' &&
                             command.val.map((link, index) => [
                                 ' ',
                                 <a
                                     key={'link-' + i + '-' + index}
                                     title={link}
                                     href={'#label-' + link}>
-                                    {index}
+                                    {['🡺', '🡻', '🡸', '🡹'][index]}
+                                </a>,
+                            ])}
+                        {command.inst == 'BRANCH-CC' &&
+                            command.val.map((link, index) => [
+                                ' ',
+                                <a
+                                    key={'link-' + i + '-' + index}
+                                    title={link}
+                                    href={'#label-' + link}>
+                                    {['🡸', '🡺'][index]}
                                 </a>,
                             ])}
                     </span>,

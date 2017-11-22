@@ -227,8 +227,7 @@ function compile(grid, blocks, blockSizes) {
 
     var height = grid.length,
         width = grid[0].length,
-        bounceCount = 0,
-        loopCounter = 0;
+        bounceCount = 0;
 
     function addCommand(command, val) {
         commandList.push({ block: blocks[row][col], inst: command.toUpperCase(), val: val, DP: DP, CC: CC });
@@ -354,7 +353,7 @@ function compile(grid, blocks, blockSizes) {
             if (command.inst == 'BRANCH-END') {
                 // find the branch command corresponding to this branch
                 for (; commandList[i] && ['BRANCH-DP', 'BRANCH-CC'].includes(commandList[i].inst); i--) {}
-            } else if (['DP', 'CC', 'BRANCH-DP', 'BRANCH-CC', 'LOOP'].includes(command.inst)) {
+            } else if (['DP', 'CC', 'BRANCH-DP', 'BRANCH-CC', 'GOTO'].includes(command.inst)) {
                 // ignore internal commands
             } else if (command.block == block && command.DP == DP && command.CC == CC) {
                 // loop detected
@@ -367,12 +366,6 @@ function compile(grid, blocks, blockSizes) {
 
     // terminate compiler when bounce count reaches 8
     while (bounceCount < 8) {
-        // if we have looped more than 500 times, this might be an infinite loop
-        if (loopCounter++ > 500) {
-            addCommand('TIMEOUT');
-            return commandList;
-        }
-
         // save the current colour to use for indexing into the command list
         var colour = grid[row][col];
         // save the previous block size in case it will be pushed to the stack
@@ -410,7 +403,7 @@ function compile(grid, blocks, blockSizes) {
             col = nextCol;
             var loop = detectLoop(row, col);
             if (loop != null) {
-                addCommand('LOOP', loop);
+                addCommand('GOTO', loop);
                 return commandList;
             }
 
@@ -510,7 +503,7 @@ function run(commandList, getInputNum, getInputChar) {
 
                     _commandList$currComm = commandList[currCommand], block = _commandList$currComm.block, inst = _commandList$currComm.inst, val = _commandList$currComm.val;
                     _context.t0 = inst;
-                    _context.next = _context.t0 === 'CC' ? 6 : _context.t0 === 'DP' ? 10 : _context.t0 === 'BRANCH-DP' ? 14 : _context.t0 === 'BRANCH-CC' ? 16 : _context.t0 === 'BRANCH-END' ? 18 : _context.t0 === 'LOOP' ? 20 : _context.t0 === 'PUSH' ? 22 : _context.t0 === 'POP' ? 26 : _context.t0 === '+' ? 30 : _context.t0 === '-' ? 35 : _context.t0 === '*' ? 40 : _context.t0 === '/' ? 45 : _context.t0 === 'MOD' ? 50 : _context.t0 === 'NOT' ? 69 : _context.t0 === '>' ? 74 : _context.t0 === 'POINTER' ? 79 : _context.t0 === 'SWITCH' ? 93 : _context.t0 === 'DUP' ? 107 : _context.t0 === 'ROLL' ? 112 : _context.t0 === 'IN(NUM)' ? 133 : _context.t0 === 'IN(CHAR)' ? 142 : _context.t0 === 'OUT(NUM)' ? 151 : _context.t0 === 'OUT(CHAR)' ? 160 : 169;
+                    _context.next = _context.t0 === 'CC' ? 6 : _context.t0 === 'DP' ? 10 : _context.t0 === 'BRANCH-DP' ? 14 : _context.t0 === 'BRANCH-CC' ? 16 : _context.t0 === 'BRANCH-END' ? 18 : _context.t0 === 'GOTO' ? 20 : _context.t0 === 'PUSH' ? 22 : _context.t0 === 'POP' ? 26 : _context.t0 === '+' ? 30 : _context.t0 === '-' ? 35 : _context.t0 === '*' ? 40 : _context.t0 === '/' ? 45 : _context.t0 === 'MOD' ? 50 : _context.t0 === 'NOT' ? 69 : _context.t0 === '>' ? 74 : _context.t0 === 'POINTER' ? 79 : _context.t0 === 'SWITCH' ? 93 : _context.t0 === 'DUP' ? 107 : _context.t0 === 'ROLL' ? 112 : _context.t0 === 'IN(NUM)' ? 133 : _context.t0 === 'IN(CHAR)' ? 142 : _context.t0 === 'OUT(NUM)' ? 151 : _context.t0 === 'OUT(CHAR)' ? 160 : 169;
                     break;
 
                 case 6:
@@ -1312,7 +1305,7 @@ var Debugger = function Debugger(props) {
                 gridColumn: 'debug',
                 gridRow: '1 / 5',
                 alignSelf: 'start',
-                width: '200px',
+                width: '250px',
                 border: '1px solid black',
                 borderRadius: '5px',
                 padding: '0 5px 5px',
@@ -1410,19 +1403,29 @@ var Compiler = function Compiler(_ref) {
                     } },
                 command.inst,
                 command.inst == 'PUSH' && ' ' + command.val,
-                ['LOOP', 'BRANCH-END'].includes(command.inst) && [' ', _react2.default.createElement(
+                ['GOTO', 'BRANCH-END'].includes(command.inst) && [' ', _react2.default.createElement(
                     'a',
-                    { key: 'link-' + i, title: command.val, href: '#label-' + command.val },
+                    { title: command.val, href: '#label-' + command.val },
                     command.val
                 )],
-                ['BRANCH-DP', 'BRANCH-CC'].includes(command.inst) && command.val.map(function (link, index) {
+                command.inst == 'BRANCH-DP' && command.val.map(function (link, index) {
                     return [' ', _react2.default.createElement(
                         'a',
                         {
                             key: 'link-' + i + '-' + index,
                             title: link,
                             href: '#label-' + link },
-                        index
+                        ['🡺', '🡻', '🡸', '🡹'][index]
+                    )];
+                }),
+                command.inst == 'BRANCH-CC' && command.val.map(function (link, index) {
+                    return [' ', _react2.default.createElement(
+                        'a',
+                        {
+                            key: 'link-' + i + '-' + index,
+                            title: link,
+                            href: '#label-' + link },
+                        ['🡸', '🡺'][index]
                     )];
                 })
             )];
@@ -2290,7 +2293,7 @@ var App = function (_React$Component) {
                         display: 'grid',
                         gridColumnGap: '1vw',
                         gridRowGap: '1vh',
-                        gridTemplateColumns: this.props.appState.debug.debugIsVisible ? '375px 300px auto 200px' : '375px 300px auto 25px',
+                        gridTemplateColumns: this.props.appState.debug.debugIsVisible ? '375px 300px auto 250px' : '375px 300px auto 25px',
                         gridTemplateRows: '35px 35px 35px auto',
                         gridTemplateAreas: this.props.appState.debug.debugIsVisible ? '\'controls1 cpicker . debug\'\n                           \'controls2 cpicker . debug\'\n                           \'controls3 cpicker . debug\'\n                           \'grid grid grid debug\'' : '\'controls1 cpicker . dtab\'\n                           \'controls2 cpicker . dtab\'\n                           \'controls3 cpicker . dtab\'\n\t\t\t   \'grid grid grid grid\'',
                         alignItems: 'center',

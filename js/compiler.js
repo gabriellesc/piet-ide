@@ -116,8 +116,7 @@ function getNextColour(grid, height, width, row, col, DP, CC) {
 function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, commandList = []) {
     let height = grid.length,
         width = grid[0].length,
-        bounceCount = 0,
-        loopCounter = 0;
+        bounceCount = 0;
 
     function addCommand(command, val) {
         commandList.push({ block: blocks[row][col], inst: command.toUpperCase(), val, DP, CC });
@@ -242,7 +241,7 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, com
                     commandList[i] && ['BRANCH-DP', 'BRANCH-CC'].includes(commandList[i].inst);
                     i--
                 );
-            } else if (['DP', 'CC', 'BRANCH-DP', 'BRANCH-CC', 'LOOP'].includes(command.inst)) {
+            } else if (['DP', 'CC', 'BRANCH-DP', 'BRANCH-CC', 'GOTO'].includes(command.inst)) {
                 // ignore internal commands
             } else if (command.block == block && command.DP == DP && command.CC == CC) {
                 // loop detected
@@ -255,12 +254,6 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, com
 
     // terminate compiler when bounce count reaches 8
     while (bounceCount < 8) {
-        // if we have looped more than 500 times, this might be an infinite loop
-        if (loopCounter++ > 500) {
-            addCommand('TIMEOUT');
-            return commandList;
-        }
-
         // save the current colour to use for indexing into the command list
         let colour = grid[row][col];
         // save the previous block size in case it will be pushed to the stack
@@ -294,7 +287,7 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, com
             // check if we are looping
             let loop = detectLoop(row, col);
             if (loop != null) {
-                addCommand('LOOP', loop);
+                addCommand('GOTO', loop);
                 return commandList;
             }
 
@@ -414,8 +407,8 @@ function* run(commandList, getInputNum, getInputChar) {
                 currCommand = val;
                 continue;
 
-            /* internal command: loop (effectively a go-to) */
-            case 'LOOP':
+            /* internal command: goto (used for looping) */
+            case 'GOTO':
                 currCommand = val;
                 continue;
 
