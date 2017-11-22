@@ -38,7 +38,7 @@ const Compiler = ({ compile, commandList, currCommand, breakpoints, toggleBP, is
         disabled={isRunning ? 'disabled' : ''}
         onClick={() => compile()}
         style={{ width: '80%', marginTop: '5px', position: 'relative', left: '10%' }}>
-        Compile
+        {isRunning ? <i>Running</i> : 'Compile'}
     </button>,
     <div
         key="command-list"
@@ -84,9 +84,9 @@ const Compiler = ({ compile, commandList, currCommand, breakpoints, toggleBP, is
                         }}>
                         {command.inst}
                         {command.inst == 'PUSH' && ' ' + command.val}
-                        {['GOTO', 'BRANCH-END'].includes(command.inst) && [
+                        {command.inst == 'GOTO' && [
                             ' ',
-                            <a title={command.val} href={'#label-' + command.val}>
+                            <a key={'link-' + i} href={'#label-' + command.val}>
                                 {command.val}
                             </a>,
                         ]}
@@ -110,6 +110,22 @@ const Compiler = ({ compile, commandList, currCommand, breakpoints, toggleBP, is
                                     {['🡸', '🡺'][index]}
                                 </a>,
                             ])}
+                        {command.inst == 'END-BRANCH-DP' && [
+                            ' ',
+                            <a key={'link-' + i} href={'#label-' + command.val[0]}>
+                                {command.val[0]}
+                            </a>,
+                            ' ',
+                            ['🡺', '🡻', '🡸', '🡹'][command.val[1]],
+                        ]}
+                        {command.inst == 'END-BRANCH-CC' && [
+                            ' ',
+                            <a key={'link-' + i} href={'#label-' + command.val[0]}>
+                                {command.val[0]}
+                            </a>,
+                            ' ',
+                            ['🡸', '🡺'][command.val[1]],
+                        ]}
                     </span>,
                 ]
         )}

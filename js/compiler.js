@@ -234,7 +234,7 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, com
         for (var i = commandList.length - 2; commandList[i]; i--) {
             var command = commandList[i];
             // skip branches that we are not in
-            if (command.inst == 'BRANCH-END') {
+            if (command.inst == 'END-BRANCH') {
                 // find the branch command corresponding to this branch
                 for (
                     ;
@@ -311,24 +311,28 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, com
 
                     let branch0 = commandList.length;
                     commandList = compile(grid, blocks, blockSizes, row, col, 0, CC, commandList);
-                    addCommand('BRANCH-END');
+                    addCommand('END-BRANCH-DP', [currCommand, 0]);
+                    addCommand('GOTO');
 
                     let branch1 = commandList.length;
                     commandList = compile(grid, blocks, blockSizes, row, col, 1, CC, commandList);
-                    addCommand('BRANCH-END');
+                    addCommand('END-BRANCH-DP', [currCommand, 1]);
+                    addCommand('GOTO');
 
                     let branch2 = commandList.length;
                     commandList = compile(grid, blocks, blockSizes, row, col, 2, CC, commandList);
-                    addCommand('BRANCH-END');
+                    addCommand('END-BRANCH-DP', [currCommand, 2]);
+                    addCommand('GOTO');
 
                     let branch3 = commandList.length;
                     commandList = compile(grid, blocks, blockSizes, row, col, 3, CC, commandList);
-                    addCommand('BRANCH-END');
+                    addCommand('END-BRANCH-DP', [currCommand, 3]);
+                    addCommand('GOTO');
 
                     // update placeholder branch command with 4 branches
                     commandList[currCommand].val = [branch0, branch1, branch2, branch3];
 
-                    // update placeholder branch end commands
+                    // update placeholder goto commands
                     let branchEnd = commandList.length;
                     commandList[branch1 - 1].val = branchEnd;
                     commandList[branch2 - 1].val = branchEnd;
@@ -345,16 +349,18 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, com
 
                     let branch0 = commandList.length;
                     commandList = compile(grid, blocks, blockSizes, row, col, DP, 0, commandList);
-                    addCommand('BRANCH-END');
+                    addCommand('END-BRANCH-CC', [currCommand, 0]);
+                    addCommand('GOTO');
 
                     let branch1 = commandList.length;
                     commandList = compile(grid, blocks, blockSizes, row, col, DP, 1, commandList);
-                    addCommand('BRANCH-END');
+                    addCommand('END-BRANCH-CC', [currCommand, 1]);
+                    addCommand('GOTO');
 
                     // update placeholder branch command with 4 branches
                     commandList[currCommand].val = [branch0, branch1];
 
-                    // update placeholder branch end commands
+                    // update placeholder goto commands
                     let branchEnd = commandList.length;
                     commandList[branch1 - 1].val = branchEnd;
                     commandList[branchEnd - 1].val = branchEnd;
@@ -403,11 +409,10 @@ function* run(commandList, getInputNum, getInputChar) {
                 continue;
 
             /* internal command: end of a branch */
-            case 'BRANCH-END':
-                currCommand = val;
+            case 'END-BRANCH':
                 continue;
 
-            /* internal command: goto (used for looping) */
+            /* internal command: goto (used for looping and branches) */
             case 'GOTO':
                 currCommand = val;
                 continue;
