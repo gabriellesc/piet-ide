@@ -59,7 +59,10 @@ class Debugger extends React.Component {
                                 fontWeight: 'bold',
                                 textAlign: 'center',
                             }}>
-                            Current command: {this.props.debug.currCommand}
+                            Current command:&nbsp;
+                            <a href={'#label-' + this.props.debug.currCommand}>
+                                {this.props.debug.currCommand}
+                            </a>
                         </div>
                     )}
                     <DebugControls {...this.props} {...this.props.debug} />
