@@ -51,6 +51,17 @@ class Debugger extends React.Component {
                 </div>
                 <div style={{ padding: '5px' }}>
                     <Compiler {...this.props} {...this.props.debug} />
+                    {this.props.debug.currCommand != -1 && (
+                        <div
+                            style={{
+                                margin: '-5px 0 10px',
+                                width: '100%',
+                                fontWeight: 'bold',
+                                textAlign: 'center',
+                            }}>
+                            Current command: {this.props.debug.currCommand}
+                        </div>
+                    )}
                     <DebugControls {...this.props} {...this.props.debug} />
                     <Pointers {...this.props.debug} />
                     <Stack {...this.props.debug} />
@@ -112,7 +123,11 @@ const Compiler = ({
                         }}
                         title="Toggle breakpoint"
                         onClick={() => toggleBP(i)}>
-                        {breakpoints.includes(i) ? <i className="glyphicon glyphicon-pause" /> : i}
+                        {breakpoints.includes(i) ? (
+                            <i style={{ color: 'red' }} className="glyphicon glyphicon-pause" />
+                        ) : (
+                            i
+                        )}
                     </span>,
                     <span
                         key={'command-' + i}
@@ -174,7 +189,7 @@ const DebugControls = props => (
             <button
                 type="button"
                 className="btn btn-success"
-                title="Run"
+                title="Run from the beginning"
                 onClick={() => props.start()}>
                 <i className="glyphicon glyphicon-play" />
             </button>
@@ -210,7 +225,7 @@ const DebugControls = props => (
             <button
                 type="button"
                 className="btn btn-primary"
-                title="Continue"
+                title="Continue running from this point"
                 style={{ width: '33%' }}
                 onClick={() => props.cont()}>
                 <i className="glyphicon glyphicon-fast-forward" />
