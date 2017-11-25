@@ -1,33 +1,64 @@
 import React from 'react';
 
 // main debugger component container
-const Debugger = props => (
-    <div
-        style={{
-            gridColumn: 'debug',
-            gridRow: '1 / 5',
-            alignSelf: 'start',
-            width: '250px',
-            border: '1px solid black',
-            borderRadius: '5px',
-            padding: '0 5px 5px',
-            background: 'white',
-            pointerEvents: 'auto',
-        }}>
-        <button
-            type="button"
-            className="close"
-            aria-label="Close"
-            onClick={() => props.toggleDebugger()}>
-            <span aria-hidden="true">&times;</span>
-        </button>
-        <Compiler {...props} {...props.debug} />
-        <DebugControls {...props} {...props.debug} />
-        <Pointers {...props.debug} />
-        <Stack {...props.debug} />
-        <IO {...props} {...props.debug} />
-    </div>
-);
+class Debugger extends React.Component {
+    constructor() {
+        super();
+        this.startPos = 0; // save the starting position of the debugger, for when it is dragged
+    }
+
+    render() {
+        return (
+            <div
+                id="debugger"
+                style={{
+                    gridColumn: 'debug',
+                    gridRow: '1 / 5',
+                    alignSelf: 'start',
+                    marginTop: '0',
+                    width: '250px',
+                    border: '1px solid #ddd',
+                    borderRadius: '5px',
+                    background: 'white',
+                    pointerEvents: 'auto',
+                }}>
+                <div
+                    draggable="true"
+                    style={{
+                        height: '25px',
+                        padding: '0 5px 5px',
+                        borderBottom: '1px solid #ddd',
+                        borderRadius: '5px 5px 0 0',
+                        backgroundColor: '#eee',
+                        cursor: 'ns-resize',
+                    }}
+                    onDragStart={event => {
+                        this.startPos = event.screenY;
+                    }}
+                    onDragEnd={event => {
+                        var style = document.getElementById('debugger').style;
+                        style.marginTop = `calc(${style.marginTop} + ${event.screenY}px - ${this
+                            .startPos}px )`;
+                    }}>
+                    <button
+                        type="button"
+                        className="close"
+                        aria-label="Close"
+                        onClick={() => this.props.toggleDebugger()}>
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div style={{ padding: '5px' }}>
+                    <Compiler {...this.props} {...this.props.debug} />
+                    <DebugControls {...this.props} {...this.props.debug} />
+                    <Pointers {...this.props.debug} />
+                    <Stack {...this.props.debug} />
+                    <IO {...this.props} {...this.props.debug} />
+                </div>
+            </div>
+        );
+    }
+}
 
 const Compiler = ({
     compile,
@@ -53,8 +84,9 @@ const Compiler = ({
         style={{
             margin: '10px auto',
             padding: '5px',
-            maxHeight: '40vh',
+            height: '40vh',
             width: '100%',
+            resize: 'vertical',
             overflow: 'auto',
             fontFamily: 'monospace',
             backgroundColor: '#f5f5f5',
