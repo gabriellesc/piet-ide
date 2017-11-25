@@ -79,6 +79,10 @@ const appState = {
             .fill(0)
             .map(_ => Array(width).fill(height * width));
 
+        appState.blocks = Array(height)
+            .fill(0)
+            .map(_ => Array(width).fill(0));
+
         appState.notify();
     }).bind(this),
 
