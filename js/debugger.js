@@ -33,6 +33,7 @@ class Debugger extends React.Component {
                         cursor: 'ns-resize',
                     }}
                     onDragStart={event => {
+                        event.dataTransfer.setData('text/plain', '');
                         this.startPos = event.screenY;
                     }}
                     onDragEnd={event => {
