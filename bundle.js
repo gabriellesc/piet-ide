@@ -268,7 +268,7 @@ function compile(grid, blocks, blockSizes) {
             var first = array.slice(0, len / 2),
                 second = array.slice(len / 2);
 
-            return len % 2 == 0 && first.every(function (elem, i) {
+            return len && len % 2 == 0 && first.every(function (elem, i) {
                 return elem == second[i];
             });
         }
@@ -299,7 +299,7 @@ function compile(grid, blocks, blockSizes) {
                         break;
                     // up
                     case 3:
-                        nextRow;
+                        nextRow++;
                         break;
                 }
 
@@ -370,7 +370,9 @@ function compile(grid, blocks, blockSizes) {
         var colour = grid[row][col];
         // save the previous block size in case it will be pushed to the stack
         var pushVal = blockSizes[row][col];
-
+        if (row == 32 && col == 49) {
+            console.log('pause');
+        }
         // find next colour block
 
         var _getNextColour = getNextColour(grid, height, width, row, col, DP, CC),
@@ -383,7 +385,7 @@ function compile(grid, blocks, blockSizes) {
             bounce();
         } else if (grid[nextRow][nextCol] == _colours.WHITE) {
             // we hit a white block, so slide across it
-            var out = slide(nextRow, nextCol);
+            var out = slideOut(nextRow, nextCol);
 
             // we are trapped in a white block
             if (out == null) {
@@ -444,7 +446,7 @@ function compile(grid, blocks, blockSizes) {
                     // update placeholder branch command with 4 branches
                     commandList[currCommand].val = [branch0, branch1, branch2, branch3];
 
-                    // update placeholder goto commands
+                    // update placeholder end-branch commands
                     var branchEnd = commandList.length;
                     commandList[branch1 - 1].val = branchEnd;
                     commandList[branch2 - 1].val = branchEnd;
@@ -470,7 +472,7 @@ function compile(grid, blocks, blockSizes) {
                     // update placeholder branch command with 4 branches
                     commandList[_currCommand].val = [_branch, _branch2];
 
-                    // update placeholder goto commands
+                    // update placeholder branch-end commands
                     var _branchEnd = commandList.length;
                     commandList[_branch2 - 1].val = _branchEnd;
                     commandList[_branchEnd - 1].val = _branchEnd;
@@ -1289,50 +1291,116 @@ Object.defineProperty(exports, "__esModule", {
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
 // main debugger component container
-var Debugger = function Debugger(props) {
-    return _react2.default.createElement(
-        'div',
-        {
-            style: {
-                gridColumn: 'debug',
-                gridRow: '1 / 5',
-                alignSelf: 'start',
-                width: '250px',
-                border: '1px solid black',
-                borderRadius: '5px',
-                padding: '0 5px 5px',
-                background: 'white',
-                pointerEvents: 'auto'
-            } },
-        _react2.default.createElement(
-            'button',
-            {
-                type: 'button',
-                className: 'close',
-                'aria-label': 'Close',
-                onClick: function onClick() {
-                    return props.toggleDebugger();
-                } },
-            _react2.default.createElement(
-                'span',
-                { 'aria-hidden': 'true' },
-                '\xD7'
-            )
-        ),
-        _react2.default.createElement(Compiler, _extends({}, props, props.debug)),
-        _react2.default.createElement(DebugControls, _extends({}, props, props.debug)),
-        _react2.default.createElement(Pointers, props.debug),
-        _react2.default.createElement(Stack, props.debug),
-        _react2.default.createElement(IO, _extends({}, props, props.debug))
-    );
-};
+var Debugger = function (_React$Component) {
+    _inherits(Debugger, _React$Component);
+
+    function Debugger() {
+        _classCallCheck(this, Debugger);
+
+        var _this = _possibleConstructorReturn(this, (Debugger.__proto__ || Object.getPrototypeOf(Debugger)).call(this));
+
+        _this.startPos = 0; // save the starting position of the debugger, for when it is dragged
+        return _this;
+    }
+
+    _createClass(Debugger, [{
+        key: 'render',
+        value: function render() {
+            var _this2 = this;
+
+            return _react2.default.createElement(
+                'div',
+                {
+                    id: 'debugger',
+                    style: {
+                        gridColumn: 'debug',
+                        gridRow: '1 / 5',
+                        alignSelf: 'start',
+                        marginTop: '0',
+                        width: '250px',
+                        border: '1px solid #ddd',
+                        borderRadius: '5px',
+                        background: 'white',
+                        pointerEvents: 'auto'
+                    } },
+                _react2.default.createElement(
+                    'div',
+                    {
+                        draggable: 'true',
+                        style: {
+                            height: '25px',
+                            padding: '0 5px 5px',
+                            borderBottom: '1px solid #ddd',
+                            borderRadius: '5px 5px 0 0',
+                            backgroundColor: '#eee',
+                            cursor: 'ns-resize'
+                        },
+                        onDragStart: function onDragStart(event) {
+                            event.dataTransfer.setData('text/plain', '');
+                            _this2.startPos = event.screenY;
+                        },
+                        onDragEnd: function onDragEnd(event) {
+                            var style = document.getElementById('debugger').style;
+                            style.marginTop = 'calc(' + style.marginTop + ' + ' + event.screenY + 'px - ' + _this2.startPos + 'px )';
+                        } },
+                    _react2.default.createElement(
+                        'button',
+                        {
+                            type: 'button',
+                            className: 'close',
+                            'aria-label': 'Close',
+                            onClick: function onClick() {
+                                return _this2.props.toggleDebugger();
+                            } },
+                        _react2.default.createElement(
+                            'span',
+                            { 'aria-hidden': 'true' },
+                            '\xD7'
+                        )
+                    )
+                ),
+                _react2.default.createElement(
+                    'div',
+                    { style: { padding: '5px' } },
+                    _react2.default.createElement(Compiler, _extends({}, this.props, this.props.debug)),
+                    this.props.debug.currCommand != -1 && _react2.default.createElement(
+                        'div',
+                        {
+                            style: {
+                                margin: '-5px 0 10px',
+                                width: '100%',
+                                fontWeight: 'bold',
+                                textAlign: 'center'
+                            } },
+                        'Current command: ',
+                        this.props.debug.currCommand
+                    ),
+                    _react2.default.createElement(DebugControls, _extends({}, this.props, this.props.debug)),
+                    _react2.default.createElement(Pointers, this.props.debug),
+                    _react2.default.createElement(Stack, this.props.debug),
+                    _react2.default.createElement(IO, _extends({}, this.props, this.props.debug))
+                )
+            );
+        }
+    }]);
+
+    return Debugger;
+}(_react2.default.Component);
 
 var Compiler = function Compiler(_ref) {
     var compile = _ref.compile,
@@ -1366,8 +1434,9 @@ var Compiler = function Compiler(_ref) {
             style: {
                 margin: '10px auto',
                 padding: '5px',
-                maxHeight: '40vh',
+                height: '40vh',
                 width: '100%',
+                resize: 'vertical',
                 overflow: 'auto',
                 fontFamily: 'monospace',
                 backgroundColor: '#f5f5f5',
@@ -1393,7 +1462,7 @@ var Compiler = function Compiler(_ref) {
                     onClick: function onClick() {
                         return toggleBP(i);
                     } },
-                breakpoints.includes(i) ? _react2.default.createElement('i', { className: 'glyphicon glyphicon-pause' }) : i
+                breakpoints.includes(i) ? _react2.default.createElement('i', { style: { color: 'red' }, className: 'glyphicon glyphicon-pause' }) : i
             ), _react2.default.createElement(
                 'span',
                 {
@@ -1463,7 +1532,7 @@ var DebugControls = function DebugControls(props) {
                 {
                     type: 'button',
                     className: 'btn btn-success',
-                    title: 'Run',
+                    title: 'Run from the beginning',
                     onClick: function onClick() {
                         return props.start();
                     } },
@@ -1518,7 +1587,7 @@ var DebugControls = function DebugControls(props) {
                 {
                     type: 'button',
                     className: 'btn btn-primary',
-                    title: 'Continue',
+                    title: 'Continue running from this point',
                     style: { width: '33%' },
                     onClick: function onClick() {
                         return props.cont();
@@ -1905,6 +1974,10 @@ var appState = {
 
         appState.blockSizes = Array(height).fill(0).map(function (_) {
             return Array(width).fill(height * width);
+        });
+
+        appState.blocks = Array(height).fill(0).map(function (_) {
+            return Array(width).fill(0);
         });
 
         appState.notify();

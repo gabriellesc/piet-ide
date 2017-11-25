@@ -157,7 +157,7 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, com
             let first = array.slice(0, len / 2),
                 second = array.slice(len / 2);
 
-            return len % 2 == 0 && first.every((elem, i) => elem == second[i]);
+            return len && len % 2 == 0 && first.every((elem, i) => elem == second[i]);
         }
 
         let [nextRow, nextCol] = slide(row, col);
@@ -189,7 +189,7 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, com
                         break;
                     // up
                     case 3:
-                        nextRow;
+                        nextRow++;
                         break;
                 }
 
@@ -258,7 +258,9 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, com
         let colour = grid[row][col];
         // save the previous block size in case it will be pushed to the stack
         let pushVal = blockSizes[row][col];
-
+        if (row == 32 && col == 49) {
+            console.log('pause');
+        }
         // find next colour block
         let [nextRow, nextCol] = getNextColour(grid, height, width, row, col, DP, CC);
 
@@ -273,7 +275,7 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, com
             bounce();
         } else if (grid[nextRow][nextCol] == WHITE) {
             // we hit a white block, so slide across it
-            let out = slide(nextRow, nextCol);
+            let out = slideOut(nextRow, nextCol);
 
             // we are trapped in a white block
             if (out == null) {
@@ -328,7 +330,7 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, com
                     // update placeholder branch command with 4 branches
                     commandList[currCommand].val = [branch0, branch1, branch2, branch3];
 
-                    // update placeholder goto commands
+                    // update placeholder end-branch commands
                     let branchEnd = commandList.length;
                     commandList[branch1 - 1].val = branchEnd;
                     commandList[branch2 - 1].val = branchEnd;
@@ -354,7 +356,7 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, com
                     // update placeholder branch command with 4 branches
                     commandList[currCommand].val = [branch0, branch1];
 
-                    // update placeholder goto commands
+                    // update placeholder branch-end commands
                     let branchEnd = commandList.length;
                     commandList[branch1 - 1].val = branchEnd;
                     commandList[branchEnd - 1].val = branchEnd;
