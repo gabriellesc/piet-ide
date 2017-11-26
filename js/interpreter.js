@@ -108,7 +108,7 @@ function getNextColour(grid, height, width, row, col, DP, CC) {
     return farEdge;
 }
 
-function* run(grid, blocks, blockSizes, getInputNum, getInputChar) {
+function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
     let height = grid.length,
         width = grid[0].length,
         row = 0, // start at top left cell
@@ -304,7 +304,13 @@ function* run(grid, blocks, blockSizes, getInputNum, getInputChar) {
                         yield { commandList, block, currCommand };
                         addError('stack underflow');
                     } else {
-                        stack.push(op1 + op2);
+                        var result = op1 + op2;
+
+                        // integer overflow runtime error
+                        if (!result.isFinite()) {
+                        }
+
+                        stack.push(result);
                         yield { commandList, block, currCommand, stack };
                         addCommand();
                     }
@@ -600,4 +606,4 @@ function* run(grid, blocks, blockSizes, getInputNum, getInputChar) {
     }
 }
 
-export default run;
+export default interpret;

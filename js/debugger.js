@@ -61,7 +61,7 @@ class Debugger extends React.Component {
     }
 }
 
-const Commands = ({ commandList, selectBlock, isRunning, currCommand }) => [
+const Commands = ({ commandList, selectBlock, isInterpreting, currCommand }) => [
     <div
         key="command-list"
         style={{
@@ -82,22 +82,22 @@ const Commands = ({ commandList, selectBlock, isRunning, currCommand }) => [
                     <div
                         key={'command-' + i}
                         style={{ color: 'red', fontWeight: 'bold' }}
-                        onMouseOver={() => !isRunning && selectBlock(command.block)}
-                        onMouseOut={() => !isRunning && selectBlock(null)}>
+                        onMouseOver={() => !isInterpreting && selectBlock(command.block)}
+                        onMouseOut={() => !isInterpreting && selectBlock(null)}>
                         {command.error}
                     </div>
                 ) : (
                     <div
                         key={'command-' + i}
                         style={{ textTransform: 'uppercase' }}
-                        onMouseOver={() => !isRunning && selectBlock(command.block)}
-                        onMouseOut={() => !isRunning && selectBlock(null)}>
+                        onMouseOver={() => !isInterpreting && selectBlock(command.block)}
+                        onMouseOut={() => !isInterpreting && selectBlock(null)}>
                         {command.inst}
                     </div>
                 )
         )}
     </div>,
-    isRunning &&
+    isInterpreting &&
         currCommand && (
             <div
                 key="current-command"
@@ -117,8 +117,8 @@ const Commands = ({ commandList, selectBlock, isRunning, currCommand }) => [
 const DebugControls = props => (
     <div className="btn-toolbar" role="toolbar" style={{ width: '100%', margin: '0 0 1vh' }}>
         <div
-            className="btn-group"
-            style={{ width: 'calc((100% - 5px) / 4 + 20px)', marginLeft: '2px' }}>
+            className="btn-group btn-group-sm"
+            style={{ width: 'calc((100% - 5px) / 4 + 10px)', marginLeft: '2px' }}>
             <button
                 type="button"
                 className="btn btn-success"
@@ -144,14 +144,22 @@ const DebugControls = props => (
         </div>
 
         <div
-            className="btn-group"
+            className="btn-group btn-group-sm"
             role="group"
-            style={{ width: 'calc((100% - 5px) / 4 * 3 - 17px)', marginLeft: '0' }}>
+            style={{ width: 'calc((100% - 5px) / 4 * 3 - 7px)', marginLeft: '0' }}>
+            <button
+                type="button"
+                className="btn btn-warning"
+                title="Pause"
+                style={{ width: '25%' }}
+                onClick={() => props.pause()}>
+                <i className="glyphicon glyphicon-pause" />
+            </button>
             <button
                 type="button"
                 className="btn btn-info"
                 title="Step"
-                style={{ width: '33%' }}
+                style={{ width: '25%' }}
                 onClick={() => props.step()}>
                 <i className="glyphicon glyphicon-step-forward" />
             </button>
@@ -159,7 +167,7 @@ const DebugControls = props => (
                 type="button"
                 className="btn btn-primary"
                 title="Continue running from this point"
-                style={{ width: '33%' }}
+                style={{ width: '25%' }}
                 onClick={() => props.cont()}>
                 <i className="glyphicon glyphicon-fast-forward" />
             </button>
@@ -167,7 +175,7 @@ const DebugControls = props => (
                 type="button"
                 className="btn btn-danger"
                 title="Stop"
-                style={{ width: '33%' }}
+                style={{ width: '25%' }}
                 onClick={() => props.stop()}>
                 <i className="glyphicon glyphicon-stop" />
             </button>
@@ -176,7 +184,7 @@ const DebugControls = props => (
 );
 
 // slider to select run speed
-const RunSpeed = ({ runSpeed, setRunSpeed, isRunning }) => [
+const RunSpeed = ({ runSpeed, setRunSpeed, isInterpreting }) => [
     <b key="fast-label">Faster</b>,
     <input
         key="run-speed"
@@ -193,13 +201,13 @@ const RunSpeed = ({ runSpeed, setRunSpeed, isRunning }) => [
             MozAppearance: 'scale-vertical',
             margin: '5px auto',
         }}
-        onChange={event => !isRunning && setRunSpeed(1000 - event.target.value)}
+        onChange={event => !isInterpreting && setRunSpeed(1000 - event.target.value)}
     />,
     <b key="slow-label">Slower</b>,
 ];
 
 // IO visual containers
-const IO = ({ output, isRunning }) => [
+const IO = ({ output, isInterpreting }) => [
     <b key="input-label">Input</b>,
     <br key="br-1" />,
     <textarea
@@ -207,7 +215,7 @@ const IO = ({ output, isRunning }) => [
         id="in"
         placeholder="Enter input before running program"
         title="Tip: Whitespace before a numerical value is ignored"
-        readOnly={isRunning}
+        readOnly={isInterpreting}
         style={{
             width: '100%',
             maxWidth: '100%',
@@ -254,6 +262,7 @@ const Stack = ({ stack }) => (
                         verticalAlign: 'center',
                         fontFamily: 'monospace',
                         fontSize: '12pt',
+                        wordBreak: 'break-all',
                     }}>
                     <td>{val}</td>
                 </tr>

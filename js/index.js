@@ -7,7 +7,7 @@ import Grid from './grid.js';
 import { DebugTab } from './debugTab.js';
 import Debugger from './debugger.js';
 
-import run from './interpreter.js';
+import interpret from './interpreter.js';
 
 import { commands } from './orderedCommands.js';
 import { colours, WHITE, BLACK } from './colours.js';
@@ -283,7 +283,8 @@ const appState = {
         debugIsVisible: false, // initially, debugger is not visible
 
         commandList: [],
-        runner: null,
+        interpreter: null,
+        runner: null, // intervalId used for automatically stepping through program
         runSpeed: 500, // delay between steps while running, in ms
         breakpoints: [],
 
@@ -321,13 +322,13 @@ const appState = {
             appState.debug.inputPtr = 0;
             appState.debug.block = null;
             appState.debug.currCommand = null;
-            appState.debug.runner = null;
+            appState.debug.interpreter = null;
 
             appState.debug.receiveInput(); // grab input
             appState.notify();
 
             // create generator
-            appState.debug.runner = run(
+            appState.debug.interpreter = interpret(
                 appState.grid,
                 appState.blocks,
                 appState.blockSizes,
@@ -385,74 +386,6 @@ const appState = {
             return appState.debug.input[appState.debug.inputPtr++];
         }).bind(this),
 
-        // start running program
-        start: (() => {
-            appState.debug.initDebugger();
-            appState.debug.cont(); // "continue" from the starting point
-        }).bind(this),
-
-        // step through program
-        step: (() => {
-            // if generator does not already exist (i.e. we have not already started stepping
-            // through program), initialize debugger
-            if (!appState.debug.runner) {
-                appState.debug.initDebugger();
-            }
-
-            // get next step from generator
-            let step = appState.debug.runner.next();
-            if (!step.done) {
-                // update state of debugger based on result of current step
-                for (var prop in step.value) {
-                    appState.debug[prop] = step.value[prop];
-                }
-                appState.notify();
-            } else {
-                appState.debug.runner = null; // finished running so clear runner
-                appState.notify();
-            }
-        }).bind(this),
-
-        // continue running after stepping through the program (run the rest of the program
-        // starting from the current step)
-        // if we were not already running/stepping through the program, this function does nothing
-        cont: (() => {
-            // update state of debugger
-            function updateDebugger() {
-                let step;
-                // if the generator has been cleared or is finished, clear the timer
-                if (!appState.debug.runner) {
-                    clearInterval(intervalId);
-                } else if ((step = appState.debug.runner.next()).done) {
-                    // if the generator is finished, clear the runner
-                    appState.debug.runner = null;
-                    appState.notify();
-                } else {
-                    for (var prop in step.value) {
-                        appState.debug[prop] = step.value[prop];
-                    }
-                    appState.notify();
-
-                    // stop if breakpoint reached
-                    if (appState.debug.breakpoints.includes(step.value.block)) {
-                        clearInterval(intervalId);
-                    }
-                }
-            }
-
-            // call generator and update state of debugger at interval
-            let intervalId = window.setInterval(updateDebugger, appState.debug.runSpeed);
-        }).bind(this),
-
-        // stop debugging
-        stop: (() => {
-            appState.debug.runner = null;
-            appState.debug.block = null;
-            appState.debug.currCommand = null;
-
-            appState.notify();
-        }).bind(this),
-
         // add/remove a breakpoint
         toggleBP: ((row, col) => {
             let block = appState.blocks[row][col];
@@ -467,6 +400,80 @@ const appState = {
 
             appState.notify();
         }).bind(this),
+
+        // start running program
+        start: (() => {
+            appState.debug.initDebugger();
+            appState.debug.cont(); // "continue" from the starting point
+        }).bind(this),
+
+        // step through program
+        step: (() => {
+            // if generator does not already exist (i.e. we have not already started stepping
+            // through program), initialize debugger
+            if (!appState.debug.interpreter) {
+                appState.debug.initDebugger();
+            }
+
+            // get next step from generator
+            let step = appState.debug.interpreter.next();
+            if (!step.done) {
+                // update state of debugger based on result of current step
+                for (var prop in step.value) {
+                    appState.debug[prop] = step.value[prop];
+                }
+                appState.notify();
+            } else {
+                appState.debug.interpreter = null; // finished running so clear interpreter
+                appState.notify();
+            }
+        }).bind(this),
+
+        // continue running after stepping through the program (run the rest of the program
+        // starting from the current step)
+        // if we were not already running/stepping through the program, this function does nothing
+        cont: (() => {
+            // update state of debugger
+            function updateDebugger() {
+                let step;
+                // if the generator has been cleared or is finished, clear the timer
+                if (!appState.debug.interpreter) {
+                    clearInterval(appState.debug.runner);
+                } else if ((step = appState.debug.interpreter.next()).done) {
+                    // if the generator is finished, clear the interpreter
+                    appState.debug.interpreter = null;
+                    appState.notify();
+                } else {
+                    for (var prop in step.value) {
+                        appState.debug[prop] = step.value[prop];
+                    }
+                    appState.notify();
+
+                    // stop running if breakpoint reached
+                    if (appState.debug.breakpoints.includes(step.value.block)) {
+                        clearInterval(appState.debug.runner);
+                    }
+                }
+            }
+
+            // call generator and update state of debugger at interval
+            appState.debug.runner = window.setInterval(updateDebugger, appState.debug.runSpeed);
+        }).bind(this),
+
+        // stop interpreting
+        stop: (() => {
+            // if we are running, this will cause the timer to be cleared
+            appState.debug.interpreter = null;
+            appState.debug.block = null;
+            appState.debug.currCommand = null;
+
+            appState.notify();
+        }).bind(this),
+
+        // pause running
+        pause: (() => {
+            clearInterval(appState.debug.runner);
+        }).bind(this),
     },
 };
 
@@ -476,7 +483,7 @@ class App extends React.Component {
     }
 
     render() {
-        let isRunning = this.props.appState.debug.runner != null;
+        let isInterpreting = this.props.appState.debug.interpreter != null;
 
         return (
             <div
@@ -500,12 +507,12 @@ class App extends React.Component {
                            'controls3 cpicker . dtab'
 			   'grid grid grid grid'`,
                     alignItems: 'center',
-                    pointerEvents: isRunning ? 'none' : 'auto',
+                    pointerEvents: isInterpreting ? 'none' : 'auto',
                 }}>
                 <Controls {...this.props.appState} />
                 <Grid {...this.props.appState} />
                 {this.props.appState.debug.debugIsVisible ? (
-                    <Debugger isRunning={isRunning} {...this.props.appState} />
+                    <Debugger isInterpreting={isInterpreting} {...this.props.appState} />
                 ) : (
                     <DebugTab {...this.props.appState} />
                 )}
