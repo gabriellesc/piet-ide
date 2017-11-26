@@ -6,7 +6,7 @@ import Controls from './controls.js';
 import Grid from './grid.js';
 import Debugger from './debugger.js';
 
-import { compile, run } from './compiler.js';
+import run from './compiler.js';
 
 import { commands } from './orderedCommands.js';
 import { colours, WHITE, BLACK } from './colours.js';
@@ -294,8 +294,8 @@ const appState = {
         input: '',
         inputPtr: 0, // pointer into input stream
 
-        block: null, // current block (in step mode)
-        currCommand: -1, // current command (in step mode)
+        block: null, // current block
+        currCommand: null, // current command
 
         setRunSpeed: (speed => {
             appState.debug.runSpeed = speed;
@@ -309,33 +309,27 @@ const appState = {
             appState.notify();
         }).bind(this),
 
-        // reset the debugger to its initial state (but ignore the current command list and input)
-        resetDebugger: (() => {
+        // initialize the debugger
+        initDebugger: (() => {
+            // reset debugger values
+            appState.debug.commandList = [];
             appState.debug.DP = 0;
             appState.debug.CC = 0;
             appState.debug.stack = [];
             appState.debug.output = '';
             appState.debug.inputPtr = 0;
             appState.debug.block = null;
-            appState.debug.currCommand = -1;
+            appState.debug.currCommand = null;
             appState.debug.runner = null;
-        }).bind(this),
 
-        // initialize the debugger
-        initDebugger: (() => {
-            // re-compile
-            appState.debug.commandList = compile(
-                appState.grid,
-                appState.blocks,
-                appState.blockSizes
-            );
-            appState.debug.resetDebugger(); // reset debugger values
             appState.debug.receiveInput(); // grab input
             appState.notify();
 
             // create generator
             appState.debug.runner = run(
-                appState.debug.commandList,
+                appState.grid,
+                appState.blocks,
+                appState.blockSizes,
                 appState.debug.getInputNum,
                 appState.debug.getInputChar
             );
@@ -390,15 +384,6 @@ const appState = {
             return appState.debug.input[appState.debug.inputPtr++];
         }).bind(this),
 
-        compile: (() => {
-            appState.debug.commandList = compile(
-                appState.grid,
-                appState.blocks,
-                appState.blockSizes
-            );
-            appState.notify();
-        }).bind(this),
-
         // start running program
         start: (() => {
             appState.debug.initDebugger();
@@ -448,7 +433,7 @@ const appState = {
                     appState.notify();
 
                     // stop if breakpoint reached
-                    if (appState.debug.breakpoints.includes(step.value.currCommand)) {
+                    if (appState.debug.breakpoints.includes(step.value.block)) {
                         clearInterval(intervalId);
                     }
                 }
@@ -458,19 +443,20 @@ const appState = {
             let intervalId = window.setInterval(updateDebugger, appState.debug.runSpeed);
         }).bind(this),
 
-        // stop debugging (and reset debugger values)
+        // stop debugging
         stop: (() => {
-            appState.debug.resetDebugger();
+            appState.debug.runner = null;
             appState.notify();
         }).bind(this),
 
         // add/remove a breakpoint
-        toggleBP: (command => {
-            let i = appState.debug.breakpoints.indexOf(command);
+        toggleBP: ((row, col) => {
+            let block = appState.blocks[row][col];
+            let i = appState.debug.breakpoints.indexOf(block);
 
             if (i == -1) {
                 // add breakpoint
-                appState.debug.breakpoints.push(command);
+                appState.debug.breakpoints.push(block);
             } else {
                 appState.debug.breakpoints.splice(i, 1);
             }
@@ -497,7 +483,7 @@ class App extends React.Component {
                     gridColumnGap: '1vw',
                     gridRowGap: '1vh',
                     gridTemplateColumns: this.props.appState.debug.debugIsVisible
-                        ? '375px 300px auto 250px'
+                        ? '375px 300px auto 200px'
                         : '375px 300px auto 25px',
                     gridTemplateRows: '35px 35px 35px auto',
                     gridTemplateAreas: this.props.appState.debug.debugIsVisible

@@ -16,7 +16,7 @@ class Debugger extends React.Component {
                     gridRow: '1 / 5',
                     alignSelf: 'start',
                     marginTop: '0',
-                    width: '250px',
+                    width: '200px',
                     border: '1px solid #ddd',
                     borderRadius: '5px',
                     background: 'white',
@@ -50,21 +50,7 @@ class Debugger extends React.Component {
                     </button>
                 </div>
                 <div style={{ padding: '5px' }}>
-                    <Compiler {...this.props} {...this.props.debug} />
-                    {this.props.debug.currCommand != -1 && (
-                        <div
-                            style={{
-                                margin: '-5px 0 10px',
-                                width: '100%',
-                                fontWeight: 'bold',
-                                textAlign: 'center',
-                            }}>
-                            Current command:&nbsp;
-                            <a href={'#label-' + this.props.debug.currCommand}>
-                                {this.props.debug.currCommand}
-                            </a>
-                        </div>
-                    )}
+                    <Commands {...this.props} {...this.props.debug} />
                     <DebugControls {...this.props} {...this.props.debug} />
                     <Pointers {...this.props.debug} />
                     <Stack {...this.props.debug} />
@@ -75,112 +61,43 @@ class Debugger extends React.Component {
     }
 }
 
-const Compiler = ({
-    compile,
-    commandList,
-    currCommand,
-    breakpoints,
-    toggleBP,
-    isRunning,
-    selectBlock,
-}) => [
-    <button
-        key="compile-button"
-        type="button"
-        className="btn btn-info"
-        title="Compile"
-        disabled={isRunning ? 'disabled' : ''}
-        onClick={() => compile()}
-        style={{ width: '80%', marginTop: '5px', position: 'relative', left: '10%' }}>
-        {isRunning ? <i>Running</i> : 'Compile'}
-    </button>,
+const Commands = ({ commandList, selectBlock, isRunning, currCommand }) => [
     <div
         key="command-list"
         style={{
-            margin: '10px auto',
+            margin: '5px auto 10px',
             padding: '5px',
-            height: '40vh',
+            height: 'auto',
             width: '100%',
             resize: 'vertical',
             overflow: 'auto',
             fontFamily: 'monospace',
+            fontSize: '11pt',
+            textTransform: 'uppercase',
             backgroundColor: '#f5f5f5',
             border: '1px solid #ccc',
-            display: 'grid',
-            gridAutoColumns: 'min-content auto',
-            alignItems: 'center',
-            gridColumnGap: '5px',
         }}>
-        {commandList.map(
-            (command, i) =>
-                command.inst != 'DP' &&
-                command.inst != 'CC' && [
-                    <span
-                        key={'label-' + i}
-                        id={'label-' + i}
-                        style={{
-                            fontSize: '8pt',
-                            gridColumn: '1',
-                            justifySelf: 'start',
-                            cursor: 'pointer',
-                        }}
-                        title="Toggle breakpoint"
-                        onClick={() => toggleBP(i)}>
-                        {breakpoints.includes(i) ? (
-                            <i style={{ color: 'red' }} className="glyphicon glyphicon-pause" />
-                        ) : (
-                            i
-                        )}
-                    </span>,
-                    <span
-                        key={'command-' + i}
-                        style={{
-                            fontSize: '11pt',
-                            paddingLeft: '5px',
-                            gridColumn: '2',
-                            backgroundColor: i == currCommand ? '#337ab7' : 'transparent',
-                            color: i == currCommand ? 'white' : 'black',
-                        }}
-                        onMouseOver={() => !isRunning && selectBlock(command.block)}
-                        onMouseOut={() => !isRunning && selectBlock(null)}>
-                        {command.inst}
-                        {command.inst == 'PUSH' && ' ' + command.val}
-                        {command.inst == 'GOTO' && [
-                            ' ',
-                            <a key={'link-' + i} href={'#label-' + command.val}>
-                                {command.val}
-                            </a>,
-                        ]}
-                        {command.inst == 'BRANCH-DP' &&
-                            command.val.map((link, index) => [
-                                ' ',
-                                <a
-                                    key={'link-' + i + '-' + index}
-                                    title={link}
-                                    href={'#label-' + link}>
-                                    {['🡺', '🡻', '🡸', '🡹'][index]}
-                                </a>,
-                            ])}
-                        {command.inst == 'BRANCH-CC' &&
-                            command.val.map((link, index) => [
-                                ' ',
-                                <a
-                                    key={'link-' + i + '-' + index}
-                                    title={link}
-                                    href={'#label-' + link}>
-                                    {['🡸', '🡺'][index]}
-                                </a>,
-                            ])}
-                        {command.inst.startsWith('END-BRANCH') && [
-                            ' ',
-                            <a key={'link-' + i} href={'#label-' + command.val}>
-                                {command.val}
-                            </a>,
-                        ]}
-                    </span>,
-                ]
-        )}
+        {commandList.map(command => (
+            <div
+                onMouseOver={() => !isRunning && selectBlock(command.block)}
+                onMouseOut={() => !isRunning && selectBlock(null)}>
+                {command.inst}
+            </div>
+        ))}
     </div>,
+    isRunning &&
+        currCommand && (
+            <div
+                style={{
+                    margin: '-5px 0 10px',
+                    width: '100%',
+                    fontWeight: 'bold',
+                    textAlign: 'center',
+                }}>
+                Current command:<br />
+                {currCommand.toUpperCase()}
+            </div>
+        ),
 ];
 
 // run/step/continue/stop control buttons

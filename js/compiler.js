@@ -108,18 +108,25 @@ function getNextColour(grid, height, width, row, col, DP, CC) {
     return farEdge;
 }
 
-// start at top left cell, bounceCount of 0, DP and CC of 0, by default
-// (bounceCount: number of consecutive times that the compiler has tried to move off the current
-// block and hit an edge or black block)
-// (DP: index into [right, down, left, up], direction pointer initially points right)
-// (CC: index into [left, right], codel chooser initially points left)
-function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, commandList = []) {
+function* run(grid, blocks, blockSizes, getInputNum, getInputChar) {
     let height = grid.length,
         width = grid[0].length,
-        bounceCount = 0;
+        row = 0, // start at top left cell
+        col = 0,
+        DP = 0, // index into [right, down, left, up], direction pointer initially points right
+        CC = 0, // index into [left, right], codel chooser initially points left
+        stack = [],
+        output = '',
+        currCommand = null,
+        block = null,
+        commandList = [],
+        // number of consecutive times that the compiler has tried to move off the current block
+        // and hit an edge or black block
+        bounceCount = 0,
+        nextColour = null;
 
-    function addCommand(command, val) {
-        commandList.push({ block: blocks[row][col], inst: command.toUpperCase(), val, DP, CC });
+    function addCommand(command) {
+        commandList.push({ block, inst: command != undefined ? command : currCommand });
     }
 
     // slide across a white block in a straight line
@@ -218,49 +225,16 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, com
         if (bounceCount % 2 != 0) {
             // toggle CC
             CC = (CC + 1) % 2;
-            addCommand('CC');
+            return { CC };
         } else {
             // move DP clockwise 1 step
             DP = (DP + 1) % 4;
-            addCommand('DP');
+            return { DP };
         }
     }
 
-    // detect a loop by searching backwards in the command list for a command corresponding
-    // to this block and DP + CC
-    function detectLoop(row, col, DP, CC) {
-        var block = blocks[row][col];
-
-        for (var i = commandList.length - 3; commandList[i]; i--) {
-            var command = commandList[i];
-            // skip branches that we are not in
-            if (command.inst.startsWith('END-BRANCH')) {
-                // retreat to the branch command corresponding to this branch
-                for (
-                    ;
-                    commandList[i] && ['BRANCH-DP', 'BRANCH-CC'].includes(commandList[i].inst);
-                    i--
-                );
-            } else if (['DP', 'CC', 'BRANCH-DP', 'BRANCH-CC', 'GOTO'].includes(command.inst)) {
-                // ignore internal commands
-            } else if (command.block == block && command.DP == DP && command.CC == CC) {
-                // loop detected
-                return i;
-            }
-        }
-
-        return null;
-    }
-
-    // terminate compiler when bounce count reaches 8
+    // terminate interpreter when bounce count reaches 8
     while (bounceCount < 8) {
-        // check if we are looping
-        let loop = detectLoop(row, col, DP, CC);
-        if (loop != null) {
-            addCommand('GOTO', loop);
-            return commandList;
-        }
-
         // save the current colour to use for indexing into the command list
         let colour = grid[row][col];
         // save the previous block size in case it will be pushed to the stack
@@ -277,7 +251,7 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, com
             grid[nextRow][nextCol] == BLACK
         ) {
             // we hit an outer edge or a black block, so bounce off it (toggle DP/CC)
-            bounce();
+            yield bounce();
         } else if (grid[nextRow][nextCol] == WHITE) {
             // we hit a white block, so slide across it
             let out = slideOut(nextRow, nextCol);
@@ -293,429 +267,332 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, com
 
             bounceCount = 0; // we can move, so reset the bounce count
 
-            let nextColour = grid[row][col],
-                command = commands[colour][nextColour]; // match colour transition to command
+            nextColour = grid[row][col];
+            currCommand = commands[colour][nextColour]; // match colour transition to command
+            block = blocks[row][col];
 
-            if (command == 'push') {
-                // if the command is PUSH, add the command and the saved pushVal
-                addCommand(command, pushVal);
-            } else {
-                addCommand(command);
+            switch (currCommand) {
+                /* Pushes the value of the colour block just exited on to the stack */
+                case 'push':
+                    stack.push(pushVal);
+                    yield { commandList, block, currCommand: currCommand + ' ' + pushVal, stack };
+                    addCommand(currCommand + ' ' + pushVal);
+                    break;
 
-                if (command == 'pointer') {
-                    // if the next command is POINTER, we should examine all possible DP values
+                /* Pops the top value off the stack and discards it */
+                case 'pop':
+                    // ignore stack underflow
+                    stack.pop();
+                    yield { commandList, block, currCommand, stack };
+                    addCommand();
+                    break;
 
-                    // add placeholder branch command and save current instruction
-                    let currCommand = commandList.length;
-                    addCommand('BRANCH-DP');
+                /* Pops the top two values off the stack, adds them, and pushes the 
+		   result back on the stack */
+                case '+':
+                    var op1 = stack.pop(),
+                        op2 = stack.pop();
 
-                    let branch0 = commandList.length;
-                    commandList = compile(grid, blocks, blockSizes, row, col, 0, CC, commandList);
-                    addCommand('END-BRANCH-DP');
+                    // ignore stack underflow
+                    if (op1 == undefined) {
+                    } else if (op2 == undefined) {
+                        stack.push(op1);
+                    } else {
+                        stack.push(op1 + op2);
+                    }
 
-                    let branch1 = commandList.length;
-                    commandList = compile(grid, blocks, blockSizes, row, col, 1, CC, commandList);
-                    addCommand('END-BRANCH-DP');
+                    yield { commandList, block, currCommand, stack };
+                    addCommand();
+                    break;
 
-                    let branch2 = commandList.length;
-                    commandList = compile(grid, blocks, blockSizes, row, col, 2, CC, commandList);
-                    addCommand('END-BRANCH-DP');
+                /* Pops the top two values off the stack, calculates the second top value
+		   minus the top value, and pushes the result back on the stack */
+                case '-':
+                    var op1 = stack.pop(),
+                        op2 = stack.pop();
 
-                    let branch3 = commandList.length;
-                    commandList = compile(grid, blocks, blockSizes, row, col, 3, CC, commandList);
-                    addCommand('END-BRANCH-DP');
+                    // ignore stack underflow
+                    if (op1 == undefined) {
+                    } else if (op2 == undefined) {
+                        stack.push(op1);
+                    } else {
+                        stack.push(op2 - op1);
+                    }
 
-                    // update placeholder branch command with 4 branches
-                    commandList[currCommand].val = [branch0, branch1, branch2, branch3];
+                    yield { commandList, block, currCommand, stack };
+                    addCommand();
+                    break;
 
-                    // update placeholder end-branch commands
-                    let branchEnd = commandList.length;
-                    commandList[branch1 - 1].val = branchEnd;
-                    commandList[branch2 - 1].val = branchEnd;
-                    commandList[branch3 - 1].val = branchEnd;
-                    commandList[branchEnd - 1].val = branchEnd;
+                /* Pops the top two values off the stack, multiplies them, and pushes 
+		   the result back on the stack */
+                case '*':
+                    var op1 = stack.pop(),
+                        op2 = stack.pop();
 
-                    return commandList;
-                } else if (command == 'switch') {
-                    // if the next command is SWITCH, we should examine all possible CC values
+                    // ignore stack underflow
+                    if (op1 == undefined) {
+                    } else if (op2 == undefined) {
+                        stack.push(op1);
+                    } else {
+                        stack.push(op1 * op2);
+                    }
 
-                    // add placeholder branch command and save current instruction
-                    let currCommand = commandList.length;
-                    addCommand('BRANCH-CC');
+                    yield { commandList, block, currCommand, stack };
+                    addCommand();
+                    break;
 
-                    let branch0 = commandList.length;
-                    commandList = compile(grid, blocks, blockSizes, row, col, DP, 0, commandList);
-                    addCommand('END-BRANCH-CC');
+                /* Pops the top two values off the stack, calculates the integer 
+		   division of the second top value by the top value, and pushes the 
+		   result back on the stack */
+                case '/':
+                    var op1 = stack.pop(),
+                        op2 = stack.pop();
 
-                    let branch1 = commandList.length;
-                    commandList = compile(grid, blocks, blockSizes, row, col, DP, 1, commandList);
-                    addCommand('END-BRANCH-CC');
+                    // ignore stack underflow
+                    if (op1 == undefined) {
+                    } else if (op2 == undefined) {
+                        stack.push(op1);
+                    } else if (op1 == 0) {
+                        // ignore divide by zero instruction
+                        stack.push(op2);
+                        stack.push(op1);
+                    } else {
+                        stack.push(Math.floor(op2 / op1));
+                    }
 
-                    // update placeholder branch command with 4 branches
-                    commandList[currCommand].val = [branch0, branch1];
+                    yield { commandList, block, currCommand, stack };
+                    addCommand();
+                    break;
 
-                    // update placeholder branch-end commands
-                    let branchEnd = commandList.length;
-                    commandList[branch1 - 1].val = branchEnd;
-                    commandList[branchEnd - 1].val = branchEnd;
+                /* Pops the top two values off the stack, calculates the second top value
+		   modulo the top value, and pushes the result back on the stack. The 
+		   result has the same sign as the divisor (the top value). */
+                case 'mod':
+                    var op1 = stack.pop(),
+                        op2 = stack.pop();
 
-                    return commandList;
-                }
+                    // ignore stack underflow
+                    if (op1 == undefined) {
+                    } else if (op2 == undefined) {
+                        stack.push(op1);
+                    } else if (op1 == 0) {
+                        // divide by 0 error; instruction is ignored
+                        stack.push(op2);
+                        stack.push(op1);
+                        yield { commandList, block, currCommand, error: 'Divide by zero', stack };
+                    } else {
+                        stack.push(op2 - op1 * Math.floor(op2 / op1));
+                    }
+
+                    yield { commandList, block, currCommand, stack };
+                    addCommand();
+                    break;
+
+                /* Replaces the top value of the stack with 0 if it is non-zero, and 1 if 
+		   it is zero */
+                case 'not':
+                    var op = stack.pop();
+
+                    // ignore stack underflow
+                    if (op != undefined) {
+                        stack.push(op == 0 ? 1 : 0);
+                    }
+                    yield { commandList, block, currCommand, stack };
+                    addCommand();
+                    break;
+
+                /* Pops the top two values off the stack, and pushes 1 on to the stack 
+		   if the second top value is greater than the top value, and pushes 0 
+		   if it is not greater */
+                case '>':
+                    var op1 = stack.pop(),
+                        op2 = stack.pop();
+
+                    // ignore stack underflow
+                    if (op1 == undefined) {
+                    } else if (op2 == undefined) {
+                        stack.push(op1);
+                    } else {
+                        stack.push(op2 > op1 ? 1 : 0);
+                    }
+
+                    yield { commandList, block, currCommand, stack };
+                    addCommand();
+                    break;
+
+                /* Pops the top value off the stack and rotates the DP clockwise that many 
+		   steps (anticlockwise if negative) */
+                case 'pointer':
+                    var op = stack.pop();
+
+                    // ignore stack underflow
+                    if (op == undefined) {
+                        yield { commandList, block, currCommand, stack };
+                        break;
+                    }
+
+                    // positive rotation (clockwise)
+                    if (op > 0) {
+                        DP = (DP + op) % 4;
+                        yield { commandList, block, currCommand, stack, DP };
+                        addCommand();
+                        break;
+                    }
+                    // negative rotation (anticlockwise)
+                    DP = (DP - op) % 4;
+                    yield { commandList, block, currCommand, stack, DP };
+                    addCommand();
+                    break;
+
+                /* Pops the top value off the stack and toggles the CC that many times (the
+		   absolute value of that many times if negative) */
+                case 'switch':
+                    var op = stack.pop();
+
+                    // ignore stack underflow
+                    if (op == undefined) {
+                        yield { commandList, block, currCommand, stack };
+                        break;
+                    }
+
+                    if (op > 0) {
+                        CC = (CC + op) % 2;
+                        yield { commandList, block, currCommand, stack, CC };
+                        addCommand();
+                        break;
+                    }
+                    // negative toggle times
+                    CC = (CC + op) % 2;
+                    yield { commandList, block, currCommand, stack, CC };
+                    addCommand();
+                    break;
+
+                /* Pushes a copy of the top value on the stack on to the stack */
+                case 'dup':
+                    var op = stack.pop();
+
+                    // ignore stack underflow
+                    if (op != undefined) {
+                        stack.push(op);
+                        stack.push(op);
+                    }
+                    yield { commandList, block, currCommand, stack };
+                    addCommand();
+                    break;
+
+                /* Pops the top two values off the stack and "rolls" the remaining stack
+		   entries to a depth equal to the second value popped, by a number of 
+		   rolls equal to the first value popped. 
+		   A single roll to depth n is defined as burying the top value on the 
+		   stack n deep and bringing all values above it up by 1 place. 
+		   A negative number of rolls rolls in the opposite direction. */
+                case 'roll':
+                    var op1 = stack.pop(),
+                        op2 = stack.pop();
+
+                    // ignore stack underflow
+                    if (op1 == undefined) {
+                    } else if (op2 == undefined) {
+                        stack.push(op1);
+                    } else if (op2 < 0) {
+                        // negative depth error; instruction is ignored
+                        stack.push(op2);
+                        stack.push(op1);
+                        yield { commandList, block, currCommand, error: 'Negative depth', stack };
+                        break;
+                    } else {
+                        // depth argument is greater than current stack depth, so use the current
+                        // depth instead
+                        if (op2 > stack.length) {
+                            op2 = stack.length;
+                        }
+
+                        if (op1 > 0) {
+                            for (var roll = 0; roll < op1; roll++) {
+                                // put top value into stack at depth
+                                stack.splice(-op2, 0, stack[stack.length - 1]);
+                                // remove original top value from top of stack
+                                stack.pop();
+                            }
+                        } else {
+                            // negative rolls
+                            for (var roll = 0; roll > op1; roll--) {
+                                // put nth value onto top of stack and remove original nth value
+                                stack.push(...stack.splice(-op2, 1));
+                            }
+                        }
+                    }
+
+                    yield { commandList, block, currCommand, stack };
+                    addCommand();
+                    break;
+
+                /* Reads a value from STDIN as a number and pushes it on to the stack */
+                case 'in(num)':
+                    var newNum = getInputNum();
+
+                    // If no input is waiting on STDIN, or if an integer value is not received, this
+                    // is an error and the command is ignored
+                    if (newNum == null) {
+                        yield {
+                            block,
+                            currCommand,
+                            error: 'Insufficient or invalid numerical input',
+                        };
+                        break;
+                    }
+                    stack.push(newNum);
+
+                    yield { commandList, block, currCommand, stack };
+                    addCommand();
+                    break;
+
+                /* Reads a value from STDIN as a character and pushes it on to the stack */
+                case 'in(char)':
+                    var newChar = getInputChar();
+
+                    // If no input is waiting on STDIN, this is an error and the command is ignored
+                    if (newChar == null) {
+                        yield { commandList, block, currCommand, error: 'Insufficient input' };
+                        break;
+                    }
+                    stack.push(newChar.charCodeAt());
+
+                    yield { commandList, block, currCommand, stack };
+                    addCommand();
+                    break;
+
+                /* Pops the top value off the stack and prints it to STDOUT as a number */
+                case 'out(num)':
+                    var op = stack.pop();
+
+                    // ignore stack underflow
+                    if (op == undefined) {
+                        yield { commandList, block, currCommand, stack };
+                        break;
+                    }
+
+                    output += op;
+                    yield { commandList, block, currCommand, stack, output };
+                    addCommand();
+                    break;
+
+                /* Pops the top value off the stack and prints it to STDOUT as a character */
+                case 'out(char)':
+                    var op = stack.pop();
+
+                    // ignore stack underflow
+                    if (op == undefined) {
+                        yield { commandList, block, currCommand, stack: stack };
+                        break;
+                    }
+                    output += String.fromCharCode(op);
+                    yield { commandList, block, currCommand, stack, output };
+                    addCommand();
+                    break;
             }
         }
     }
-
-    return commandList;
 }
 
-function* run(commandList, getInputNum, getInputChar) {
-    let DP = 0, // index into [right, down, left, up], direction pointer initially points right
-        CC = 0, // index into [left, right], codel chooser initially points left
-        stack = [],
-        output = '',
-        currCommand = 0;
-
-    // iterate over commands
-    while (commandList[currCommand]) {
-        var { block, inst, val } = commandList[currCommand];
-
-        switch (inst) {
-            /* internal command: toggle CC */
-            case 'CC':
-                CC = (CC + 1) % 2;
-                yield { currCommand, CC };
-                break;
-
-            /* internal command: move DP clockwise 1 step */
-            case 'DP':
-                DP = (DP + 1) % 4;
-                yield { currCommand, DP };
-                break;
-
-            /* internal command: branch after pointer instruction */
-            case 'BRANCH-DP':
-                currCommand = val[DP];
-                continue;
-
-            /* internal command: branch after switch instruction */
-            case 'BRANCH-CC':
-                currCommand = val[CC];
-                continue;
-
-            /* internal command: end of a branch after pointer instruction */
-            case 'END-BRANCH-DP':
-                currCommand = val[1];
-                continue;
-
-            /* internal command: end of a branch after switch instruction */
-            case 'END-BRANCH-CC':
-                currCommand = val[1];
-                continue;
-
-            /* internal command: goto (used for looping and branches) */
-            case 'GOTO':
-                currCommand = val;
-                continue;
-
-            /* Pushes the value of the colour block just exited on to the stack */
-            case 'PUSH':
-                stack.push(val);
-                yield { block, currCommand, stack };
-                break;
-
-            /* Pops the top value off the stack and discards it */
-            case 'POP':
-                // ignore stack underflow
-                stack.pop();
-                yield { block, currCommand, stack };
-                break;
-
-            /* Pops the top two values off the stack, adds them, and pushes the 
-	       result back on the stack */
-            case '+':
-                var op1 = stack.pop(),
-                    op2 = stack.pop();
-
-                // ignore stack underflow
-                if (op1 == undefined) {
-                } else if (op2 == undefined) {
-                    stack.push(op1);
-                } else {
-                    stack.push(op1 + op2);
-                }
-
-                yield { block, currCommand, stack };
-                break;
-
-            /* Pops the top two values off the stack, calculates the second top value
-	       minus the top value, and pushes the result back on the stack */
-            case '-':
-                var op1 = stack.pop(),
-                    op2 = stack.pop();
-
-                // ignore stack underflow
-                if (op1 == undefined) {
-                } else if (op2 == undefined) {
-                    stack.push(op1);
-                } else {
-                    stack.push(op2 - op1);
-                }
-
-                yield { block, currCommand, stack };
-                break;
-
-            /* Pops the top two values off the stack, multiplies them, and pushes 
-	       the result back on the stack */
-            case '*':
-                var op1 = stack.pop(),
-                    op2 = stack.pop();
-
-                // ignore stack underflow
-                if (op1 == undefined) {
-                } else if (op2 == undefined) {
-                    stack.push(op1);
-                } else {
-                    stack.push(op1 * op2);
-                }
-
-                yield { block, currCommand, stack };
-                break;
-
-            /* Pops the top two values off the stack, calculates the integer 
-	       division of the second top value by the top value, and pushes the 
-	       result back on the stack */
-            case '/':
-                var op1 = stack.pop(),
-                    op2 = stack.pop();
-
-                // ignore stack underflow
-                if (op1 == undefined) {
-                } else if (op2 == undefined) {
-                    stack.push(op1);
-                } else if (op1 == 0) {
-                    // ignore divide by zero instruction
-                    stack.push(op2);
-                    stack.push(op1);
-                } else {
-                    stack.push(Math.floor(op2 / op1));
-                }
-
-                yield { block, currCommand, stack };
-                break;
-
-            /* Pops the top two values off the stack, calculates the second top value
-	       modulo the top value, and pushes the result back on the stack. The 
-	       result has the same sign as the divisor (the top value). */
-            case 'MOD':
-                var op1 = stack.pop(),
-                    op2 = stack.pop();
-
-                // ignore stack underflow
-                if (op1 == undefined) {
-                } else if (op2 == undefined) {
-                    stack.push(op1);
-                } else if (op1 == 0) {
-                    // divide by 0 error; instruction is ignored
-                    stack.push(op2);
-                    stack.push(op1);
-                    yield { block, currCommand, error: 'Divide by zero', stack };
-                } else {
-                    stack.push(op2 - op1 * Math.floor(op2 / op1));
-                }
-
-                yield { block, currCommand, stack };
-                break;
-
-            /* Replaces the top value of the stack with 0 if it is non-zero, and 1 if 
-	       it is zero */
-            case 'NOT':
-                var op = stack.pop();
-
-                // ignore stack underflow
-                if (op != undefined) {
-                    stack.push(op == 0 ? 1 : 0);
-                }
-                yield { block, currCommand, stack };
-                break;
-
-            /* Pops the top two values off the stack, and pushes 1 on to the stack 
-	       if the second top value is greater than the top value, and pushes 0 
-	       if it is not greater */
-            case '>':
-                var op1 = stack.pop(),
-                    op2 = stack.pop();
-
-                // ignore stack underflow
-                if (op1 == undefined) {
-                } else if (op2 == undefined) {
-                    stack.push(op1);
-                } else {
-                    stack.push(op2 > op1 ? 1 : 0);
-                }
-
-                yield { block, currCommand, stack };
-                break;
-
-            /* Pops the top value off the stack and rotates the DP clockwise that many 
-	       steps (anticlockwise if negative) */
-            case 'POINTER':
-                var op = stack.pop();
-
-                // ignore stack underflow
-                if (op == undefined) {
-                    yield { block, currCommand, stack };
-                    break;
-                }
-
-                // positive rotation (clockwise)
-                if (op > 0) {
-                    DP = (DP + op) % 4;
-                    yield { block, currCommand, stack, DP };
-                    break;
-                }
-                // negative rotation (anticlockwise)
-                DP = (DP - op) % 4;
-                yield { block, currCommand, stack, DP };
-                break;
-
-            /* Pops the top value off the stack and toggles the CC that many times (the
-	       absolute value of that many times if negative) */
-            case 'SWITCH':
-                var op = stack.pop();
-
-                // ignore stack underflow
-                if (op == undefined) {
-                    yield { block, currCommand, stack };
-                    break;
-                }
-
-                if (op > 0) {
-                    CC = (CC + op) % 2;
-                    yield { block, currCommand, stack, CC };
-                    break;
-                }
-                // negative toggle times
-                CC = (CC + op) % 2;
-                yield { block, currCommand, stack, CC };
-                break;
-
-            /* Pushes a copy of the top value on the stack on to the stack */
-            case 'DUP':
-                var op = stack.pop();
-
-                // ignore stack underflow
-                if (op != undefined) {
-                    stack.push(op);
-                    stack.push(op);
-                }
-                yield { block, currCommand, stack };
-                break;
-
-            /* Pops the top two values off the stack and "rolls" the remaining stack
-	       entries to a depth equal to the second value popped, by a number of 
-	       rolls equal to the first value popped. 
-	       A single roll to depth n is defined as burying the top value on the 
-	       stack n deep and bringing all values above it up by 1 place. 
-	       A negative number of rolls rolls in the opposite direction. */
-            case 'ROLL':
-                var op1 = stack.pop(),
-                    op2 = stack.pop();
-
-                // ignore stack underflow
-                if (op1 == undefined) {
-                } else if (op2 == undefined) {
-                    stack.push(op1);
-                } else if (op2 < 0) {
-                    // negative depth error; instruction is ignored
-                    stack.push(op2);
-                    stack.push(op1);
-                    yield { block, currCommand, error: 'Negative depth', stack };
-                    break;
-                } else {
-                    // depth argument is greater than current stack depth, so use the current
-                    // depth instead
-                    if (op2 > stack.length) {
-                        op2 = stack.length;
-                    }
-
-                    if (op1 > 0) {
-                        for (var roll = 0; roll < op1; roll++) {
-                            // put top value into stack at depth
-                            stack.splice(-op2, 0, stack[stack.length - 1]);
-                            // remove original top value from top of stack
-                            stack.pop();
-                        }
-                    } else {
-                        // negative rolls
-                        for (var roll = 0; roll > op1; roll--) {
-                            // put nth value onto top of stack and remove original nth value
-                            stack.push(...stack.splice(-op2, 1));
-                        }
-                    }
-                }
-
-                yield { block, currCommand, stack };
-                break;
-
-            /* Reads a value from STDIN as a number and pushes it on to the stack */
-            case 'IN(NUM)':
-                var newNum = getInputNum();
-
-                // If no input is waiting on STDIN, or if an integer value is not received, this
-                // is an error and the command is ignored
-                if (newNum == null) {
-                    yield { block, currCommand, error: 'Insufficient or invalid numerical input' };
-                    break;
-                }
-                stack.push(newNum);
-
-                yield { block, currCommand, stack };
-                break;
-
-            /* Reads a value from STDIN as a character and pushes it on to the stack */
-            case 'IN(CHAR)':
-                var newChar = getInputChar();
-
-                // If no input is waiting on STDIN, this is an error and the command is ignored
-                if (newChar == null) {
-                    yield { block, currCommand, error: 'Insufficient input' };
-                    break;
-                }
-                stack.push(newChar.charCodeAt());
-
-                yield { block, currCommand, stack };
-                break;
-
-            /* Pops the top value off the stack and prints it to STDOUT as a number */
-            case 'OUT(NUM)':
-                var op = stack.pop();
-
-                // ignore stack underflow
-                if (op == undefined) {
-                    yield { block, currCommand, stack };
-                    break;
-                }
-
-                output += op;
-                yield { block, currCommand, stack, output };
-                break;
-
-            /* Pops the top value off the stack and prints it to STDOUT as a character */
-            case 'OUT(CHAR)':
-                var op = stack.pop();
-
-                // ignore stack underflow
-                if (op == undefined) {
-                    yield { block, currCommand, stack: stack };
-                    break;
-                }
-                output += String.fromCharCode(op);
-                yield { block, currCommand, stack, output };
-                break;
-        }
-
-        currCommand++; // advance to next command
-    }
-}
-
-export { compile, run };
+export default run;
