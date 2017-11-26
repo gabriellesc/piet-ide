@@ -33,7 +33,7 @@ class Grid extends React.Component {
                                                   colours[cell] +
                                                   ', ' +
                                                   colours[cell] +
-                                                  ' 2px, white 2px, white 4px)'
+                                                  ' 2px, black 2px, black 4px)'
                                                 : colours[cell],
                                         color: 'white',
                                         fontSize: '11px',
