@@ -1752,7 +1752,7 @@ function interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
 
                 case 6:
                     if (!(bounceCount < 8)) {
-                        _context.next = 213;
+                        _context.next = 214;
                         break;
                     }
 
@@ -1775,12 +1775,12 @@ function interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                     return bounce();
 
                 case 13:
-                    _context.next = 211;
+                    _context.next = 212;
                     break;
 
                 case 15:
                     if (!(grid[nextRow][nextCol] == _colours.WHITE)) {
-                        _context.next = 24;
+                        _context.next = 25;
                         break;
                     }
 
@@ -1800,10 +1800,12 @@ function interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                     _out = _slicedToArray(out, 2);
                     row = _out[0];
                     col = _out[1];
-                    _context.next = 211;
+
+                    bounceCount = 0; // we can move, so reset the bounce count
+                    _context.next = 212;
                     break;
 
-                case 24:
+                case 25:
                     row = nextRow;
                     // we found the next block, so update the row/col
 
@@ -1817,57 +1819,57 @@ function interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                     block = blocks[row][col];
 
                     _context.t0 = currCommand;
-                    _context.next = _context.t0 === 'push' ? 33 : _context.t0 === 'pop' ? 38 : _context.t0 === '+' ? 43 : _context.t0 === '-' ? 61 : _context.t0 === '*' ? 67 : _context.t0 === '/' ? 73 : _context.t0 === 'mod' ? 79 : _context.t0 === 'not' ? 99 : _context.t0 === '>' ? 105 : _context.t0 === 'pointer' ? 111 : _context.t0 === 'switch' ? 127 : _context.t0 === 'dup' ? 143 : _context.t0 === 'roll' ? 149 : _context.t0 === 'in(num)' ? 171 : _context.t0 === 'in(char)' ? 181 : _context.t0 === 'out(num)' ? 191 : _context.t0 === 'out(char)' ? 201 : 211;
+                    _context.next = _context.t0 === 'push' ? 34 : _context.t0 === 'pop' ? 39 : _context.t0 === '+' ? 44 : _context.t0 === '-' ? 62 : _context.t0 === '*' ? 68 : _context.t0 === '/' ? 74 : _context.t0 === 'mod' ? 80 : _context.t0 === 'not' ? 100 : _context.t0 === '>' ? 106 : _context.t0 === 'pointer' ? 112 : _context.t0 === 'switch' ? 128 : _context.t0 === 'dup' ? 144 : _context.t0 === 'roll' ? 150 : _context.t0 === 'in(num)' ? 172 : _context.t0 === 'in(char)' ? 182 : _context.t0 === 'out(num)' ? 192 : _context.t0 === 'out(char)' ? 202 : 212;
                     break;
 
-                case 33:
+                case 34:
                     stack.push(pushVal);
-                    _context.next = 36;
+                    _context.next = 37;
                     return { commandList: commandList, block: block, currCommand: currCommand + ' ' + pushVal, stack: stack };
 
-                case 36:
+                case 37:
                     addCommand(currCommand + ' ' + pushVal);
-                    return _context.abrupt('break', 211);
+                    return _context.abrupt('break', 212);
 
-                case 38:
+                case 39:
                     // ignore stack underflow
                     stack.pop();
-                    _context.next = 41;
+                    _context.next = 42;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack };
 
-                case 41:
+                case 42:
                     addCommand();
-                    return _context.abrupt('break', 211);
+                    return _context.abrupt('break', 212);
 
-                case 43:
+                case 44:
                     op1 = stack.pop(), op2 = stack.pop();
 
                     // ignore stack underflow
 
                     if (!(op1 == undefined)) {
-                        _context.next = 47;
+                        _context.next = 48;
                         break;
                     }
 
-                    _context.next = 60;
+                    _context.next = 61;
                     break;
 
-                case 47:
+                case 48:
                     if (!(op2 == undefined)) {
-                        _context.next = 54;
+                        _context.next = 55;
                         break;
                     }
 
                     stack.push(op1);
-                    _context.next = 51;
+                    _context.next = 52;
                     return { commandList: commandList, block: block, currCommand: currCommand };
 
-                case 51:
+                case 52:
                     addError('stack underflow');
-                    _context.next = 60;
+                    _context.next = 61;
                     break;
 
-                case 54:
+                case 55:
                     result = op1 + op2;
 
                     // integer overflow runtime error
@@ -1875,16 +1877,16 @@ function interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                     if (!Number.isFinite(result)) {}
 
                     stack.push(result);
-                    _context.next = 59;
+                    _context.next = 60;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack };
 
-                case 59:
+                case 60:
                     addCommand();
 
-                case 60:
-                    return _context.abrupt('break', 211);
-
                 case 61:
+                    return _context.abrupt('break', 212);
+
+                case 62:
                     op1 = stack.pop(), op2 = stack.pop();
 
                     // ignore stack underflow
@@ -1895,14 +1897,14 @@ function interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                         stack.push(op2 - op1);
                     }
 
-                    _context.next = 65;
+                    _context.next = 66;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack };
 
-                case 65:
+                case 66:
                     addCommand();
-                    return _context.abrupt('break', 211);
+                    return _context.abrupt('break', 212);
 
-                case 67:
+                case 68:
                     op1 = stack.pop(), op2 = stack.pop();
 
                     // ignore stack underflow
@@ -1913,14 +1915,14 @@ function interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                         stack.push(op1 * op2);
                     }
 
-                    _context.next = 71;
+                    _context.next = 72;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack };
 
-                case 71:
+                case 72:
                     addCommand();
-                    return _context.abrupt('break', 211);
+                    return _context.abrupt('break', 212);
 
-                case 73:
+                case 74:
                     op1 = stack.pop(), op2 = stack.pop();
 
                     // ignore stack underflow
@@ -1935,64 +1937,64 @@ function interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                         stack.push(Math.floor(op2 / op1));
                     }
 
-                    _context.next = 77;
+                    _context.next = 78;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack };
 
-                case 77:
+                case 78:
                     addCommand();
-                    return _context.abrupt('break', 211);
+                    return _context.abrupt('break', 212);
 
-                case 79:
+                case 80:
                     op1 = stack.pop(), op2 = stack.pop();
 
                     // ignore stack underflow
 
                     if (!(op1 == undefined)) {
-                        _context.next = 83;
+                        _context.next = 84;
                         break;
                     }
 
-                    _context.next = 95;
+                    _context.next = 96;
                     break;
 
-                case 83:
+                case 84:
                     if (!(op2 == undefined)) {
-                        _context.next = 87;
+                        _context.next = 88;
                         break;
                     }
 
                     stack.push(op1);
-                    _context.next = 95;
+                    _context.next = 96;
                     break;
 
-                case 87:
+                case 88:
                     if (!(op1 == 0)) {
-                        _context.next = 94;
+                        _context.next = 95;
                         break;
                     }
 
                     // divide by 0 error; instruction is ignored
                     stack.push(op2);
                     stack.push(op1);
-                    _context.next = 92;
+                    _context.next = 93;
                     return { commandList: commandList, block: block, currCommand: currCommand, error: 'Divide by zero', stack: stack };
 
-                case 92:
-                    _context.next = 95;
+                case 93:
+                    _context.next = 96;
                     break;
 
-                case 94:
+                case 95:
                     stack.push(op2 - op1 * Math.floor(op2 / op1));
 
-                case 95:
-                    _context.next = 97;
+                case 96:
+                    _context.next = 98;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack };
 
-                case 97:
+                case 98:
                     addCommand();
-                    return _context.abrupt('break', 211);
+                    return _context.abrupt('break', 212);
 
-                case 99:
+                case 100:
                     op = stack.pop();
 
                     // ignore stack underflow
@@ -2000,14 +2002,14 @@ function interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                     if (op != undefined) {
                         stack.push(op == 0 ? 1 : 0);
                     }
-                    _context.next = 103;
+                    _context.next = 104;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack };
 
-                case 103:
+                case 104:
                     addCommand();
-                    return _context.abrupt('break', 211);
+                    return _context.abrupt('break', 212);
 
-                case 105:
+                case 106:
                     op1 = stack.pop(), op2 = stack.pop();
 
                     // ignore stack underflow
@@ -2018,94 +2020,94 @@ function interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                         stack.push(op2 > op1 ? 1 : 0);
                     }
 
-                    _context.next = 109;
+                    _context.next = 110;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack };
 
-                case 109:
+                case 110:
                     addCommand();
-                    return _context.abrupt('break', 211);
+                    return _context.abrupt('break', 212);
 
-                case 111:
+                case 112:
                     op = stack.pop();
 
                     // ignore stack underflow
 
                     if (!(op == undefined)) {
-                        _context.next = 116;
+                        _context.next = 117;
                         break;
                     }
 
-                    _context.next = 115;
+                    _context.next = 116;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack };
 
-                case 115:
-                    return _context.abrupt('break', 211);
-
                 case 116:
+                    return _context.abrupt('break', 212);
+
+                case 117:
                     if (!(op > 0)) {
-                        _context.next = 122;
+                        _context.next = 123;
                         break;
                     }
 
                     DP = (DP + op) % 4;
-                    _context.next = 120;
+                    _context.next = 121;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack, DP: DP };
 
-                case 120:
+                case 121:
                     addCommand();
-                    return _context.abrupt('break', 211);
+                    return _context.abrupt('break', 212);
 
-                case 122:
+                case 123:
                     // negative rotation (anticlockwise)
                     DP = (DP - op) % 4;
-                    _context.next = 125;
+                    _context.next = 126;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack, DP: DP };
 
-                case 125:
+                case 126:
                     addCommand();
-                    return _context.abrupt('break', 211);
+                    return _context.abrupt('break', 212);
 
-                case 127:
+                case 128:
                     op = stack.pop();
 
                     // ignore stack underflow
 
                     if (!(op == undefined)) {
-                        _context.next = 132;
+                        _context.next = 133;
                         break;
                     }
 
-                    _context.next = 131;
+                    _context.next = 132;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack };
 
-                case 131:
-                    return _context.abrupt('break', 211);
-
                 case 132:
+                    return _context.abrupt('break', 212);
+
+                case 133:
                     if (!(op > 0)) {
-                        _context.next = 138;
+                        _context.next = 139;
                         break;
                     }
 
                     CC = (CC + op) % 2;
-                    _context.next = 136;
+                    _context.next = 137;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack, CC: CC };
 
-                case 136:
+                case 137:
                     addCommand();
-                    return _context.abrupt('break', 211);
+                    return _context.abrupt('break', 212);
 
-                case 138:
+                case 139:
                     // negative toggle times
                     CC = (CC + op) % 2;
-                    _context.next = 141;
+                    _context.next = 142;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack, CC: CC };
 
-                case 141:
+                case 142:
                     addCommand();
-                    return _context.abrupt('break', 211);
+                    return _context.abrupt('break', 212);
 
-                case 143:
+                case 144:
                     op = stack.pop();
 
                     // ignore stack underflow
@@ -2114,52 +2116,52 @@ function interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                         stack.push(op);
                         stack.push(op);
                     }
-                    _context.next = 147;
+                    _context.next = 148;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack };
 
-                case 147:
+                case 148:
                     addCommand();
-                    return _context.abrupt('break', 211);
+                    return _context.abrupt('break', 212);
 
-                case 149:
+                case 150:
                     op1 = stack.pop(), op2 = stack.pop();
 
                     // ignore stack underflow
 
                     if (!(op1 == undefined)) {
-                        _context.next = 153;
+                        _context.next = 154;
                         break;
                     }
 
-                    _context.next = 167;
+                    _context.next = 168;
                     break;
 
-                case 153:
+                case 154:
                     if (!(op2 == undefined)) {
-                        _context.next = 157;
+                        _context.next = 158;
                         break;
                     }
 
                     stack.push(op1);
-                    _context.next = 167;
+                    _context.next = 168;
                     break;
 
-                case 157:
+                case 158:
                     if (!(op2 < 0)) {
-                        _context.next = 165;
+                        _context.next = 166;
                         break;
                     }
 
                     // negative depth error; instruction is ignored
                     stack.push(op2);
                     stack.push(op1);
-                    _context.next = 162;
+                    _context.next = 163;
                     return { commandList: commandList, block: block, currCommand: currCommand, error: 'Negative depth', stack: stack };
 
-                case 162:
-                    return _context.abrupt('break', 211);
+                case 163:
+                    return _context.abrupt('break', 212);
 
-                case 165:
+                case 166:
                     // depth argument is greater than current stack depth, so use the current
                     // depth instead
                     if (op2 > stack.length) {
@@ -2181,127 +2183,127 @@ function interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                         }
                     }
 
-                case 167:
-                    _context.next = 169;
+                case 168:
+                    _context.next = 170;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack };
 
-                case 169:
+                case 170:
                     addCommand();
-                    return _context.abrupt('break', 211);
+                    return _context.abrupt('break', 212);
 
-                case 171:
+                case 172:
                     newNum = getInputNum();
 
                     // If no input is waiting on STDIN, or if an integer value is not received, this
                     // is an error and the command is ignored
 
                     if (!(newNum == null)) {
-                        _context.next = 176;
+                        _context.next = 177;
                         break;
                     }
 
-                    _context.next = 175;
+                    _context.next = 176;
                     return {
                         block: block,
                         currCommand: currCommand,
                         error: 'Insufficient or invalid numerical input'
                     };
 
-                case 175:
-                    return _context.abrupt('break', 211);
-
                 case 176:
+                    return _context.abrupt('break', 212);
+
+                case 177:
                     stack.push(newNum);
 
-                    _context.next = 179;
+                    _context.next = 180;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack };
 
-                case 179:
+                case 180:
                     addCommand();
-                    return _context.abrupt('break', 211);
+                    return _context.abrupt('break', 212);
 
-                case 181:
+                case 182:
                     newChar = getInputChar();
 
                     // If no input is waiting on STDIN, this is an error and the command is ignored
 
                     if (!(newChar == null)) {
-                        _context.next = 186;
+                        _context.next = 187;
                         break;
                     }
 
-                    _context.next = 185;
+                    _context.next = 186;
                     return { commandList: commandList, block: block, currCommand: currCommand, error: 'Insufficient input' };
 
-                case 185:
-                    return _context.abrupt('break', 211);
-
                 case 186:
+                    return _context.abrupt('break', 212);
+
+                case 187:
                     stack.push(newChar.charCodeAt());
 
-                    _context.next = 189;
+                    _context.next = 190;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack };
 
-                case 189:
+                case 190:
                     addCommand();
-                    return _context.abrupt('break', 211);
+                    return _context.abrupt('break', 212);
 
-                case 191:
+                case 192:
                     op = stack.pop();
 
                     // ignore stack underflow
 
                     if (!(op == undefined)) {
-                        _context.next = 196;
+                        _context.next = 197;
                         break;
                     }
 
-                    _context.next = 195;
+                    _context.next = 196;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack };
-
-                case 195:
-                    return _context.abrupt('break', 211);
 
                 case 196:
+                    return _context.abrupt('break', 212);
+
+                case 197:
 
                     output += op;
-                    _context.next = 199;
+                    _context.next = 200;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack, output: output };
 
-                case 199:
+                case 200:
                     addCommand();
-                    return _context.abrupt('break', 211);
+                    return _context.abrupt('break', 212);
 
-                case 201:
+                case 202:
                     op = stack.pop();
 
                     // ignore stack underflow
 
                     if (!(op == undefined)) {
-                        _context.next = 206;
+                        _context.next = 207;
                         break;
                     }
 
-                    _context.next = 205;
+                    _context.next = 206;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack };
 
-                case 205:
-                    return _context.abrupt('break', 211);
-
                 case 206:
+                    return _context.abrupt('break', 212);
+
+                case 207:
                     output += String.fromCharCode(op);
-                    _context.next = 209;
+                    _context.next = 210;
                     return { commandList: commandList, block: block, currCommand: currCommand, stack: stack, output: output };
 
-                case 209:
+                case 210:
                     addCommand();
-                    return _context.abrupt('break', 211);
+                    return _context.abrupt('break', 212);
 
-                case 211:
+                case 212:
                     _context.next = 6;
                     break;
 
-                case 213:
+                case 214:
                 case 'end':
                     return _context.stop();
             }

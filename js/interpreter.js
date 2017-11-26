@@ -283,7 +283,9 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
             if (out == null) {
                 return commandList;
             }
+
             [row, col] = out;
+            bounceCount = 0; // we can move, so reset the bounce count
         } else {
             // we found the next block, so update the row/col
             [row, col] = [nextRow, nextCol];
