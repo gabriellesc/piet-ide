@@ -1628,26 +1628,52 @@ function interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                     };
 
                     slideOut = function slideOut(row, col) {
-                        // check if the first half of an array is identical to the second half
-                        function arrayIsDoubled(array) {
+                        // check if the first half of the route array is identical to the second half
+                        function routeIsDoubled(array) {
                             var len = array.length;
                             var first = array.slice(0, len / 2),
                                 second = array.slice(len / 2);
 
                             return len && len % 2 == 0 && first.every(function (elem, i) {
-                                return elem == second[i];
+                                return elem[0] == second[i][0] && elem[1] == second[i][1];
                             });
                         }
+
+                        // try sliding out
 
                         var _slide = slide(row, col),
                             _slide2 = _slicedToArray(_slide, 2),
                             nextRow = _slide2[0],
                             nextCol = _slide2[1];
 
+                        // we hit an outer edge or a black block
+
+
+                        if (nextRow < 0 || nextRow >= height || nextCol < 0 || nextCol >= width || grid[nextRow][nextCol] == _colours.BLACK) {
+                            nextRow = row;
+                            // now start from the white block
+
+                            nextCol = col;
+                        } else {
+                            return [nextRow, nextCol];
+                        }
+
                         var whiteRoute = [];
                         // check if we have retraced our route
-                        while (!arrayIsDoubled(whiteRoute)) {
+                        while (!routeIsDoubled(whiteRoute)) {
+                            // bounce twice (toggle CC and DP)
+                            bounce();
+                            bounce();
+
+                            // try sliding again
+
                             // we hit an outer edge or a black block
+                            var _slide3 = slide(nextRow, nextCol);
+
+                            var _slide4 = _slicedToArray(_slide3, 2);
+
+                            nextRow = _slide4[0];
+                            nextCol = _slide4[1];
                             if (nextRow < 0 || nextRow >= height || nextCol < 0 || nextCol >= width || grid[nextRow][nextCol] == _colours.BLACK) {
                                 // step backwards into the white block
                                 switch (DP) {
@@ -1671,19 +1697,6 @@ function interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
 
                                 // keep track of current position
                                 whiteRoute.push([nextRow, nextCol]);
-
-                                // bounce twice (toggle CC and DP)
-                                bounce();
-                                bounce();
-
-                                // try sliding again
-
-                                var _slide3 = slide(nextRow, nextCol);
-
-                                var _slide4 = _slicedToArray(_slide3, 2);
-
-                                nextRow = _slide4[0];
-                                nextCol = _slide4[1];
                             } else {
                                 return [nextRow, nextCol];
                             }
@@ -1859,7 +1872,7 @@ function interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
 
                     // integer overflow runtime error
 
-                    if (!result.isFinite()) {}
+                    if (!Number.isFinite(result)) {}
 
                     stack.push(result);
                     _context.next = 59;

@@ -162,20 +162,46 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
 
     // attempt to exit a white block
     function slideOut(row, col) {
-        // check if the first half of an array is identical to the second half
-        function arrayIsDoubled(array) {
+        // check if the first half of the route array is identical to the second half
+        function routeIsDoubled(array) {
             let len = array.length;
             let first = array.slice(0, len / 2),
                 second = array.slice(len / 2);
 
-            return len && len % 2 == 0 && first.every((elem, i) => elem == second[i]);
+            return (
+                len &&
+                len % 2 == 0 &&
+                first.every((elem, i) => elem[0] == second[i][0] && elem[1] == second[i][1])
+            );
         }
 
+        // try sliding out
         let [nextRow, nextCol] = slide(row, col);
+
+        // we hit an outer edge or a black block
+        if (
+            nextRow < 0 ||
+            nextRow >= height ||
+            nextCol < 0 ||
+            nextCol >= width ||
+            grid[nextRow][nextCol] == BLACK
+        ) {
+            // now start from the white block
+            [nextRow, nextCol] = [row, col];
+        } else {
+            return [nextRow, nextCol];
+        }
 
         let whiteRoute = [];
         // check if we have retraced our route
-        while (!arrayIsDoubled(whiteRoute)) {
+        while (!routeIsDoubled(whiteRoute)) {
+            // bounce twice (toggle CC and DP)
+            bounce();
+            bounce();
+
+            // try sliding again
+            [nextRow, nextCol] = slide(nextRow, nextCol);
+
             // we hit an outer edge or a black block
             if (
                 nextRow < 0 ||
@@ -206,13 +232,6 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
 
                 // keep track of current position
                 whiteRoute.push([nextRow, nextCol]);
-
-                // bounce twice (toggle CC and DP)
-                bounce();
-                bounce();
-
-                // try sliding again
-                [nextRow, nextCol] = slide(nextRow, nextCol);
             } else {
                 return [nextRow, nextCol];
             }
@@ -307,7 +326,7 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                         var result = op1 + op2;
 
                         // integer overflow runtime error
-                        if (!result.isFinite()) {
+                        if (!Number.isFinite(result)) {
                         }
 
                         stack.push(result);
