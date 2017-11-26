@@ -129,6 +129,10 @@ function* run(grid, blocks, blockSizes, getInputNum, getInputChar) {
         commandList.push({ block, inst: command != undefined ? command : currCommand });
     }
 
+    function addError(error) {
+        commandList.push({ block, error });
+    }
+
     // slide across a white block in a straight line
     function slide(row, col) {
         let nextRow = row,
@@ -297,12 +301,13 @@ function* run(grid, blocks, blockSizes, getInputNum, getInputChar) {
                     if (op1 == undefined) {
                     } else if (op2 == undefined) {
                         stack.push(op1);
+                        yield { commandList, block, currCommand };
+                        addError('stack underflow');
                     } else {
                         stack.push(op1 + op2);
+                        yield { commandList, block, currCommand, stack };
+                        addCommand();
                     }
-
-                    yield { commandList, block, currCommand, stack };
-                    addCommand();
                     break;
 
                 /* Pops the top two values off the stack, calculates the second top value

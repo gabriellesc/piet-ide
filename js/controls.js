@@ -83,32 +83,9 @@ class Controls extends React.Component {
                 </b>
             </div>,
             <ColourPicker key="colour-picker" {...this.props} />,
-            <DebugTab key="debug-tab" {...this.props} />,
         ];
     }
 }
-
-// tab to make debugger visible
-const DebugTab = props =>
-    props.debug.debugIsVisible ? null : (
-        <div
-            style={{
-                gridColumn: 'dtab',
-                gridRow: '1 / 4',
-                height: '100%',
-                width: '25px',
-                padding: '5px 2px',
-                writingMode: 'vertical-lr',
-                textAlign: 'center',
-                color: 'white',
-                fontWeight: 'bold',
-                backgroundColor: '#5bc0de',
-                cursor: 'pointer',
-            }}
-            onClick={() => props.toggleDebugger()}>
-            DEBUGGER
-        </div>
-    );
 
 const ImportExportMenu = ({ importImg, exportPng }) => [
     <input

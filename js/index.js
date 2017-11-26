@@ -4,9 +4,10 @@ import ReactDOM from 'react-dom';
 
 import Controls from './controls.js';
 import Grid from './grid.js';
+import { DebugTab } from './debugTab.js';
 import Debugger from './debugger.js';
 
-import run from './compiler.js';
+import run from './interpreter.js';
 
 import { commands } from './orderedCommands.js';
 import { colours, WHITE, BLACK } from './colours.js';
@@ -446,6 +447,9 @@ const appState = {
         // stop debugging
         stop: (() => {
             appState.debug.runner = null;
+            appState.debug.block = null;
+            appState.debug.currCommand = null;
+
             appState.notify();
         }).bind(this),
 
@@ -500,8 +504,10 @@ class App extends React.Component {
                 }}>
                 <Controls {...this.props.appState} />
                 <Grid {...this.props.appState} />
-                {this.props.appState.debug.debugIsVisible && (
+                {this.props.appState.debug.debugIsVisible ? (
                     <Debugger isRunning={isRunning} {...this.props.appState} />
+                ) : (
+                    <DebugTab {...this.props.appState} />
                 )}
             </div>
         );

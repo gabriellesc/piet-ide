@@ -67,27 +67,40 @@ const Commands = ({ commandList, selectBlock, isRunning, currCommand }) => [
         style={{
             margin: '5px auto 10px',
             padding: '5px',
-            height: 'auto',
             width: '100%',
+            height: '40vh',
             resize: 'vertical',
             overflow: 'auto',
             fontFamily: 'monospace',
             fontSize: '11pt',
-            textTransform: 'uppercase',
             backgroundColor: '#f5f5f5',
             border: '1px solid #ccc',
         }}>
-        {commandList.map(command => (
-            <div
-                onMouseOver={() => !isRunning && selectBlock(command.block)}
-                onMouseOut={() => !isRunning && selectBlock(null)}>
-                {command.inst}
-            </div>
-        ))}
+        {commandList.map(
+            (command, i) =>
+                command.error ? (
+                    <div
+                        key={'command-' + i}
+                        style={{ color: 'red', fontWeight: 'bold' }}
+                        onMouseOver={() => !isRunning && selectBlock(command.block)}
+                        onMouseOut={() => !isRunning && selectBlock(null)}>
+                        {command.error}
+                    </div>
+                ) : (
+                    <div
+                        key={'command-' + i}
+                        style={{ textTransform: 'uppercase' }}
+                        onMouseOver={() => !isRunning && selectBlock(command.block)}
+                        onMouseOut={() => !isRunning && selectBlock(null)}>
+                        {command.inst}
+                    </div>
+                )
+        )}
     </div>,
     isRunning &&
         currCommand && (
             <div
+                key="current-command"
                 style={{
                     margin: '-5px 0 10px',
                     width: '100%',
