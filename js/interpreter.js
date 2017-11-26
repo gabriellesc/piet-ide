@@ -276,15 +276,23 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
             // we hit an outer edge or a black block, so bounce off it (toggle DP/CC)
             yield bounce();
         } else if (grid[nextRow][nextCol] == WHITE) {
+            let initDP = DP; // save the current DP
+
             // we hit a white block, so slide across it
             let out = slideOut(nextRow, nextCol);
 
+            // we bounced, so update the DP+CC
+            if (DP != initDP) {
+                yield { DP, CC };
+            }
+
             // we are trapped in a white block
             if (out == null) {
-                return commandList;
+                return; // terminate the interpreter
             }
 
             [row, col] = out;
+
             bounceCount = 0; // we can move, so reset the bounce count
         } else {
             // we found the next block, so update the row/col
