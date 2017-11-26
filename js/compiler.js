@@ -227,11 +227,11 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, com
     }
 
     // detect a loop by searching backwards in the command list for a command corresponding
-    // to this block and the current DP + CC
-    function detectLoop(row, col) {
+    // to this block and DP + CC
+    function detectLoop(row, col, DP, CC) {
         var block = blocks[row][col];
 
-        for (var i = commandList.length - 2; commandList[i]; i--) {
+        for (var i = commandList.length - 3; commandList[i]; i--) {
             var command = commandList[i];
             // skip branches that we are not in
             if (command.inst.startsWith('END-BRANCH')) {
@@ -254,13 +254,18 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, com
 
     // terminate compiler when bounce count reaches 8
     while (bounceCount < 8) {
+        // check if we are looping
+        let loop = detectLoop(row, col, DP, CC);
+        if (loop != null) {
+            addCommand('GOTO', loop);
+            return commandList;
+        }
+
         // save the current colour to use for indexing into the command list
         let colour = grid[row][col];
         // save the previous block size in case it will be pushed to the stack
         let pushVal = blockSizes[row][col];
-        if (row == 32 && col == 49) {
-            console.log('pause');
-        }
+
         // find next colour block
         let [nextRow, nextCol] = getNextColour(grid, height, width, row, col, DP, CC);
 
@@ -285,13 +290,6 @@ function compile(grid, blocks, blockSizes, row = 0, col = 0, DP = 0, CC = 0, com
         } else {
             // we found the next block, so update the row/col
             [row, col] = [nextRow, nextCol];
-
-            // check if we are looping
-            let loop = detectLoop(row, col);
-            if (loop != null) {
-                addCommand('GOTO', loop);
-                return commandList;
-            }
 
             bounceCount = 0; // we can move, so reset the bounce count
 
@@ -404,8 +402,14 @@ function* run(commandList, getInputNum, getInputChar) {
                 currCommand = val[CC];
                 continue;
 
-            /* internal command: end of a branch */
-            case 'END-BRANCH':
+            /* internal command: end of a branch after pointer instruction */
+            case 'END-BRANCH-DP':
+                currCommand = val[1];
+                continue;
+
+            /* internal command: end of a branch after switch instruction */
+            case 'END-BRANCH-CC':
+                currCommand = val[1];
                 continue;
 
             /* internal command: goto (used for looping and branches) */
