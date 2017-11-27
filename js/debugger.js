@@ -76,26 +76,24 @@ const Commands = ({ commandList, selectBlock, isInterpreting, currCommand }) => 
             backgroundColor: '#f5f5f5',
             border: '1px solid #ccc',
         }}>
-        {commandList.map(
-            (command, i) =>
-                command.error ? (
-                    <div
-                        key={'command-' + i}
-                        style={{ color: 'red', fontWeight: 'bold' }}
-                        onMouseOver={() => !isInterpreting && selectBlock(command.block)}
-                        onMouseOut={() => !isInterpreting && selectBlock(null)}>
-                        {command.error}
-                    </div>
-                ) : (
-                    <div
-                        key={'command-' + i}
-                        style={{ textTransform: 'uppercase' }}
-                        onMouseOver={() => !isInterpreting && selectBlock(command.block)}
-                        onMouseOut={() => !isInterpreting && selectBlock(null)}>
-                        {command.inst}
-                    </div>
-                )
-        )}
+        {commandList.map((command, i) => (
+            <div
+                key={'command-' + i}
+                style={{ textTransform: 'uppercase' }}
+                onMouseOver={() => !isInterpreting && selectBlock(command.block)}
+                onMouseOut={() => !isInterpreting && selectBlock(null)}>
+                {command.inst}
+                {command.error && [
+                    ' ',
+                    <i
+                        key={'error-' + i}
+                        className="glyphicon glyphicon-exclamation-sign"
+                        style={{ color: 'red' }}
+                        title={command.error}
+                    />,
+                ]}
+            </div>
+        ))}
     </div>,
     isInterpreting &&
         currCommand && (
@@ -108,7 +106,8 @@ const Commands = ({ commandList, selectBlock, isInterpreting, currCommand }) => 
                     textAlign: 'center',
                 }}>
                 Current command:<br />
-                {currCommand.toUpperCase()}
+                {currCommand.inst.toUpperCase()}
+                {currCommand.error && <div style={{ color: 'red' }}>{currCommand.error}</div>}
             </div>
         ),
 ];

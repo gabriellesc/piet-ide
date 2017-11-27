@@ -1,3 +1,5 @@
+import React from 'react';
+
 import { commands } from './orderedCommands.js';
 import { WHITE, BLACK } from './colours.js';
 
@@ -117,21 +119,14 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
         CC = 0, // index into [left, right], codel chooser initially points left
         stack = [],
         output = '',
-        currCommand = null,
-        block = null,
         commandList = [],
         // number of consecutive times that the compiler has tried to move off the current block
         // and hit an edge or black block
         bounceCount = 0,
-        nextColour = null;
-
-    function addCommand(command) {
-        commandList.push({ block, inst: command != undefined ? command : currCommand });
-    }
-
-    function addError(error) {
-        commandList.push({ block, error });
-    }
+        inst,
+        nextColour,
+        block,
+        currCommand;
 
     // slide across a white block in a straight line
     function slide(row, col) {
@@ -301,23 +296,28 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
             bounceCount = 0; // we can move, so reset the bounce count
 
             nextColour = grid[row][col];
-            currCommand = commands[colour][nextColour]; // match colour transition to command
+            inst = commands[colour][nextColour]; // match colour transition to command
             block = blocks[row][col];
 
-            switch (currCommand) {
+            currCommand = { block, inst };
+
+            switch (inst) {
                 /* Pushes the value of the colour block just exited on to the stack */
                 case 'push':
                     stack.push(pushVal);
-                    yield { commandList, block, currCommand: currCommand + ' ' + pushVal, stack };
-                    addCommand(currCommand + ' ' + pushVal);
+                    currCommand.inst += ' ' + pushVal;
+                    yield { commandList, block, currCommand, stack };
                     break;
 
                 /* Pops the top value off the stack and discards it */
                 case 'pop':
+                    var op = stack.pop();
                     // ignore stack underflow
-                    stack.pop();
+                    if (op == undefined) {
+                        currCommand.error = 'stack underflow';
+                    }
+
                     yield { commandList, block, currCommand, stack };
-                    addCommand();
                     break;
 
                 /* Pops the top two values off the stack, adds them, and pushes the 
@@ -327,22 +327,30 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                         op2 = stack.pop();
 
                     // ignore stack underflow
-                    if (op1 == undefined) {
-                    } else if (op2 == undefined) {
-                        stack.push(op1);
-                        yield { commandList, block, currCommand };
-                        addError('stack underflow');
+                    if (op1 == undefined || op2 == undefined) {
+                        currCommand.error = 'stack underflow';
+                        // one value on stack, so put it back
+                        if (op1 != undefined) {
+                            stack.push(op1);
+                        }
                     } else {
                         var result = op1 + op2;
 
                         // integer overflow runtime error
                         if (!Number.isFinite(result)) {
+                            currCommand.error = 'integer overflow';
+                            yield { commandList, block, currCommand };
+
+                            // add command to command list and terminate interpreter
+                            commandList.push(currCommand);
+                            yield { commandList };
+                            return;
                         }
 
                         stack.push(result);
-                        yield { commandList, block, currCommand, stack };
-                        addCommand();
                     }
+
+                    yield { commandList, block, currCommand, stack };
                     break;
 
                 /* Pops the top two values off the stack, calculates the second top value
@@ -352,15 +360,30 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                         op2 = stack.pop();
 
                     // ignore stack underflow
-                    if (op1 == undefined) {
-                    } else if (op2 == undefined) {
-                        stack.push(op1);
+                    if (op1 == undefined || op2 == undefined) {
+                        currCommand.error = 'stack underflow';
+                        // one value on stack, so put it back
+                        if (op1 != undefined) {
+                            stack.push(op1);
+                        }
                     } else {
-                        stack.push(op2 - op1);
+                        var result = op2 - op1;
+
+                        // integer overflow runtime error
+                        if (!Number.isFinite(result)) {
+                            currCommand.error = 'integer overflow';
+                            yield { commandList, block, currCommand };
+
+                            // add command to command list and terminate interpreter
+                            commandList.push(currCommand);
+                            yield { commandList };
+                            return;
+                        }
+
+                        stack.push(result);
                     }
 
                     yield { commandList, block, currCommand, stack };
-                    addCommand();
                     break;
 
                 /* Pops the top two values off the stack, multiplies them, and pushes 
@@ -370,15 +393,30 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                         op2 = stack.pop();
 
                     // ignore stack underflow
-                    if (op1 == undefined) {
-                    } else if (op2 == undefined) {
-                        stack.push(op1);
+                    if (op1 == undefined || op2 == undefined) {
+                        currCommand.error = 'stack underflow';
+                        // one value on stack, so put it back
+                        if (op1 != undefined) {
+                            stack.push(op1);
+                        }
                     } else {
-                        stack.push(op1 * op2);
+                        var result = op1 * op2;
+
+                        // integer overflow runtime error
+                        if (!Number.isFinite(result)) {
+                            currCommand.error = 'integer overflow';
+                            yield { commandList, block, currCommand };
+
+                            // add command to command list and terminate interpreter
+                            commandList.push(currCommand);
+                            yield { commandList };
+                            return;
+                        }
+
+                        stack.push(result);
                     }
 
                     yield { commandList, block, currCommand, stack };
-                    addCommand();
                     break;
 
                 /* Pops the top two values off the stack, calculates the integer 
@@ -389,11 +427,16 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                         op2 = stack.pop();
 
                     // ignore stack underflow
-                    if (op1 == undefined) {
-                    } else if (op2 == undefined) {
-                        stack.push(op1);
+                    if (op1 == undefined || op2 == undefined) {
+                        currCommand.error = 'stack underflow';
+                        // one value on stack, so put it back
+                        if (op1 != undefined) {
+                            stack.push(op1);
+                        }
                     } else if (op1 == 0) {
                         // ignore divide by zero instruction
+                        currCommand.error = 'divide by zero';
+                        // put values back on stack
                         stack.push(op2);
                         stack.push(op1);
                     } else {
@@ -401,7 +444,6 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                     }
 
                     yield { commandList, block, currCommand, stack };
-                    addCommand();
                     break;
 
                 /* Pops the top two values off the stack, calculates the second top value
@@ -412,20 +454,23 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                         op2 = stack.pop();
 
                     // ignore stack underflow
-                    if (op1 == undefined) {
-                    } else if (op2 == undefined) {
-                        stack.push(op1);
+                    if (op1 == undefined || op2 == undefined) {
+                        currCommand.error = 'stack underflow';
+                        // one value on stack, so put it back
+                        if (op1 != undefined) {
+                            stack.push(op1);
+                        }
                     } else if (op1 == 0) {
-                        // divide by 0 error; instruction is ignored
+                        // ignore divide by zero instruction
+                        currCommand.error = 'divide by zero';
+                        // put values back on stack
                         stack.push(op2);
                         stack.push(op1);
-                        yield { commandList, block, currCommand, error: 'Divide by zero', stack };
                     } else {
                         stack.push(op2 - op1 * Math.floor(op2 / op1));
                     }
 
                     yield { commandList, block, currCommand, stack };
-                    addCommand();
                     break;
 
                 /* Replaces the top value of the stack with 0 if it is non-zero, and 1 if 
@@ -434,11 +479,13 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                     var op = stack.pop();
 
                     // ignore stack underflow
-                    if (op != undefined) {
+                    if (op == undefined) {
+                        currCommand.error = 'stack underflow';
+                    } else {
                         stack.push(op == 0 ? 1 : 0);
                     }
+
                     yield { commandList, block, currCommand, stack };
-                    addCommand();
                     break;
 
                 /* Pops the top two values off the stack, and pushes 1 on to the stack 
@@ -449,15 +496,17 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                         op2 = stack.pop();
 
                     // ignore stack underflow
-                    if (op1 == undefined) {
-                    } else if (op2 == undefined) {
-                        stack.push(op1);
+                    if (op1 == undefined || op2 == undefined) {
+                        currCommand.error = 'stack underflow';
+                        // one value on stack, so put it back
+                        if (op1 != undefined) {
+                            stack.push(op1);
+                        }
                     } else {
                         stack.push(op2 > op1 ? 1 : 0);
                     }
 
                     yield { commandList, block, currCommand, stack };
-                    addCommand();
                     break;
 
                 /* Pops the top value off the stack and rotates the DP clockwise that many 
@@ -467,21 +516,16 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
 
                     // ignore stack underflow
                     if (op == undefined) {
-                        yield { commandList, block, currCommand, stack };
-                        break;
+                        currCommand.error = 'stack underflow';
+                    } else if (op > 0) {
+                        // positive rotation (clockwise)
+                        DP = (DP + op) % 4;
+                    } else {
+                        // negative rotation (anticlockwise)
+                        DP = (DP - op) % 4;
                     }
 
-                    // positive rotation (clockwise)
-                    if (op > 0) {
-                        DP = (DP + op) % 4;
-                        yield { commandList, block, currCommand, stack, DP };
-                        addCommand();
-                        break;
-                    }
-                    // negative rotation (anticlockwise)
-                    DP = (DP - op) % 4;
                     yield { commandList, block, currCommand, stack, DP };
-                    addCommand();
                     break;
 
                 /* Pops the top value off the stack and toggles the CC that many times (the
@@ -491,20 +535,15 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
 
                     // ignore stack underflow
                     if (op == undefined) {
-                        yield { commandList, block, currCommand, stack };
-                        break;
+                        currCommand.error = 'stack underflow';
+                    } else if (op > 0) {
+                        CC = (CC + op) % 2;
+                    } else {
+                        // negative toggle times
+                        CC = (CC + op) % 2;
                     }
 
-                    if (op > 0) {
-                        CC = (CC + op) % 2;
-                        yield { commandList, block, currCommand, stack, CC };
-                        addCommand();
-                        break;
-                    }
-                    // negative toggle times
-                    CC = (CC + op) % 2;
                     yield { commandList, block, currCommand, stack, CC };
-                    addCommand();
                     break;
 
                 /* Pushes a copy of the top value on the stack on to the stack */
@@ -512,12 +551,14 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                     var op = stack.pop();
 
                     // ignore stack underflow
-                    if (op != undefined) {
+                    if (op == undefined) {
+                        currCommand.error = 'stack underflow';
+                    } else {
                         stack.push(op);
                         stack.push(op);
                     }
+
                     yield { commandList, block, currCommand, stack };
-                    addCommand();
                     break;
 
                 /* Pops the top two values off the stack and "rolls" the remaining stack
@@ -531,17 +572,20 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                         op2 = stack.pop();
 
                     // ignore stack underflow
-                    if (op1 == undefined) {
-                    } else if (op2 == undefined) {
-                        stack.push(op1);
+                    if (op1 == undefined || op2 == undefined) {
+                        currCommand.error = 'stack underflow';
+                        // one value on stack, so put it back
+                        if (op1 != undefined) {
+                            stack.push(op1);
+                        }
                     } else if (op2 < 0) {
-                        // negative depth error; instruction is ignored
+                        // ignore negative depth instruction
+                        currCommand.error = 'negative roll depth';
+                        // put values back on stack
                         stack.push(op2);
                         stack.push(op1);
-                        yield { commandList, block, currCommand, error: 'Negative depth', stack };
-                        break;
                     } else {
-                        // depth argument is greater than current stack depth, so use the current
+                        // if depth argument is greater than current stack depth, use the current
                         // depth instead
                         if (op2 > stack.length) {
                             op2 = stack.length;
@@ -564,27 +608,21 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                     }
 
                     yield { commandList, block, currCommand, stack };
-                    addCommand();
                     break;
 
                 /* Reads a value from STDIN as a number and pushes it on to the stack */
                 case 'in(num)':
                     var newNum = getInputNum();
 
-                    // If no input is waiting on STDIN, or if an integer value is not received, this
-                    // is an error and the command is ignored
+                    // If no input is waiting on STDIN, or if an integer value is not received,
+                    // this is an error and the command is ignored
                     if (newNum == null) {
-                        yield {
-                            block,
-                            currCommand,
-                            error: 'Insufficient or invalid numerical input',
-                        };
-                        break;
+                        currCommand.error = 'Insufficient or invalid numerical input';
+                    } else {
+                        stack.push(newNum);
                     }
-                    stack.push(newNum);
 
                     yield { commandList, block, currCommand, stack };
-                    addCommand();
                     break;
 
                 /* Reads a value from STDIN as a character and pushes it on to the stack */
@@ -593,13 +631,12 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
 
                     // If no input is waiting on STDIN, this is an error and the command is ignored
                     if (newChar == null) {
-                        yield { commandList, block, currCommand, error: 'Insufficient input' };
-                        break;
+                        currCommand.error = 'insufficient input';
+                    } else {
+                        stack.push(newChar.charCodeAt());
                     }
-                    stack.push(newChar.charCodeAt());
 
                     yield { commandList, block, currCommand, stack };
-                    addCommand();
                     break;
 
                 /* Pops the top value off the stack and prints it to STDOUT as a number */
@@ -608,13 +645,12 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
 
                     // ignore stack underflow
                     if (op == undefined) {
-                        yield { commandList, block, currCommand, stack };
-                        break;
+                        currCommand.error = 'stack underflow';
+                    } else {
+                        output += op;
                     }
 
-                    output += op;
                     yield { commandList, block, currCommand, stack, output };
-                    addCommand();
                     break;
 
                 /* Pops the top value off the stack and prints it to STDOUT as a character */
@@ -623,14 +659,16 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
 
                     // ignore stack underflow
                     if (op == undefined) {
-                        yield { commandList, block, currCommand, stack: stack };
-                        break;
+                        currCommand.error = 'stack underflow';
+                    } else {
+                        output += String.fromCharCode(op);
                     }
-                    output += String.fromCharCode(op);
+
                     yield { commandList, block, currCommand, stack, output };
-                    addCommand();
                     break;
             }
+
+            commandList.push(currCommand); // add the current command to the command list
         }
     }
 }
