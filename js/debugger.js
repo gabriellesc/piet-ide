@@ -113,7 +113,7 @@ const Commands = ({ commandList, selectBlock, isInterpreting, currCommand }) => 
 ];
 
 // run/step/continue/stop control buttons
-const DebugControls = props => (
+const DebugControls = ({ start, pause, step, stop, runSpeed, isInterpreting, setRunSpeed }) => (
     <div className="btn-toolbar" role="toolbar" style={{ width: '100%', margin: '0 0 1vh' }}>
         <div
             className="btn-group btn-group-sm"
@@ -122,12 +122,13 @@ const DebugControls = props => (
                 type="button"
                 className="btn btn-success"
                 title="Run from the beginning"
-                onClick={() => props.start()}>
+                onClick={() => start()}>
                 <i className="glyphicon glyphicon-play" />
             </button>
             <button
                 type="button"
                 className="btn btn-success dropdown-toggle"
+                title="Set run speed"
                 data-toggle="dropdown"
                 aria-haspopup="true"
                 aria-expanded="false"
@@ -135,9 +136,19 @@ const DebugControls = props => (
                 <span className="caret" />
                 <span className="sr-only">Toggle Dropdown</span>
             </button>
-            <ul className="dropdown-menu" style={{ minWidth: 'auto', whiteSpace: 'nowrap' }}>
-                <li style={{ height: '200px', padding: '0 5px' }}>
-                    <RunSpeed {...props} />
+            <ul className="dropdown-menu">
+                <li style={{ padding: '0 5px' }}>
+                    <small style={{ float: 'left' }}>Slower</small>
+                    <small style={{ float: 'right' }}>Faster</small>
+                    <input
+                        type="range"
+                        min="0"
+                        max="1000"
+                        step="100"
+                        value={1000 - runSpeed}
+                        onChange={event =>
+                            !isInterpreting && setRunSpeed(1000 - event.target.value)}
+                    />
                 </li>
             </ul>
         </div>
@@ -151,7 +162,7 @@ const DebugControls = props => (
                 className="btn btn-warning"
                 title="Pause"
                 style={{ width: '25%' }}
-                onClick={() => props.pause()}>
+                onClick={() => pause()}>
                 <i className="glyphicon glyphicon-pause" />
             </button>
             <button
@@ -159,7 +170,7 @@ const DebugControls = props => (
                 className="btn btn-info"
                 title="Step"
                 style={{ width: '25%' }}
-                onClick={() => props.step()}>
+                onClick={() => step()}>
                 <i className="glyphicon glyphicon-step-forward" />
             </button>
             <button
@@ -167,7 +178,7 @@ const DebugControls = props => (
                 className="btn btn-primary"
                 title="Continue running from this point"
                 style={{ width: '25%' }}
-                onClick={() => props.cont()}>
+                onClick={() => cont()}>
                 <i className="glyphicon glyphicon-fast-forward" />
             </button>
             <button
@@ -175,35 +186,12 @@ const DebugControls = props => (
                 className="btn btn-danger"
                 title="Stop"
                 style={{ width: '25%' }}
-                onClick={() => props.stop()}>
+                onClick={() => stop()}>
                 <i className="glyphicon glyphicon-stop" />
             </button>
         </div>
     </div>
 );
-
-// slider to select run speed
-const RunSpeed = ({ runSpeed, setRunSpeed, isInterpreting }) => [
-    <b key="fast-label">Faster</b>,
-    <input
-        key="run-speed"
-        type="range"
-        min="0"
-        max="1000"
-        step="100"
-        value={1000 - runSpeed}
-        style={{
-            height: '150px',
-            width: '20px',
-            paddingTop: '5px',
-            WebkitAppearance: 'slider-vertical',
-            MozAppearance: 'scale-vertical',
-            margin: '5px auto',
-        }}
-        onChange={event => !isInterpreting && setRunSpeed(1000 - event.target.value)}
-    />,
-    <b key="slow-label">Slower</b>,
-];
 
 // IO visual containers
 const IO = ({ output, isInterpreting }) => [

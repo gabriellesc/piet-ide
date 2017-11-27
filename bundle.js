@@ -587,7 +587,14 @@ var Commands = function Commands(_ref) {
 };
 
 // run/step/continue/stop control buttons
-var DebugControls = function DebugControls(props) {
+var DebugControls = function DebugControls(_ref2) {
+    var start = _ref2.start,
+        pause = _ref2.pause,
+        step = _ref2.step,
+        stop = _ref2.stop,
+        runSpeed = _ref2.runSpeed,
+        isInterpreting = _ref2.isInterpreting,
+        setRunSpeed = _ref2.setRunSpeed;
     return _react2.default.createElement(
         'div',
         { className: 'btn-toolbar', role: 'toolbar', style: { width: '100%', margin: '0 0 1vh' } },
@@ -603,7 +610,7 @@ var DebugControls = function DebugControls(props) {
                     className: 'btn btn-success',
                     title: 'Run from the beginning',
                     onClick: function onClick() {
-                        return props.start();
+                        return start();
                     } },
                 _react2.default.createElement('i', { className: 'glyphicon glyphicon-play' })
             ),
@@ -612,6 +619,7 @@ var DebugControls = function DebugControls(props) {
                 {
                     type: 'button',
                     className: 'btn btn-success dropdown-toggle',
+                    title: 'Set run speed',
                     'data-toggle': 'dropdown',
                     'aria-haspopup': 'true',
                     'aria-expanded': 'false',
@@ -625,11 +633,30 @@ var DebugControls = function DebugControls(props) {
             ),
             _react2.default.createElement(
                 'ul',
-                { className: 'dropdown-menu', style: { minWidth: 'auto', whiteSpace: 'nowrap' } },
+                { className: 'dropdown-menu' },
                 _react2.default.createElement(
                     'li',
-                    { style: { height: '200px', padding: '0 5px' } },
-                    _react2.default.createElement(RunSpeed, props)
+                    { style: { padding: '0 5px' } },
+                    _react2.default.createElement(
+                        'small',
+                        { style: { float: 'left' } },
+                        'Slower'
+                    ),
+                    _react2.default.createElement(
+                        'small',
+                        { style: { float: 'right' } },
+                        'Faster'
+                    ),
+                    _react2.default.createElement('input', {
+                        type: 'range',
+                        min: '0',
+                        max: '1000',
+                        step: '100',
+                        value: 1000 - runSpeed,
+                        onChange: function onChange(event) {
+                            return !isInterpreting && setRunSpeed(1000 - event.target.value);
+                        }
+                    })
                 )
             )
         ),
@@ -647,7 +674,7 @@ var DebugControls = function DebugControls(props) {
                     title: 'Pause',
                     style: { width: '25%' },
                     onClick: function onClick() {
-                        return props.pause();
+                        return pause();
                     } },
                 _react2.default.createElement('i', { className: 'glyphicon glyphicon-pause' })
             ),
@@ -659,7 +686,7 @@ var DebugControls = function DebugControls(props) {
                     title: 'Step',
                     style: { width: '25%' },
                     onClick: function onClick() {
-                        return props.step();
+                        return step();
                     } },
                 _react2.default.createElement('i', { className: 'glyphicon glyphicon-step-forward' })
             ),
@@ -671,7 +698,7 @@ var DebugControls = function DebugControls(props) {
                     title: 'Continue running from this point',
                     style: { width: '25%' },
                     onClick: function onClick() {
-                        return props.cont();
+                        return cont();
                     } },
                 _react2.default.createElement('i', { className: 'glyphicon glyphicon-fast-forward' })
             ),
@@ -683,46 +710,12 @@ var DebugControls = function DebugControls(props) {
                     title: 'Stop',
                     style: { width: '25%' },
                     onClick: function onClick() {
-                        return props.stop();
+                        return stop();
                     } },
                 _react2.default.createElement('i', { className: 'glyphicon glyphicon-stop' })
             )
         )
     );
-};
-
-// slider to select run speed
-var RunSpeed = function RunSpeed(_ref2) {
-    var runSpeed = _ref2.runSpeed,
-        setRunSpeed = _ref2.setRunSpeed,
-        isInterpreting = _ref2.isInterpreting;
-    return [_react2.default.createElement(
-        'b',
-        { key: 'fast-label' },
-        'Faster'
-    ), _react2.default.createElement('input', {
-        key: 'run-speed',
-        type: 'range',
-        min: '0',
-        max: '1000',
-        step: '100',
-        value: 1000 - runSpeed,
-        style: {
-            height: '150px',
-            width: '20px',
-            paddingTop: '5px',
-            WebkitAppearance: 'slider-vertical',
-            MozAppearance: 'scale-vertical',
-            margin: '5px auto'
-        },
-        onChange: function onChange(event) {
-            return !isInterpreting && setRunSpeed(1000 - event.target.value);
-        }
-    }), _react2.default.createElement(
-        'b',
-        { key: 'slow-label' },
-        'Slower'
-    )];
 };
 
 // IO visual containers
