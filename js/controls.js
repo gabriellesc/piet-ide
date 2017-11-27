@@ -66,6 +66,7 @@ class Controls extends React.Component {
                     type="button"
                     className="btn btn-warning"
                     value="Resize / Clear"
+                    disabled={this.props.isInterpreting ? 'disabled' : ''}
                     onClick={() =>
                         this.props.resize({
                             height: parseInt(this.height.value),
@@ -87,12 +88,13 @@ class Controls extends React.Component {
     }
 }
 
-const ImportExportMenu = ({ importImg, exportPng }) => [
+const ImportExportMenu = ({ isInterpreting, importImg, exportPng }) => [
     <input
         key="import-btn"
         type="button"
         className="btn btn-primary"
         value="Import"
+        disabled={isInterpreting ? 'disabled' : ''}
         onClick={() => document.getElementById('fileChooser').click()}
     />,
     <input
@@ -150,18 +152,18 @@ const PaintModeSwitch = ({ paintMode, selectPaintMode }) => (
     <div className="btn-group" role="group" style={{ float: 'right' }}>
         <button
             type="button"
-            title="Pencil mode (fill single pixel)"
-            className={'btn btn-default' + (paintMode == 0 ? 'active' : '')}
+            title="Brush mode (fill single pixel)"
+            className={'btn btn-default' + (paintMode == 'BRUSH' ? 'active' : '')}
             style={{ padding: '2px 12px' }}
-            onClick={() => selectPaintMode(0)}>
+            onClick={() => selectPaintMode('BRUSH')}>
             <i className="fi-pencil" style={{ fontSize: '14pt' }} />
         </button>
         <button
             type="button"
             title="Bucket mode (fill block of pixels)"
-            className={'btn btn-default' + (paintMode == 1 ? 'active' : '')}
+            className={'btn btn-default' + (paintMode == 'BUCKET' ? 'active' : '')}
             style={{ padding: '2px 12px' }}
-            onClick={() => selectPaintMode(1)}>
+            onClick={() => selectPaintMode('BUCKET')}>
             <i className="fi-paint-bucket" style={{ fontSize: '14pt' }} />
         </button>
     </div>

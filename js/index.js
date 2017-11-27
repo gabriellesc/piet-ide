@@ -58,7 +58,7 @@ const appState = {
 
     commands: commands[0],
 
-    paintMode: 0, // 0 (brush) or 1 (fill); use brush paint mode initially
+    paintMode: 'BRUSH', // BRUSH, BUCKET, or BP; use brush paint mode initially
 
     cellInFocus: null,
     displayBS: false, // initially do not show block sizes
@@ -101,36 +101,31 @@ const appState = {
         appState.notify();
     }).bind(this),
 
-    // paint this cell/block the currently-selected colour
-    paint: ((row, col) => {
-        if (appState.paintMode == 0) {
-            // brush paint mode
-            appState.grid[row][col] = appState.selectedColour;
-        } else {
-            // bucket paint mode
-            if (appState.grid[row][col] != appState.selectedColour) {
-                (function paintBlock(row, col, origColour) {
-                    appState.grid[row][col] = appState.selectedColour;
+    // select paint mode (BRUSH, BUCKET, BP)
+    selectPaintMode: (mode => {
+        appState.paintMode = mode;
 
-                    // above
-                    if (row - 1 >= 0 && appState.grid[row - 1][col] == origColour) {
-                        paintBlock(row - 1, col, origColour);
-                    }
-                    // below
-                    if (row + 1 < appState.height && appState.grid[row + 1][col] == origColour) {
-                        paintBlock(row + 1, col, origColour);
-                    }
-                    // left
-                    if (col - 1 >= 0 && appState.grid[row][col - 1] == origColour) {
-                        paintBlock(row, col - 1, origColour);
-                    }
-                    // right
-                    if (col + 1 < appState.width && appState.grid[row][col + 1] == origColour) {
-                        paintBlock(row, col + 1, origColour);
-                    }
-                })(row, col, appState.grid[row][col]);
-            }
+        appState.notify();
+    }).bind(this),
+
+    // delegate this cell click to the appropriate function, depending on the paint mode
+    handleCellClick: ((row, col) => {
+        switch (appState.paintMode) {
+            case 'BRUSH':
+                appState.brushPaint(row, col);
+                break;
+            case 'BUCKET':
+                appState.bucketPaint(row, col);
+                break;
+            case 'BP':
+                appState.debug.toggleBP(row, col);
+                break;
         }
+    }).bind(this),
+
+    // paint this cell the currently-selected colour
+    brushPaint: ((row, col) => {
+        appState.grid[row][col] = appState.selectedColour;
 
         // recompute blocks and block sizes
         let blocks = appState.computeBlocks();
@@ -140,9 +135,35 @@ const appState = {
         appState.notify();
     }).bind(this),
 
-    // toggle paint mode between brush and fill
-    selectPaintMode: (mode => {
-        appState.paintMode = mode;
+    // paint this block the currently-selected colour
+    bucketPaint: ((row, col) => {
+        if (appState.grid[row][col] != appState.selectedColour) {
+            (function paintBlock(row, col, origColour) {
+                appState.grid[row][col] = appState.selectedColour;
+
+                // above
+                if (row - 1 >= 0 && appState.grid[row - 1][col] == origColour) {
+                    paintBlock(row - 1, col, origColour);
+                }
+                // below
+                if (row + 1 < appState.height && appState.grid[row + 1][col] == origColour) {
+                    paintBlock(row + 1, col, origColour);
+                }
+                // left
+                if (col - 1 >= 0 && appState.grid[row][col - 1] == origColour) {
+                    paintBlock(row, col - 1, origColour);
+                }
+                // right
+                if (col + 1 < appState.width && appState.grid[row][col + 1] == origColour) {
+                    paintBlock(row, col + 1, origColour);
+                }
+            })(row, col, appState.grid[row][col]);
+        }
+
+        // recompute blocks and block sizes
+        let blocks = appState.computeBlocks();
+        appState.blocks = blocks.blockMap;
+        appState.blockSizes = blocks.blockSizes;
 
         appState.notify();
     }).bind(this),
@@ -386,6 +407,17 @@ const appState = {
             return appState.debug.input[appState.debug.inputPtr++];
         }).bind(this),
 
+        // toggle the paint mode between BP and not BP
+        toggleSetBP: (() => {
+            if (appState.paintMode == 'BP') {
+                appState.paintMode = 'BRUSH';
+            } else {
+                appState.paintMode = 'BP';
+            }
+
+            appState.notify();
+        }).bind(this),
+
         // add/remove a breakpoint
         toggleBP: ((row, col) => {
             let block = appState.blocks[row][col];
@@ -494,7 +526,7 @@ class App extends React.Component {
                     gridColumnGap: '1vw',
                     gridRowGap: '1vh',
                     gridTemplateColumns: this.props.appState.debug.debugIsVisible
-                        ? '375px 300px auto 200px'
+                        ? '375px 300px auto 225px'
                         : '375px 300px auto 25px',
                     gridTemplateRows: '35px 35px 35px auto',
                     gridTemplateAreas: this.props.appState.debug.debugIsVisible
@@ -507,9 +539,8 @@ class App extends React.Component {
                            'controls3 cpicker . dtab'
 			   'grid grid grid grid'`,
                     alignItems: 'center',
-                    pointerEvents: isInterpreting ? 'none' : 'auto',
                 }}>
-                <Controls {...this.props.appState} />
+                <Controls isInterpreting={isInterpreting} {...this.props.appState} />
                 <Grid {...this.props.appState} />
                 {this.props.appState.debug.debugIsVisible ? (
                     <Debugger isInterpreting={isInterpreting} {...this.props.appState} />

@@ -16,7 +16,7 @@ class Debugger extends React.Component {
                     gridRow: '1 / 5',
                     alignSelf: 'start',
                     marginTop: '0',
-                    width: '200px',
+                    width: '225px',
                     border: '1px solid #ddd',
                     borderRadius: '5px',
                     background: 'white',
@@ -112,12 +112,20 @@ const Commands = ({ commandList, selectBlock, isInterpreting, currCommand }) => 
         ),
 ];
 
-// run/step/continue/stop control buttons
-const DebugControls = ({ start, pause, step, stop, runSpeed, isInterpreting, setRunSpeed }) => (
-    <div className="btn-toolbar" role="toolbar" style={{ width: '100%', margin: '0 0 1vh' }}>
-        <div
-            className="btn-group btn-group-sm"
-            style={{ width: 'calc((100% - 5px) / 4 + 10px)', marginLeft: '2px' }}>
+// run/step/continue/stop/pause + set BP control buttons
+const DebugControls = ({
+    start,
+    pause,
+    step,
+    stop,
+    runSpeed,
+    isInterpreting,
+    setRunSpeed,
+    paintMode,
+    toggleSetBP,
+}) => (
+    <div className="btn-toolbar" role="toolbar" style={{ margin: '0 0 1vh' }}>
+        <div className="btn-group btn-group-sm" style={{ width: '52px', margin: '0' }}>
             <button
                 type="button"
                 className="btn btn-success"
@@ -132,7 +140,7 @@ const DebugControls = ({ start, pause, step, stop, runSpeed, isInterpreting, set
                 data-toggle="dropdown"
                 aria-haspopup="true"
                 aria-expanded="false"
-                style={{ paddingLeft: '4px', paddingRight: '4px' }}>
+                style={{ width: '18px', paddingLeft: '4px', paddingRight: '4px' }}>
                 <span className="caret" />
                 <span className="sr-only">Toggle Dropdown</span>
             </button>
@@ -152,44 +160,40 @@ const DebugControls = ({ start, pause, step, stop, runSpeed, isInterpreting, set
                 </li>
             </ul>
         </div>
-
         <div
             className="btn-group btn-group-sm"
             role="group"
-            style={{ width: 'calc((100% - 5px) / 4 * 3 - 7px)', marginLeft: '0' }}>
-            <button
-                type="button"
-                className="btn btn-warning"
-                title="Pause"
-                style={{ width: '25%' }}
-                onClick={() => pause()}>
+            style={{ width: '136px', margin: '0 0 0 4px' }}>
+            <button type="button" className="btn btn-warning" title="Pause" onClick={() => pause()}>
                 <i className="glyphicon glyphicon-pause" />
             </button>
-            <button
-                type="button"
-                className="btn btn-info"
-                title="Step"
-                style={{ width: '25%' }}
-                onClick={() => step()}>
+            <button type="button" className="btn btn-info" title="Step" onClick={() => step()}>
                 <i className="glyphicon glyphicon-step-forward" />
             </button>
             <button
                 type="button"
                 className="btn btn-primary"
                 title="Continue running from this point"
-                style={{ width: '25%' }}
                 onClick={() => cont()}>
                 <i className="glyphicon glyphicon-fast-forward" />
             </button>
-            <button
-                type="button"
-                className="btn btn-danger"
-                title="Stop"
-                style={{ width: '25%' }}
-                onClick={() => stop()}>
+            <button type="button" className="btn btn-danger" title="Stop" onClick={() => stop()}>
                 <i className="glyphicon glyphicon-stop" />
             </button>
         </div>
+
+        <i
+            className="glyphicon glyphicon-map-marker"
+            title="Set breakpoints"
+            style={{
+                fontSize: '18px',
+                margin: '0 0 0 3px',
+                padding: '5px 0',
+                cursor: 'pointer',
+                color: paintMode == 'BP' ? 'red' : 'black',
+            }}
+            onClick={() => toggleSetBP()}
+        />
     </div>
 );
 

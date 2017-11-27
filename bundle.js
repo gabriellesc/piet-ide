@@ -218,6 +218,7 @@ var Controls = function (_React$Component) {
                     type: 'button',
                     className: 'btn btn-warning',
                     value: 'Resize / Clear',
+                    disabled: this.props.isInterpreting ? 'disabled' : '',
                     onClick: function onClick() {
                         return _this2.props.resize({
                             height: parseInt(_this2.height.value),
@@ -243,13 +244,15 @@ var Controls = function (_React$Component) {
 }(_react2.default.Component);
 
 var ImportExportMenu = function ImportExportMenu(_ref) {
-    var importImg = _ref.importImg,
+    var isInterpreting = _ref.isInterpreting,
+        importImg = _ref.importImg,
         exportPng = _ref.exportPng;
     return [_react2.default.createElement('input', {
         key: 'import-btn',
         type: 'button',
         className: 'btn btn-primary',
         value: 'Import',
+        disabled: isInterpreting ? 'disabled' : '',
         onClick: function onClick() {
             return document.getElementById('fileChooser').click();
         }
@@ -330,11 +333,11 @@ var PaintModeSwitch = function PaintModeSwitch(_ref2) {
             'button',
             {
                 type: 'button',
-                title: 'Pencil mode (fill single pixel)',
-                className: 'btn btn-default' + (paintMode == 0 ? 'active' : ''),
+                title: 'Brush mode (fill single pixel)',
+                className: 'btn btn-default' + (paintMode == 'BRUSH' ? 'active' : ''),
                 style: { padding: '2px 12px' },
                 onClick: function onClick() {
-                    return selectPaintMode(0);
+                    return selectPaintMode('BRUSH');
                 } },
             _react2.default.createElement('i', { className: 'fi-pencil', style: { fontSize: '14pt' } })
         ),
@@ -343,10 +346,10 @@ var PaintModeSwitch = function PaintModeSwitch(_ref2) {
             {
                 type: 'button',
                 title: 'Bucket mode (fill block of pixels)',
-                className: 'btn btn-default' + (paintMode == 1 ? 'active' : ''),
+                className: 'btn btn-default' + (paintMode == 'BUCKET' ? 'active' : ''),
                 style: { padding: '2px 12px' },
                 onClick: function onClick() {
-                    return selectPaintMode(1);
+                    return selectPaintMode('BUCKET');
                 } },
             _react2.default.createElement('i', { className: 'fi-paint-bucket', style: { fontSize: '14pt' } })
         )
@@ -465,7 +468,7 @@ var Debugger = function (_React$Component) {
                         gridRow: '1 / 5',
                         alignSelf: 'start',
                         marginTop: '0',
-                        width: '200px',
+                        width: '225px',
                         border: '1px solid #ddd',
                         borderRadius: '5px',
                         background: 'white',
@@ -586,7 +589,7 @@ var Commands = function Commands(_ref) {
     )];
 };
 
-// run/step/continue/stop control buttons
+// run/step/continue/stop/pause + set BP control buttons
 var DebugControls = function DebugControls(_ref2) {
     var start = _ref2.start,
         pause = _ref2.pause,
@@ -594,15 +597,15 @@ var DebugControls = function DebugControls(_ref2) {
         stop = _ref2.stop,
         runSpeed = _ref2.runSpeed,
         isInterpreting = _ref2.isInterpreting,
-        setRunSpeed = _ref2.setRunSpeed;
+        setRunSpeed = _ref2.setRunSpeed,
+        paintMode = _ref2.paintMode,
+        toggleSetBP = _ref2.toggleSetBP;
     return _react2.default.createElement(
         'div',
-        { className: 'btn-toolbar', role: 'toolbar', style: { width: '100%', margin: '0 0 1vh' } },
+        { className: 'btn-toolbar', role: 'toolbar', style: { margin: '0 0 1vh' } },
         _react2.default.createElement(
             'div',
-            {
-                className: 'btn-group btn-group-sm',
-                style: { width: 'calc((100% - 5px) / 4 + 10px)', marginLeft: '2px' } },
+            { className: 'btn-group btn-group-sm', style: { width: '52px', margin: '0' } },
             _react2.default.createElement(
                 'button',
                 {
@@ -623,7 +626,7 @@ var DebugControls = function DebugControls(_ref2) {
                     'data-toggle': 'dropdown',
                     'aria-haspopup': 'true',
                     'aria-expanded': 'false',
-                    style: { paddingLeft: '4px', paddingRight: '4px' } },
+                    style: { width: '18px', paddingLeft: '4px', paddingRight: '4px' } },
                 _react2.default.createElement('span', { className: 'caret' }),
                 _react2.default.createElement(
                     'span',
@@ -665,27 +668,17 @@ var DebugControls = function DebugControls(_ref2) {
             {
                 className: 'btn-group btn-group-sm',
                 role: 'group',
-                style: { width: 'calc((100% - 5px) / 4 * 3 - 7px)', marginLeft: '0' } },
+                style: { width: '136px', margin: '0 0 0 4px' } },
             _react2.default.createElement(
                 'button',
-                {
-                    type: 'button',
-                    className: 'btn btn-warning',
-                    title: 'Pause',
-                    style: { width: '25%' },
-                    onClick: function onClick() {
+                { type: 'button', className: 'btn btn-warning', title: 'Pause', onClick: function onClick() {
                         return pause();
                     } },
                 _react2.default.createElement('i', { className: 'glyphicon glyphicon-pause' })
             ),
             _react2.default.createElement(
                 'button',
-                {
-                    type: 'button',
-                    className: 'btn btn-info',
-                    title: 'Step',
-                    style: { width: '25%' },
-                    onClick: function onClick() {
+                { type: 'button', className: 'btn btn-info', title: 'Step', onClick: function onClick() {
                         return step();
                     } },
                 _react2.default.createElement('i', { className: 'glyphicon glyphicon-step-forward' })
@@ -696,7 +689,6 @@ var DebugControls = function DebugControls(_ref2) {
                     type: 'button',
                     className: 'btn btn-primary',
                     title: 'Continue running from this point',
-                    style: { width: '25%' },
                     onClick: function onClick() {
                         return cont();
                     } },
@@ -704,17 +696,26 @@ var DebugControls = function DebugControls(_ref2) {
             ),
             _react2.default.createElement(
                 'button',
-                {
-                    type: 'button',
-                    className: 'btn btn-danger',
-                    title: 'Stop',
-                    style: { width: '25%' },
-                    onClick: function onClick() {
+                { type: 'button', className: 'btn btn-danger', title: 'Stop', onClick: function onClick() {
                         return stop();
                     } },
                 _react2.default.createElement('i', { className: 'glyphicon glyphicon-stop' })
             )
-        )
+        ),
+        _react2.default.createElement('i', {
+            className: 'glyphicon glyphicon-map-marker',
+            title: 'Set breakpoints',
+            style: {
+                fontSize: '18px',
+                margin: '0 0 0 3px',
+                padding: '5px 0',
+                cursor: 'pointer',
+                color: paintMode == 'BP' ? 'red' : 'black'
+            },
+            onClick: function onClick() {
+                return toggleSetBP();
+            }
+        })
     );
 };
 
@@ -839,8 +840,6 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
 var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
@@ -849,83 +848,64 @@ var _colours = require('./colours.js');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var Grid = function (_React$Component) {
-    _inherits(Grid, _React$Component);
-
-    function Grid() {
-        _classCallCheck(this, Grid);
-
-        return _possibleConstructorReturn(this, (Grid.__proto__ || Object.getPrototypeOf(Grid)).apply(this, arguments));
-    }
-
-    _createClass(Grid, [{
-        key: 'render',
-        value: function render() {
-            var _this2 = this;
-
-            return _react2.default.createElement(
-                'table',
-                {
-                    style: {
-                        margin: '1vh 0 0 0',
-                        tableLayout: 'fixed',
-                        gridColumn: 'grid / span ' + (this.props.debug.debugIsVisible ? '3' : '4'),
-                        alignSelf: 'start',
-                        justifySelf: 'start'
-                    },
-                    onMouseOut: function onMouseOut() {
-                        return _this2.props.setCellInFocus(null);
-                    } },
-                _react2.default.createElement(
-                    'tbody',
-                    null,
-                    this.props.grid.map(function (row, i) {
+var Grid = function Grid(props) {
+    return _react2.default.createElement(
+        'table',
+        {
+            style: {
+                margin: '1vh 0 0 0',
+                tableLayout: 'fixed',
+                gridColumn: 'grid / span ' + (props.debug.debugIsVisible ? '3' : '4'),
+                alignSelf: 'start',
+                justifySelf: 'start'
+            },
+            onMouseOut: function onMouseOut() {
+                return props.setCellInFocus(null);
+            } },
+        _react2.default.createElement(
+            'tbody',
+            null,
+            props.grid.map(function (row, i) {
+                return _react2.default.createElement(
+                    'tr',
+                    { key: 'row-' + i },
+                    row.map(function (cell, j) {
                         return _react2.default.createElement(
-                            'tr',
-                            { key: 'row-' + i },
-                            row.map(function (cell, j) {
-                                return _react2.default.createElement(
-                                    'td',
-                                    {
-                                        key: 'cell-' + i + '-' + j,
-                                        title: '(' + j + ',' + i + ')',
-                                        style: {
-                                            maxHeight: '30px',
-                                            maxWidth: '30px',
-                                            height: _this2.props.cellDim + 'px',
-                                            width: _this2.props.cellDim + 'px',
-                                            border: '1px solid black',
-                                            background: _this2.props.blocks[i][j] == _this2.props.debug.block ? 'repeating-linear-gradient(45deg, ' + _colours.colours[cell] + ', ' + _colours.colours[cell] + ' 2px, black 2px, black 4px)' : _colours.colours[cell],
-                                            color: 'white',
-                                            fontSize: '11px',
-                                            textShadow: '1px 1px 1px black',
-                                            textAlign: 'center',
-                                            cursor: _this2.props.paintMode == 0 ? 'url(img/pencil.png) 5 30,auto' : 'url(img/paint-bucket.png) 28 28,auto'
-                                        },
-                                        onMouseOver: function onMouseOver() {
-                                            return _this2.props.setCellInFocus(i, j);
-                                        },
-                                        onClick: function onClick() {
-                                            return _this2.props.paint(i, j);
-                                        } },
-                                    _this2.props.displayBS && _this2.props.blockSizes[i][j]
-                                );
-                            })
+                            'td',
+                            {
+                                key: 'cell-' + i + '-' + j,
+                                title: '(' + j + ',' + i + ')',
+                                style: {
+                                    maxHeight: '30px',
+                                    maxWidth: '30px',
+                                    height: props.cellDim + 'px',
+                                    width: props.cellDim + 'px',
+                                    border: '1px solid black',
+                                    background: props.blocks[i][j] == props.debug.block ? 'repeating-linear-gradient(45deg, ' + _colours.colours[cell] + ', ' + _colours.colours[cell] + ' 2px, black 2px, black 4px)' : _colours.colours[cell],
+                                    color: 'white',
+                                    fontSize: '11px',
+                                    textShadow: '1px 1px 1px black',
+                                    textAlign: 'center',
+                                    cursor: {
+                                        BRUSH: 'url(img/pencil.png) 5 30,auto',
+                                        BUCKET: 'url(img/paint-bucket.png) 28 28,auto',
+                                        BP: 'url(img/bp.png) 16 32,auto'
+                                    }[props.paintMode]
+                                },
+                                onMouseOver: function onMouseOver() {
+                                    return props.setCellInFocus(i, j);
+                                },
+                                onClick: function onClick() {
+                                    return props.handleCellClick(i, j);
+                                } },
+                            props.displayBS && props.blockSizes[i][j]
                         );
                     })
-                )
-            );
-        }
-    }]);
-
-    return Grid;
-}(_react2.default.Component);
+                );
+            })
+        )
+    );
+};
 
 exports.default = Grid;
 
@@ -1024,7 +1004,7 @@ var appState = {
 
     commands: _orderedCommands.commands[0],
 
-    paintMode: 0, // 0 (brush) or 1 (fill); use brush paint mode initially
+    paintMode: 'BRUSH', // BRUSH, BUCKET, or BP; use brush paint mode initially
 
     cellInFocus: null,
     displayBS: false, // initially do not show block sizes
@@ -1076,36 +1056,31 @@ var appState = {
         appState.notify();
     }.bind(undefined),
 
-    // paint this cell/block the currently-selected colour
-    paint: function (row, col) {
-        if (appState.paintMode == 0) {
-            // brush paint mode
-            appState.grid[row][col] = appState.selectedColour;
-        } else {
-            // bucket paint mode
-            if (appState.grid[row][col] != appState.selectedColour) {
-                (function paintBlock(row, col, origColour) {
-                    appState.grid[row][col] = appState.selectedColour;
+    // select paint mode (BRUSH, BUCKET, BP)
+    selectPaintMode: function (mode) {
+        appState.paintMode = mode;
 
-                    // above
-                    if (row - 1 >= 0 && appState.grid[row - 1][col] == origColour) {
-                        paintBlock(row - 1, col, origColour);
-                    }
-                    // below
-                    if (row + 1 < appState.height && appState.grid[row + 1][col] == origColour) {
-                        paintBlock(row + 1, col, origColour);
-                    }
-                    // left
-                    if (col - 1 >= 0 && appState.grid[row][col - 1] == origColour) {
-                        paintBlock(row, col - 1, origColour);
-                    }
-                    // right
-                    if (col + 1 < appState.width && appState.grid[row][col + 1] == origColour) {
-                        paintBlock(row, col + 1, origColour);
-                    }
-                })(row, col, appState.grid[row][col]);
-            }
+        appState.notify();
+    }.bind(undefined),
+
+    // delegate this cell click to the appropriate function, depending on the paint mode
+    handleCellClick: function (row, col) {
+        switch (appState.paintMode) {
+            case 'BRUSH':
+                appState.brushPaint(row, col);
+                break;
+            case 'BUCKET':
+                appState.bucketPaint(row, col);
+                break;
+            case 'BP':
+                appState.debug.toggleBP(row, col);
+                break;
         }
+    }.bind(undefined),
+
+    // paint this cell the currently-selected colour
+    brushPaint: function (row, col) {
+        appState.grid[row][col] = appState.selectedColour;
 
         // recompute blocks and block sizes
         var blocks = appState.computeBlocks();
@@ -1115,9 +1090,35 @@ var appState = {
         appState.notify();
     }.bind(undefined),
 
-    // toggle paint mode between brush and fill
-    selectPaintMode: function (mode) {
-        appState.paintMode = mode;
+    // paint this block the currently-selected colour
+    bucketPaint: function (row, col) {
+        if (appState.grid[row][col] != appState.selectedColour) {
+            (function paintBlock(row, col, origColour) {
+                appState.grid[row][col] = appState.selectedColour;
+
+                // above
+                if (row - 1 >= 0 && appState.grid[row - 1][col] == origColour) {
+                    paintBlock(row - 1, col, origColour);
+                }
+                // below
+                if (row + 1 < appState.height && appState.grid[row + 1][col] == origColour) {
+                    paintBlock(row + 1, col, origColour);
+                }
+                // left
+                if (col - 1 >= 0 && appState.grid[row][col - 1] == origColour) {
+                    paintBlock(row, col - 1, origColour);
+                }
+                // right
+                if (col + 1 < appState.width && appState.grid[row][col + 1] == origColour) {
+                    paintBlock(row, col + 1, origColour);
+                }
+            })(row, col, appState.grid[row][col]);
+        }
+
+        // recompute blocks and block sizes
+        var blocks = appState.computeBlocks();
+        appState.blocks = blocks.blockMap;
+        appState.blockSizes = blocks.blockSizes;
 
         appState.notify();
     }.bind(undefined),
@@ -1349,6 +1350,17 @@ var appState = {
             return appState.debug.input[appState.debug.inputPtr++];
         }.bind(undefined),
 
+        // toggle the paint mode between BP and not BP
+        toggleSetBP: function () {
+            if (appState.paintMode == 'BP') {
+                appState.paintMode = 'BRUSH';
+            } else {
+                appState.paintMode = 'BP';
+            }
+
+            appState.notify();
+        }.bind(undefined),
+
         // add/remove a breakpoint
         toggleBP: function (row, col) {
             var block = appState.blocks[row][col];
@@ -1468,13 +1480,12 @@ var App = function (_React$Component) {
                         display: 'grid',
                         gridColumnGap: '1vw',
                         gridRowGap: '1vh',
-                        gridTemplateColumns: this.props.appState.debug.debugIsVisible ? '375px 300px auto 200px' : '375px 300px auto 25px',
+                        gridTemplateColumns: this.props.appState.debug.debugIsVisible ? '375px 300px auto 225px' : '375px 300px auto 25px',
                         gridTemplateRows: '35px 35px 35px auto',
                         gridTemplateAreas: this.props.appState.debug.debugIsVisible ? '\'controls1 cpicker . debug\'\n                           \'controls2 cpicker . debug\'\n                           \'controls3 cpicker . debug\'\n                           \'grid grid grid debug\'' : '\'controls1 cpicker . dtab\'\n                           \'controls2 cpicker . dtab\'\n                           \'controls3 cpicker . dtab\'\n\t\t\t   \'grid grid grid grid\'',
-                        alignItems: 'center',
-                        pointerEvents: isInterpreting ? 'none' : 'auto'
+                        alignItems: 'center'
                     } },
-                _react2.default.createElement(_controls2.default, this.props.appState),
+                _react2.default.createElement(_controls2.default, _extends({ isInterpreting: isInterpreting }, this.props.appState)),
                 _react2.default.createElement(_grid2.default, this.props.appState),
                 this.props.appState.debug.debugIsVisible ? _react2.default.createElement(_debugger2.default, _extends({ isInterpreting: isInterpreting }, this.props.appState)) : _react2.default.createElement(_debugTab.DebugTab, this.props.appState)
             );
@@ -1498,15 +1509,9 @@ Object.defineProperty(exports, "__esModule", {
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
-var _react = require('react');
-
-var _react2 = _interopRequireDefault(_react);
-
 var _orderedCommands = require('./orderedCommands.js');
 
 var _colours = require('./colours.js');
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var _marked = /*#__PURE__*/regeneratorRuntime.mark(interpret);
 
@@ -2213,7 +2218,7 @@ function interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                     // this is an error and the command is ignored
 
                     if (newNum == null) {
-                        currCommand.error = 'Insufficient or invalid numerical input';
+                        currCommand.error = 'invalid input';
                     } else {
                         stack.push(newNum);
                     }
@@ -2230,7 +2235,7 @@ function interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                     // If no input is waiting on STDIN, this is an error and the command is ignored
 
                     if (newChar == null) {
-                        currCommand.error = 'insufficient input';
+                        currCommand.error = 'invalid input';
                     } else {
                         stack.push(newChar.charCodeAt());
                     }
@@ -2293,7 +2298,7 @@ function interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
 
 exports.default = interpret;
 
-},{"./colours.js":2,"./orderedCommands.js":9,"react":368}],9:[function(require,module,exports){
+},{"./colours.js":2,"./orderedCommands.js":9}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {

@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { commands } from './orderedCommands.js';
 import { WHITE, BLACK } from './colours.js';
 
@@ -617,7 +615,7 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
                     // If no input is waiting on STDIN, or if an integer value is not received,
                     // this is an error and the command is ignored
                     if (newNum == null) {
-                        currCommand.error = 'Insufficient or invalid numerical input';
+                        currCommand.error = 'invalid input';
                     } else {
                         stack.push(newNum);
                     }
@@ -631,7 +629,7 @@ function* interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
 
                     // If no input is waiting on STDIN, this is an error and the command is ignored
                     if (newChar == null) {
-                        currCommand.error = 'insufficient input';
+                        currCommand.error = 'invalid input';
                     } else {
                         stack.push(newChar.charCodeAt());
                     }
