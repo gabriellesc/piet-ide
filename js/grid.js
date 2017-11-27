@@ -25,14 +25,13 @@ const Grid = props => (
                                 height: props.cellDim + 'px',
                                 width: props.cellDim + 'px',
                                 border: '1px solid black',
-                                background:
-                                    props.blocks[i][j] == props.debug.block
-                                        ? 'repeating-linear-gradient(45deg, ' +
-                                          colours[cell] +
-                                          ', ' +
-                                          colours[cell] +
-                                          ' 2px, black 2px, black 4px)'
-                                        : colours[cell],
+                                background: props.debug.breakpoints.includes(props.blocks[i][j])
+                                    ? 'repeating-linear-gradient(45deg, ' +
+                                      colours[cell] +
+                                      ', ' +
+                                      colours[cell] +
+                                      ' 2px, black 2px, black 4px)'
+                                    : colours[cell],
                                 color: 'white',
                                 fontSize: '11px',
                                 textShadow: '1px 1px 1px black',
@@ -45,7 +44,9 @@ const Grid = props => (
                             }}
                             onMouseOver={() => props.setCellInFocus(i, j)}
                             onClick={() => props.handleCellClick(i, j)}>
-                            {props.displayBS && props.blockSizes[i][j]}
+                            {props.blocks[i][j] == props.debug.block
+                                ? '◉'
+                                : props.displayBS && props.blockSizes[i][j]}
                         </td>
                     ))}
                 </tr>

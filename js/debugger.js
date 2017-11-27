@@ -117,6 +117,7 @@ const DebugControls = ({
     start,
     pause,
     step,
+    cont,
     stop,
     runSpeed,
     isInterpreting,
