@@ -818,17 +818,9 @@ var Pointers = function Pointers(_ref5) {
         'div',
         { style: { width: '100%', textAlign: 'center', fontWeight: 'bold' } },
         'DP:\xA0',
-        _react2.default.createElement(
-            'span',
-            { style: { fontSize: '12pt' } },
-            ['🡺', '🡻', '🡸', '🡹'][DP]
-        ),
+        _react2.default.createElement('i', { className: 'glyphicon glyphicon-arrow-' + ['right', 'down', 'left', 'up'][DP] }),
         '\u2003 CC:\xA0',
-        _react2.default.createElement(
-            'span',
-            { style: { fontSize: '12pt' } },
-            ['🡸', '🡺'][CC]
-        )
+        _react2.default.createElement('i', { className: 'glyphicon glyphicon-arrow-' + ['left', 'right'][CC] })
     );
 };
 
