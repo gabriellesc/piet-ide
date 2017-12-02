@@ -257,9 +257,9 @@ const appState = {
 
                 video.srcObject = mediaStream;
 
-                const render = () => {
+                function render() {
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                };
+                }
 
                 // set up render to be called on at an interval until the video "ends"
                 video.onplay = () => {
@@ -272,18 +272,25 @@ const appState = {
                 };
 
                 video.onloadedmetadata = function(e) {
-                    // set the canvas size
-                    var ratio = video.videoWidth / 700; // limit width to 700px
+                    // set the canvas size, limiting width to 700px
+                    var ratio = 700 / video.videoWidth;
                     canvas.width = 700;
                     canvas.height = video.videoHeight * ratio; // match height to size ratio
-
                     video.play();
                 };
             })
             .catch(function(err) {
                 console.log(err.name + ': ' + err.message);
+
                 // if an error occurs, make sure that the media modal is hidden
                 $('#media-modal').modal('hide');
+
+                // close the stream if it has been opened
+                var video = document.querySelector('video');
+                if (video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
+                }
             });
     }).bind(this),
 

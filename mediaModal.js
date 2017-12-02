@@ -44,6 +44,9 @@ class MediaModal extends React.Component {
                                 onClick={() => this.closeMediaStream()}>
                                 Close
                             </button>
+                            <button type="button" className="btn btn-warning" onClick={() => {}}>
+                                Restart
+                            </button>
                             <button
                                 type="button"
                                 className="btn btn-primary"
