@@ -185,6 +185,7 @@ const appState = {
         appState.notify();
     }).bind(this),
 
+    // export program to png
     exportPng: (scale => {
         // create a new image
         let image = new Jimp(appState.width, appState.height);
@@ -205,7 +206,8 @@ const appState = {
         });
     }).bind(this),
 
-    importImg: file => {
+    // import a program from an image file
+    importImgFromFile: file => {
         let reader = new FileReader();
 
         // map hex values to colour indices
@@ -242,6 +244,51 @@ const appState = {
         };
         reader.readAsArrayBuffer(file);
     },
+
+    // process video from media
+    processMedia: (() => {
+        navigator.mediaDevices
+            .getUserMedia({ video: true })
+            .then(function(mediaStream) {
+                var video = document.querySelector('video'),
+                    canvas = document.querySelector('canvas'),
+                    ctx = canvas.getContext('2d'),
+                    intervalId;
+
+                video.srcObject = mediaStream;
+
+                const render = () => {
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                };
+
+                // set up render to be called on at an interval until the video "ends"
+                video.onplay = () => {
+                    // as soon as the first track ends, stop the timer
+                    video.srcObject
+                        .getTracks()
+                        .forEach(track => (track.onended = () => clearInterval(intervalId)));
+
+                    intervalId = setInterval(render, 10);
+                };
+
+                video.onloadedmetadata = function(e) {
+                    // set the canvas size
+                    var ratio = video.videoWidth / 700; // limit width to 700px
+                    canvas.width = 700;
+                    canvas.height = video.videoHeight * ratio; // match height to size ratio
+
+                    video.play();
+                };
+            })
+            .catch(function(err) {
+                console.log(err.name + ': ' + err.message);
+                // if an error occurs, make sure that the media modal is hidden
+                $('#media-modal').modal('hide');
+            });
+    }).bind(this),
+
+    // read a program from a media device and import it
+    importImgFromMedia: (() => {}).bind(this),
 
     // return the colour blocks in the current grid, with arbitrary unique labels, and the number
     // of cells in each colour block

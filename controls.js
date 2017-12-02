@@ -1,5 +1,6 @@
 import React from 'react';
 
+import MediaModal from './mediaModal.js';
 import ColourPicker from './colourPicker.js';
 
 class Controls extends React.Component {
@@ -88,10 +89,9 @@ class Controls extends React.Component {
     }
 }
 
-const ImportExportMenu = ({ isInterpreting, importImg, exportPng }) => [
-    <div className="btn-group">
+const ImportExportMenu = ({ isInterpreting, importImgFromFile, processMedia, exportPng }) => [
+    <div className="btn-group" key="import-btn">
         <button
-            key="import-btn"
             type="button"
             className="btn btn-primary dropdown-toggle"
             data-toggle="dropdown"
@@ -105,7 +105,7 @@ const ImportExportMenu = ({ isInterpreting, importImg, exportPng }) => [
             <li onClick={() => document.getElementById('fileChooser').click()}>
                 <a href="#">From file</a>
             </li>
-            <li>
+            <li data-toggle="modal" data-target="#media-modal" onClick={() => processMedia()}>
                 <a href="#">From camera</a>
             </li>
         </ul>
@@ -117,10 +117,11 @@ const ImportExportMenu = ({ isInterpreting, importImg, exportPng }) => [
         accept="image/png, image/bmp, image/jpeg"
         style={{ display: 'none' }}
         onChange={event => {
-            importImg(event.target.files[0]);
+            importImgFromFile(event.target.files[0]);
             event.target.value = '';
         }}
     />,
+    <MediaModal key="media-modal" />,
 
     <div key="export-btn" className="btn-group">
         <button
