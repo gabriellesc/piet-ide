@@ -247,16 +247,47 @@ var ImportExportMenu = function ImportExportMenu(_ref) {
     var isInterpreting = _ref.isInterpreting,
         importImg = _ref.importImg,
         exportPng = _ref.exportPng;
-    return [_react2.default.createElement('input', {
-        key: 'import-btn',
-        type: 'button',
-        className: 'btn btn-primary',
-        value: 'Import',
-        disabled: isInterpreting ? 'disabled' : '',
-        onClick: function onClick() {
-            return document.getElementById('fileChooser').click();
-        }
-    }), _react2.default.createElement('input', {
+    return [_react2.default.createElement(
+        'div',
+        { className: 'btn-group' },
+        _react2.default.createElement(
+            'button',
+            {
+                key: 'import-btn',
+                type: 'button',
+                className: 'btn btn-primary dropdown-toggle',
+                'data-toggle': 'dropdown',
+                'aria-haspopup': 'true',
+                'aria-expanded': 'false',
+                disabled: isInterpreting ? 'disabled' : '' },
+            'Import\xA0',
+            _react2.default.createElement('span', { className: 'caret' })
+        ),
+        _react2.default.createElement(
+            'ul',
+            { className: 'dropdown-menu' },
+            _react2.default.createElement(
+                'li',
+                { onClick: function onClick() {
+                        return document.getElementById('fileChooser').click();
+                    } },
+                _react2.default.createElement(
+                    'a',
+                    { href: '#' },
+                    'From file'
+                )
+            ),
+            _react2.default.createElement(
+                'li',
+                null,
+                _react2.default.createElement(
+                    'a',
+                    { href: '#' },
+                    'From camera'
+                )
+            )
+        )
+    ), _react2.default.createElement('input', {
         key: 'hidden-file-input',
         id: 'fileChooser',
         type: 'file',

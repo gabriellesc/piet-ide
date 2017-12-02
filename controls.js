@@ -89,14 +89,27 @@ class Controls extends React.Component {
 }
 
 const ImportExportMenu = ({ isInterpreting, importImg, exportPng }) => [
-    <input
-        key="import-btn"
-        type="button"
-        className="btn btn-primary"
-        value="Import"
-        disabled={isInterpreting ? 'disabled' : ''}
-        onClick={() => document.getElementById('fileChooser').click()}
-    />,
+    <div className="btn-group">
+        <button
+            key="import-btn"
+            type="button"
+            className="btn btn-primary dropdown-toggle"
+            data-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="false"
+            disabled={isInterpreting ? 'disabled' : ''}>
+            Import&nbsp;
+            <span className="caret" />
+        </button>
+        <ul className="dropdown-menu">
+            <li onClick={() => document.getElementById('fileChooser').click()}>
+                <a href="#">From file</a>
+            </li>
+            <li>
+                <a href="#">From camera</a>
+            </li>
+        </ul>
+    </div>,
     <input
         key="hidden-file-input"
         id="fileChooser"
