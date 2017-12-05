@@ -85,7 +85,7 @@ class MediaModal extends React.Component {
                             </button>
                             <button
                                 type="button"
-                                className="btn btn-info"
+                                className="btn btn-default"
                                 title="Select a new photo file and clear annotations"
                                 onClick={() => document.getElementById('photoChooser').click()}>
                                 Select photo from file

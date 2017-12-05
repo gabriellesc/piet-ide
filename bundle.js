@@ -1292,6 +1292,7 @@ var appState = {
                             canvas.height = img.bitmap.height;
                             canvas.width = img.bitmap.width;
 
+                            ctx.resetTransform();
                             ctx.drawImage(imgElem, 0, 0);
 
                             // switch photo mode
@@ -1332,6 +1333,10 @@ var appState = {
                     }
                     canvas.width = video.videoWidth * ratio;
                     canvas.height = video.videoHeight * ratio;
+
+                    // flip frames
+                    ctx.setTransform(-1, 0, 0, 1, canvas.width, 0);
+
                     video.play();
                 };
             }).catch(function (err) {
@@ -2560,7 +2565,7 @@ var MediaModal = function (_React$Component) {
                                 'button',
                                 {
                                     type: 'button',
-                                    className: 'btn btn-info',
+                                    className: 'btn btn-default',
                                     title: 'Select a new photo file and clear annotations',
                                     onClick: function onClick() {
                                         return document.getElementById('photoChooser').click();

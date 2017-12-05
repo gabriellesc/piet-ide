@@ -311,6 +311,7 @@ const appState = {
                             canvas.height = img.bitmap.height;
                             canvas.width = img.bitmap.width;
 
+                            ctx.resetTransform();
                             ctx.drawImage(imgElem, 0, 0);
 
                             // switch photo mode
@@ -349,6 +350,10 @@ const appState = {
                         }
                         canvas.width = video.videoWidth * ratio;
                         canvas.height = video.videoHeight * ratio;
+
+                        // flip frames
+                        ctx.setTransform(-1, 0, 0, 1, canvas.width, 0);
+
                         video.play();
                     };
                 })
