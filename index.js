@@ -12,26 +12,6 @@ import interpret from './interpreter.js';
 import { commands } from './orderedCommands.js';
 import { colours, WHITE, BLACK } from './colours.js';
 
-/* re-order commands to correspond to colours order based on currently-selected colour
- * NOTE: this was used to compute all command orders, which were saved to be re-used;
- * the function is no longer in use
-const mapCommandsToColours = baseColour => {
-    const rotateArray = (array, pivot) => array.slice(-pivot).concat(array.slice(0, -pivot));
-
-    let hShift = baseColour % 6;
-    let lShift = Math.floor(baseColour / 6);
-
-    let map = [
-        rotateArray(initCommands.slice(0, 6), hShift),
-        rotateArray(initCommands.slice(6, 12), hShift),
-        rotateArray(initCommands.slice(12), hShift),
-    ];
-
-    map = rotateArray(map, lShift);
-    return [...map[0], ...map[1], ...map[2]];
-};
-*/
-
 const HEIGHT = 10, // initial height
     WIDTH = 10; // initial width
 
@@ -207,7 +187,7 @@ const appState = {
     }).bind(this),
 
     // import a program from an image file
-    importImgFromFile: file => {
+    importImgFromFile: (file => {
         let reader = new FileReader();
 
         // map hex values to colour indices
@@ -243,59 +223,7 @@ const appState = {
             });
         };
         reader.readAsArrayBuffer(file);
-    },
-
-    // process video from media
-    processMedia: (() => {
-        navigator.mediaDevices
-            .getUserMedia({ video: true })
-            .then(function(mediaStream) {
-                var video = document.querySelector('video'),
-                    canvas = document.querySelector('canvas'),
-                    ctx = canvas.getContext('2d'),
-                    intervalId;
-
-                video.srcObject = mediaStream;
-
-                function render() {
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                }
-
-                // set up render to be called on at an interval until the video "ends"
-                video.onplay = () => {
-                    // as soon as the first track ends, stop the timer
-                    video.srcObject
-                        .getTracks()
-                        .forEach(track => (track.onended = () => clearInterval(intervalId)));
-
-                    intervalId = setInterval(render, 10);
-                };
-
-                video.onloadedmetadata = function(e) {
-                    // set the canvas size, limiting width to 700px
-                    var ratio = 700 / video.videoWidth;
-                    canvas.width = 700;
-                    canvas.height = video.videoHeight * ratio; // match height to size ratio
-                    video.play();
-                };
-            })
-            .catch(function(err) {
-                console.log(err.name + ': ' + err.message);
-
-                // if an error occurs, make sure that the media modal is hidden
-                $('#media-modal').modal('hide');
-
-                // close the stream if it has been opened
-                var video = document.querySelector('video');
-                if (video.srcObject) {
-                    video.srcObject.getTracks().forEach(track => track.stop());
-                    video.srcObject = null;
-                }
-            });
     }).bind(this),
-
-    // read a program from a media device and import it
-    importImgFromMedia: (() => {}).bind(this),
 
     // return the colour blocks in the current grid, with arbitrary unique labels, and the number
     // of cells in each colour block
@@ -353,6 +281,103 @@ const appState = {
 
         appState.notify();
     }).bind(this),
+
+    photo: {
+        photoMode: 'CAMERA', // one of CAMERA, EDIT, 'READY'
+
+        camera: null, // intervalId if camera is being run and rendered on canvas
+
+        // import a photo and draw on canvas
+        importPhotoFromFile: ((file, canvas) => {
+            let reader = new FileReader();
+
+            reader.onload = event => {
+                Jimp.read(Buffer.from(event.target.result), function(readErr, img) {
+                    // rescale the image, limiting width to 700px and height to 500px
+                    if (img.bitmap.width > 700 || img.bitmap.height > 500) {
+                        img.scaleToFit(700, 500);
+                    }
+
+                    // convert the image to a data URI and draw it on the canvas
+                    img.getBase64(Jimp.AUTO, function(urlErr, url) {
+                        var ctx = canvas.getContext('2d'),
+                            imgElem = new Image();
+
+                        clearInterval(appState.photo.camera); // stop rendering
+
+                        imgElem.src = url;
+                        imgElem.onload = () => {
+                            // resize the canvas
+                            canvas.height = img.bitmap.height;
+                            canvas.width = img.bitmap.width;
+
+                            ctx.drawImage(imgElem, 0, 0);
+
+                            // switch photo mode
+                            appState.photo.photoMode = 'EDIT';
+
+                            appState.notify();
+                        };
+                    });
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        }).bind(this),
+
+        // render video from camera on canvas
+        renderCamera: ((video, canvas) => {
+            // switch photo mode
+            appState.photo.photoMode = 'CAMERA';
+
+            navigator.mediaDevices
+                .getUserMedia({ video: true })
+                .then(function(mediaStream) {
+                    video.srcObject = mediaStream;
+
+                    // function to display a frame from the video source on a canvas
+                    var ctx = canvas.getContext('2d');
+                    const render = () => ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                    // set up render to be called on at an interval
+                    video.onplay = () => (appState.photo.camera = setInterval(render, 10));
+
+                    video.onloadedmetadata = function(e) {
+                        // set the canvas size, limiting width to 700px and height to 500px
+                        var ratio = 700 / video.videoWidth;
+                        if (video.videoHeight * ratio > 500) {
+                            ratio = 500 / video.videoHeight;
+                        }
+                        canvas.width = video.videoWidth * ratio;
+                        canvas.height = video.videoHeight * ratio;
+                        video.play();
+                    };
+                })
+                .catch(function(err) {
+                    console.log(err.name + ': ' + err.message);
+
+                    // close the stream if it has been opened
+                    if (video.srcObject) {
+                        video.srcObject.getTracks().forEach(track => track.stop());
+                        video.srcObject = null;
+                    }
+
+                    // clear the interval if it was started
+                    clearInterval(appState.photo.camera);
+                });
+
+            appState.notify();
+        }).bind(this),
+
+        // save the current video frame
+        takePhoto: (() => {
+            clearInterval(appState.photo.camera); // stop rendering
+
+            // switch photo mode
+            appState.photo.photoMode = 'EDIT';
+
+            appState.notify();
+        }).bind(this),
+    },
 
     debug: {
         debugIsVisible: false, // initially, debugger is not visible

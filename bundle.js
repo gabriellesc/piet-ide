@@ -247,11 +247,7 @@ var Controls = function (_React$Component) {
     return Controls;
 }(_react2.default.Component);
 
-var ImportExportMenu = function ImportExportMenu(_ref) {
-    var isInterpreting = _ref.isInterpreting,
-        importImgFromFile = _ref.importImgFromFile,
-        processMedia = _ref.processMedia,
-        exportPng = _ref.exportPng;
+var ImportExportMenu = function ImportExportMenu(props) {
     return [_react2.default.createElement(
         'div',
         { className: 'btn-group', key: 'import-btn' },
@@ -263,7 +259,7 @@ var ImportExportMenu = function ImportExportMenu(_ref) {
                 'data-toggle': 'dropdown',
                 'aria-haspopup': 'true',
                 'aria-expanded': 'false',
-                disabled: isInterpreting ? 'disabled' : '' },
+                disabled: props.isInterpreting ? 'disabled' : '' },
             'Import\xA0',
             _react2.default.createElement('span', { className: 'caret' })
         ),
@@ -273,7 +269,7 @@ var ImportExportMenu = function ImportExportMenu(_ref) {
             _react2.default.createElement(
                 'li',
                 { onClick: function onClick() {
-                        return document.getElementById('fileChooser').click();
+                        return document.getElementById('imgFileChooser').click();
                     } },
                 _react2.default.createElement(
                     'a',
@@ -283,27 +279,25 @@ var ImportExportMenu = function ImportExportMenu(_ref) {
             ),
             _react2.default.createElement(
                 'li',
-                { 'data-toggle': 'modal', 'data-target': '#media-modal', onClick: function onClick() {
-                        return processMedia();
-                    } },
+                { 'data-toggle': 'modal', 'data-target': '#media-modal' },
                 _react2.default.createElement(
                     'a',
                     { href: '#' },
-                    'From camera'
+                    'From photo'
                 )
             )
         )
     ), _react2.default.createElement('input', {
         key: 'hidden-file-input',
-        id: 'fileChooser',
+        id: 'imgFileChooser',
         type: 'file',
         accept: 'image/png, image/bmp, image/jpeg',
         style: { display: 'none' },
         onChange: function onChange(event) {
-            importImgFromFile(event.target.files[0]);
+            props.importImgFromFile(event.target.files[0]);
             event.target.value = '';
         }
-    }), _react2.default.createElement(_mediaModal2.default, { key: 'media-modal' }), _react2.default.createElement(
+    }), _react2.default.createElement(_mediaModal2.default, _extends({ key: 'media-modal' }, props.photo)), _react2.default.createElement(
         'div',
         { key: 'export-btn', className: 'btn-group' },
         _react2.default.createElement(
@@ -312,7 +306,7 @@ var ImportExportMenu = function ImportExportMenu(_ref) {
                 type: 'button',
                 className: 'btn btn-info',
                 onClick: function onClick() {
-                    exportPng(parseInt(document.getElementById('scale').value));
+                    props.exportPng(parseInt(document.getElementById('scale').value));
                 } },
             'Export to PNG'
         ),
@@ -360,9 +354,9 @@ var ImportExportMenu = function ImportExportMenu(_ref) {
     )];
 };
 
-var PaintModeSwitch = function PaintModeSwitch(_ref2) {
-    var paintMode = _ref2.paintMode,
-        selectPaintMode = _ref2.selectPaintMode;
+var PaintModeSwitch = function PaintModeSwitch(_ref) {
+    var paintMode = _ref.paintMode,
+        selectPaintMode = _ref.selectPaintMode;
     return _react2.default.createElement(
         'div',
         { className: 'btn-group', role: 'group', style: { float: 'right' } },
@@ -393,9 +387,9 @@ var PaintModeSwitch = function PaintModeSwitch(_ref2) {
     );
 };
 
-var BSDisplaySwitch = function BSDisplaySwitch(_ref3) {
-    var displayBS = _ref3.displayBS,
-        toggleDisplayBS = _ref3.toggleDisplayBS;
+var BSDisplaySwitch = function BSDisplaySwitch(_ref2) {
+    var displayBS = _ref2.displayBS,
+        toggleDisplayBS = _ref2.toggleDisplayBS;
     return displayBS ? _react2.default.createElement('i', {
         className: 'glyphicon glyphicon-eye-open',
         title: 'Show block sizes',
@@ -987,26 +981,6 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-/* re-order commands to correspond to colours order based on currently-selected colour
- * NOTE: this was used to compute all command orders, which were saved to be re-used;
- * the function is no longer in use
-const mapCommandsToColours = baseColour => {
-    const rotateArray = (array, pivot) => array.slice(-pivot).concat(array.slice(0, -pivot));
-
-    let hShift = baseColour % 6;
-    let lShift = Math.floor(baseColour / 6);
-
-    let map = [
-        rotateArray(initCommands.slice(0, 6), hShift),
-        rotateArray(initCommands.slice(6, 12), hShift),
-        rotateArray(initCommands.slice(12), hShift),
-    ];
-
-    map = rotateArray(map, lShift);
-    return [...map[0], ...map[1], ...map[2]];
-};
-*/
-
 var HEIGHT = 10,
     // initial height
 WIDTH = 10; // initial width
@@ -1194,7 +1168,7 @@ var appState = {
     }.bind(undefined),
 
     // import a program from an image file
-    importImgFromFile: function importImgFromFile(file) {
+    importImgFromFile: function (file) {
         var reader = new FileReader();
 
         // map hex values to colour indices
@@ -1232,60 +1206,7 @@ var appState = {
             });
         };
         reader.readAsArrayBuffer(file);
-    },
-
-    // process video from media
-    processMedia: function () {
-        navigator.mediaDevices.getUserMedia({ video: true }).then(function (mediaStream) {
-            var video = document.querySelector('video'),
-                canvas = document.querySelector('canvas'),
-                ctx = canvas.getContext('2d'),
-                intervalId;
-
-            video.srcObject = mediaStream;
-
-            function render() {
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            }
-
-            // set up render to be called on at an interval until the video "ends"
-            video.onplay = function () {
-                // as soon as the first track ends, stop the timer
-                video.srcObject.getTracks().forEach(function (track) {
-                    return track.onended = function () {
-                        return clearInterval(intervalId);
-                    };
-                });
-
-                intervalId = setInterval(render, 10);
-            };
-
-            video.onloadedmetadata = function (e) {
-                // set the canvas size, limiting width to 700px
-                var ratio = 700 / video.videoWidth;
-                canvas.width = 700;
-                canvas.height = video.videoHeight * ratio; // match height to size ratio
-                video.play();
-            };
-        }).catch(function (err) {
-            console.log(err.name + ': ' + err.message);
-
-            // if an error occurs, make sure that the media modal is hidden
-            $('#media-modal').modal('hide');
-
-            // close the stream if it has been opened
-            var video = document.querySelector('video');
-            if (video.srcObject) {
-                video.srcObject.getTracks().forEach(function (track) {
-                    return track.stop();
-                });
-                video.srcObject = null;
-            }
-        });
     }.bind(undefined),
-
-    // read a program from a media device and import it
-    importImgFromMedia: function () {}.bind(undefined),
 
     // return the colour blocks in the current grid, with arbitrary unique labels, and the number
     // of cells in each colour block
@@ -1341,6 +1262,106 @@ var appState = {
 
         appState.notify();
     }.bind(undefined),
+
+    photo: {
+        photoMode: 'CAMERA', // one of CAMERA, EDIT, 'READY'
+
+        camera: null, // intervalId if camera is being run and rendered on canvas
+
+        // import a photo and draw on canvas
+        importPhotoFromFile: function (file, canvas) {
+            var reader = new FileReader();
+
+            reader.onload = function (event) {
+                Jimp.read(Buffer.from(event.target.result), function (readErr, img) {
+                    // rescale the image, limiting width to 700px and height to 500px
+                    if (img.bitmap.width > 700 || img.bitmap.height > 500) {
+                        img.scaleToFit(700, 500);
+                    }
+
+                    // convert the image to a data URI and draw it on the canvas
+                    img.getBase64(Jimp.AUTO, function (urlErr, url) {
+                        var ctx = canvas.getContext('2d'),
+                            imgElem = new Image();
+
+                        clearInterval(appState.photo.camera); // stop rendering
+
+                        imgElem.src = url;
+                        imgElem.onload = function () {
+                            // resize the canvas
+                            canvas.height = img.bitmap.height;
+                            canvas.width = img.bitmap.width;
+
+                            ctx.drawImage(imgElem, 0, 0);
+
+                            // switch photo mode
+                            appState.photo.photoMode = 'EDIT';
+
+                            appState.notify();
+                        };
+                    });
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        }.bind(undefined),
+
+        // render video from camera on canvas
+        renderCamera: function (video, canvas) {
+            // switch photo mode
+            appState.photo.photoMode = 'CAMERA';
+
+            navigator.mediaDevices.getUserMedia({ video: true }).then(function (mediaStream) {
+                video.srcObject = mediaStream;
+
+                // function to display a frame from the video source on a canvas
+                var ctx = canvas.getContext('2d');
+                var render = function render() {
+                    return ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                };
+
+                // set up render to be called on at an interval
+                video.onplay = function () {
+                    return appState.photo.camera = setInterval(render, 10);
+                };
+
+                video.onloadedmetadata = function (e) {
+                    // set the canvas size, limiting width to 700px and height to 500px
+                    var ratio = 700 / video.videoWidth;
+                    if (video.videoHeight * ratio > 500) {
+                        ratio = 500 / video.videoHeight;
+                    }
+                    canvas.width = video.videoWidth * ratio;
+                    canvas.height = video.videoHeight * ratio;
+                    video.play();
+                };
+            }).catch(function (err) {
+                console.log(err.name + ': ' + err.message);
+
+                // close the stream if it has been opened
+                if (video.srcObject) {
+                    video.srcObject.getTracks().forEach(function (track) {
+                        return track.stop();
+                    });
+                    video.srcObject = null;
+                }
+
+                // clear the interval if it was started
+                clearInterval(appState.photo.camera);
+            });
+
+            appState.notify();
+        }.bind(undefined),
+
+        // save the current video frame
+        takePhoto: function () {
+            clearInterval(appState.photo.camera); // stop rendering
+
+            // switch photo mode
+            appState.photo.photoMode = 'EDIT';
+
+            appState.notify();
+        }.bind(undefined)
+    },
 
     debug: {
         debugIsVisible: false, // initially, debugger is not visible
@@ -2384,7 +2405,7 @@ function interpret(grid, blocks, blockSizes, getInputNum, getInputChar) {
 exports.default = interpret;
 
 },{"./colours.js":2,"./orderedCommands.js":365}],9:[function(require,module,exports){
-"use strict";
+'use strict';
 
 Object.defineProperty(exports, "__esModule", {
     value: true
@@ -2392,7 +2413,7 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _react = require("react");
+var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
@@ -2414,96 +2435,153 @@ var MediaModal = function (_React$Component) {
     }
 
     _createClass(MediaModal, [{
-        key: "closeMediaStream",
+        key: 'closeMediaStream',
         value: function closeMediaStream() {
-            this.video.srcObject.getTracks().forEach(function (track) {
-                return track.stop();
-            });
-            this.video.srcObject = null;
+            if (this.video.srcObject) {
+                this.video.srcObject.getTracks().forEach(function (track) {
+                    return track.stop();
+                });
+                this.video.srcObject = null;
+            }
         }
+
+        // when the component is mounted, add event listeners for modal show/hide events, to trigger
+        // video stream opening/closing
+
     }, {
-        key: "render",
-        value: function render() {
+        key: 'componentDidMount',
+        value: function componentDidMount() {
             var _this2 = this;
 
+            $('#media-modal').on('show.bs.modal', function () {
+                return _this2.props.renderCamera(_this2.video, _this2.canvas);
+            });
+            $('#media-modal').on('hidden.bs.modal', function () {
+                return _this2.closeMediaStream();
+            });
+        }
+    }, {
+        key: 'render',
+        value: function render() {
+            var _this3 = this;
+
             return _react2.default.createElement(
-                "div",
+                'div',
                 {
-                    className: "modal fade",
-                    id: "media-modal",
-                    tabIndex: "-1",
-                    role: "dialog",
-                    "aria-labelledby": "myModalLabel" },
+                    className: 'modal fade',
+                    id: 'media-modal',
+                    tabIndex: '-1',
+                    role: 'dialog',
+                    'aria-labelledby': 'myModalLabel' },
                 _react2.default.createElement(
-                    "div",
-                    { className: "modal-dialog", role: "document", style: { width: '730px' } },
+                    'div',
+                    { className: 'modal-dialog', role: 'document', style: { width: '730px' } },
                     _react2.default.createElement(
-                        "div",
-                        { className: "modal-content" },
+                        'div',
+                        { className: 'modal-content' },
                         _react2.default.createElement(
-                            "div",
-                            { className: "modal-header" },
+                            'div',
+                            { className: 'modal-header' },
                             _react2.default.createElement(
-                                "button",
+                                'button',
                                 {
-                                    type: "button",
-                                    className: "close",
-                                    "data-dismiss": "modal",
-                                    "aria-label": "Close",
-                                    onClick: function onClick() {
-                                        return _this2.closeMediaStream();
-                                    } },
+                                    type: 'button',
+                                    className: 'close',
+                                    'data-dismiss': 'modal',
+                                    'aria-label': 'Close' },
                                 _react2.default.createElement(
-                                    "span",
-                                    { "aria-hidden": "true" },
-                                    "\xD7"
+                                    'span',
+                                    { 'aria-hidden': 'true' },
+                                    '\xD7'
                                 )
                             ),
                             _react2.default.createElement(
-                                "h4",
-                                { className: "modal-title", id: "myModalLabel" },
-                                "Modal title"
+                                'h4',
+                                { className: 'modal-title' },
+                                'Import a program from a photo'
                             )
                         ),
                         _react2.default.createElement(
-                            "div",
-                            { className: "modal-body" },
-                            _react2.default.createElement("video", {
+                            'div',
+                            { className: 'modal-body' },
+                            _react2.default.createElement('input', {
+                                id: 'photoChooser',
+                                type: 'file',
+                                accept: 'image/png, image/bmp, image/jpeg',
                                 style: { display: 'none' },
-                                ref: function ref(video) {
-                                    return _this2.video = video;
+                                onChange: function onChange(event) {
+                                    _this3.props.importPhotoFromFile(event.target.files[0], _this3.canvas);
+                                    event.target.value = '';
                                 }
                             }),
-                            _react2.default.createElement("canvas", { width: "0", height: "0" })
+                            _react2.default.createElement('video', {
+                                id: 'hidden-video',
+                                style: { display: 'none' },
+                                ref: function ref(video) {
+                                    return _this3.video = video;
+                                }
+                            }),
+                            _react2.default.createElement(
+                                'center',
+                                null,
+                                _react2.default.createElement('canvas', {
+                                    id: 'photo-canvas',
+                                    width: '0',
+                                    height: '0',
+                                    ref: function ref(canvas) {
+                                        return _this3.canvas = canvas;
+                                    }
+                                }),
+                                this.props.photoMode == 'CAMERA' && _react2.default.createElement('div', {
+                                    style: {
+                                        width: '40px',
+                                        height: '40px',
+                                        background: 'red',
+                                        borderRadius: '20px',
+                                        border: '6px double white',
+                                        marginBottom: '-35px',
+                                        cursor: 'pointer'
+                                    },
+                                    onClick: function onClick() {
+                                        return _this3.props.takePhoto();
+                                    }
+                                })
+                            )
                         ),
                         _react2.default.createElement(
-                            "div",
-                            { className: "modal-footer" },
+                            'div',
+                            { className: 'modal-footer' },
                             _react2.default.createElement(
-                                "button",
-                                {
-                                    type: "button",
-                                    className: "btn btn-default",
-                                    "data-dismiss": "modal",
-                                    onClick: function onClick() {
-                                        return _this2.closeMediaStream();
-                                    } },
-                                "Close"
+                                'button',
+                                { type: 'button', className: 'btn btn-default', 'data-dismiss': 'modal' },
+                                'Close'
                             ),
                             _react2.default.createElement(
-                                "button",
-                                { type: "button", className: "btn btn-warning", onClick: function onClick() {} },
-                                "Restart"
-                            ),
-                            _react2.default.createElement(
-                                "button",
+                                'button',
                                 {
-                                    type: "button",
-                                    className: "btn btn-primary",
+                                    type: 'button',
+                                    className: 'btn btn-info',
+                                    title: 'Select a new photo file and clear annotations',
                                     onClick: function onClick() {
-                                        return _this2.closeMediaStream();
+                                        return document.getElementById('photoChooser').click();
                                     } },
-                                "Complete ",
+                                'Select photo from file'
+                            ),
+                            this.props.photoMode == 'EDIT' && _react2.default.createElement(
+                                'button',
+                                {
+                                    type: 'button',
+                                    className: 'btn btn-default',
+                                    title: 'Return to the camera and clear annotations',
+                                    onClick: function onClick() {
+                                        return _this3.props.renderCamera(_this3.video, _this3.canvas);
+                                    } },
+                                _react2.default.createElement('i', { className: 'glyphicon glyphicon-camera' })
+                            ),
+                            this.props.photoMode == 'READY' && _react2.default.createElement(
+                                'button',
+                                { type: 'button', className: 'btn btn-primary' },
+                                'Complete ',
                                 'import'
                             )
                         )

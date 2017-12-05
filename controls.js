@@ -89,7 +89,7 @@ class Controls extends React.Component {
     }
 }
 
-const ImportExportMenu = ({ isInterpreting, importImgFromFile, processMedia, exportPng }) => [
+const ImportExportMenu = props => [
     <div className="btn-group" key="import-btn">
         <button
             type="button"
@@ -97,38 +97,38 @@ const ImportExportMenu = ({ isInterpreting, importImgFromFile, processMedia, exp
             data-toggle="dropdown"
             aria-haspopup="true"
             aria-expanded="false"
-            disabled={isInterpreting ? 'disabled' : ''}>
+            disabled={props.isInterpreting ? 'disabled' : ''}>
             Import&nbsp;
             <span className="caret" />
         </button>
         <ul className="dropdown-menu">
-            <li onClick={() => document.getElementById('fileChooser').click()}>
+            <li onClick={() => document.getElementById('imgFileChooser').click()}>
                 <a href="#">From file</a>
             </li>
-            <li data-toggle="modal" data-target="#media-modal" onClick={() => processMedia()}>
-                <a href="#">From camera</a>
+            <li data-toggle="modal" data-target="#media-modal">
+                <a href="#">From photo</a>
             </li>
         </ul>
     </div>,
     <input
         key="hidden-file-input"
-        id="fileChooser"
+        id="imgFileChooser"
         type="file"
         accept="image/png, image/bmp, image/jpeg"
         style={{ display: 'none' }}
         onChange={event => {
-            importImgFromFile(event.target.files[0]);
+            props.importImgFromFile(event.target.files[0]);
             event.target.value = '';
         }}
     />,
-    <MediaModal key="media-modal" />,
+    <MediaModal key="media-modal" {...props.photo} />,
 
     <div key="export-btn" className="btn-group">
         <button
             type="button"
             className="btn btn-info"
             onClick={() => {
-                exportPng(parseInt(document.getElementById('scale').value));
+                props.exportPng(parseInt(document.getElementById('scale').value));
             }}>
             Export to PNG
         </button>
