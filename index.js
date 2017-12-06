@@ -283,13 +283,57 @@ const appState = {
     }).bind(this),
 
     photo: {
-        photoMode: 'CAMERA', // one of CAMERA, EDIT, 'READY'
+        /* one of:
+	   CAMERA (video),
+	   ANNOTATE-1 (marking program corners), 
+	   ANNOTATE-2 (marking codel corners), 
+	   ANNOTATE-3 (selecting codel colour),
+	   READY (fully annotated and ready for import)
+	*/
+        photoMode: 'CAMERA',
 
         camera: null, // intervalId if camera is being run and rendered on canvas
 
+        currPhoto: null, // current photo data (without annotations)
+        programCorners: [], // canvas coordinates of the marked program corners
+        codelCorners: [], // canvas coordinates of the marked codel corners
+        codelColour: null, // selected colour of marked codel
+
+        // reset photo state
+        resetPhoto: (() => {
+            let video = document.getElementById('hidden-video'),
+                canvas = document.getElementById('photo-canvas');
+
+            // clear any existing canvas
+            if (canvas) {
+                var ctx = canvas.getContext('2d');
+                ctx.setTransform(1, 0, 0, 0, 1, 0);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+
+            // close any open video streams
+            if (video && video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+
+            // clear current photo
+            appState.photo.currPhoto = null;
+
+            // clear any annotations
+            appState.photo.programCorners = [];
+            appState.photo.codelCorners = [];
+            appState.photo.codelColour = null;
+
+            // stop rendering
+            clearInterval(appState.photo.camera);
+            appState.photo.camera = null;
+        }).bind(this),
+
         // import a photo and draw on canvas
-        importPhotoFromFile: ((file, canvas) => {
-            let reader = new FileReader();
+        importPhotoFromFile: (file => {
+            let canvas = document.getElementById('photo-canvas'),
+                reader = new FileReader();
 
             reader.onload = event => {
                 Jimp.read(Buffer.from(event.target.result), function(readErr, img) {
@@ -303,19 +347,25 @@ const appState = {
                         var ctx = canvas.getContext('2d'),
                             imgElem = new Image();
 
-                        clearInterval(appState.photo.camera); // stop rendering
-
                         imgElem.src = url;
                         imgElem.onload = () => {
+                            appState.photo.resetPhoto();
+
                             // resize the canvas
                             canvas.height = img.bitmap.height;
                             canvas.width = img.bitmap.width;
 
-                            ctx.resetTransform();
                             ctx.drawImage(imgElem, 0, 0);
+                            // save the image
+                            appState.photo.currPhoto = ctx.getImageData(
+                                0,
+                                0,
+                                canvas.width,
+                                canvas.height
+                            );
 
                             // switch photo mode
-                            appState.photo.photoMode = 'EDIT';
+                            appState.photo.photoMode = 'ANNOTATE-1';
 
                             appState.notify();
                         };
@@ -326,9 +376,14 @@ const appState = {
         }).bind(this),
 
         // render video from camera on canvas
-        renderCamera: ((video, canvas) => {
+        renderCamera: (() => {
+            let video = document.getElementById('hidden-video'),
+                canvas = document.getElementById('photo-canvas');
+
             // switch photo mode
             appState.photo.photoMode = 'CAMERA';
+
+            appState.photo.resetPhoto();
 
             navigator.mediaDevices
                 .getUserMedia({ video: true })
@@ -359,15 +414,9 @@ const appState = {
                 })
                 .catch(function(err) {
                     console.log(err.name + ': ' + err.message);
+                    appState.photo.resetPhoto();
 
-                    // close the stream if it has been opened
-                    if (video.srcObject) {
-                        video.srcObject.getTracks().forEach(track => track.stop());
-                        video.srcObject = null;
-                    }
-
-                    // clear the interval if it was started
-                    clearInterval(appState.photo.camera);
+                    appState.notify();
                 });
 
             appState.notify();
@@ -377,8 +426,116 @@ const appState = {
         takePhoto: (() => {
             clearInterval(appState.photo.camera); // stop rendering
 
+            let canvas = document.getElementById('photo-canvas'),
+                ctx = canvas.getContext('2d');
+
+            // save the image
+            appState.photo.currPhoto = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            // unflip future drawing
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+
             // switch photo mode
-            appState.photo.photoMode = 'EDIT';
+            appState.photo.photoMode = 'ANNOTATE-1';
+
+            appState.notify();
+        }).bind(this),
+
+        // draw the current photo with annotations
+        drawPhoto: (() => {
+            let canvas = document.getElementById('photo-canvas'),
+                ctx = canvas.getContext('2d');
+
+            ctx.putImageData(appState.photo.currPhoto, 0, 0); // draw underlying saved image
+
+            // draw marked program corners
+            for (var [x, y] of appState.photo.programCorners) {
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.fillStyle = 'black';
+                ctx.fill();
+            }
+            // if there are four corners marked, draw a bounding polygon
+            if (appState.photo.programCorners.length == 4) {
+                ctx.beginPath();
+                ctx.moveTo();
+
+                ctx.setLineDash([5, 10]);
+                ctx.stroke();
+            }
+
+            // draw marked codel corners
+            for (var [x, y] of appState.photo.codelCorners) {
+                ctx.arc(x, y, 2, 0, 2 * Math.PI);
+                ctx.stroke();
+            }
+            // if there are four corners marked, draw a bounding polygon
+            if (appState.photo.programCorners.length == 4) {
+                ctx.beginPath();
+                ctx.moveTo();
+
+                ctx.setLineDash([2, 5]);
+                ctx.stroke();
+            }
+        }).bind(this),
+
+        // show a moving cursor on the canvas when annotating corners
+        showCursor: ((cursorX, cursorY) => {
+            if (['ANNOTATE-1', 'ANNOTATE-2'].includes(appState.photo.photoMode)) {
+                appState.photo.drawPhoto(); // redraw current photo
+
+                // calculate the mouse coordinates relative to the canvas
+                let canvas = document.getElementById('photo-canvas'),
+                    { left, top } = canvas.getBoundingClientRect(),
+                    x = cursorX - left,
+                    y = cursorY - top,
+                    ctx = canvas.getContext('2d');
+
+                // draw cursor
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.fillStyle = 'black';
+                ctx.fill();
+            }
+        }).bind(this),
+
+        // mark a corner (program or codel, depending on the mode)
+        markCorner: ((cursorX, cursorY) => {
+            if (!['ANNOTATE-1', 'ANNOTATE-2'].includes(appState.photo.photoMode)) {
+                return;
+            }
+
+            let canvas = document.getElementById('photo-canvas'),
+                { left, top } = canvas.getBoundingClientRect(),
+                x = cursorX - left,
+                y = cursorY - top;
+
+            switch (appState.photo.photoMode) {
+                case 'ANNOTATE-1':
+                    appState.photo.programCorners.push([x, y]);
+
+                    // if four corners have been marked, change annotation mode
+                    if (appState.photo.programCorners.length == 4) {
+                        appState.photo.photoMode = 'ANNOTATE-2';
+                    }
+                    break;
+
+                case 'ANNOTATE-2':
+                    appState.photo.codelCorners.push([x, y]);
+
+                    // if four corners have been marked, change annotation mode
+                    if (appState.photo.codelCorners.length == 4) {
+                        appState.photo.photoMode = 'ANNOTATE-3';
+                    }
+                    break;
+            }
+
+            appState.photo.drawPhoto(); // redraw current photo
 
             appState.notify();
         }).bind(this),

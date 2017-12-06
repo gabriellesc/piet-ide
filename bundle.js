@@ -941,6 +941,8 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 require('babel-polyfill');
 
 var _react = require('react');
@@ -1264,13 +1266,59 @@ var appState = {
     }.bind(undefined),
 
     photo: {
-        photoMode: 'CAMERA', // one of CAMERA, EDIT, 'READY'
+        /* one of:
+        CAMERA (video),
+        ANNOTATE-1 (marking program corners), 
+        ANNOTATE-2 (marking codel corners), 
+        ANNOTATE-3 (selecting codel colour),
+        READY (fully annotated and ready for import)
+        */
+        photoMode: 'CAMERA',
 
         camera: null, // intervalId if camera is being run and rendered on canvas
 
+        currPhoto: null, // current photo data (without annotations)
+        programCorners: [], // canvas coordinates of the marked program corners
+        codelCorners: [], // canvas coordinates of the marked codel corners
+        codelColour: null, // selected colour of marked codel
+
+        // reset photo state
+        resetPhoto: function () {
+            var video = document.getElementById('hidden-video'),
+                canvas = document.getElementById('photo-canvas');
+
+            // clear any existing canvas
+            if (canvas) {
+                var ctx = canvas.getContext('2d');
+                ctx.setTransform(1, 0, 0, 0, 1, 0);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+
+            // close any open video streams
+            if (video && video.srcObject) {
+                video.srcObject.getTracks().forEach(function (track) {
+                    return track.stop();
+                });
+                video.srcObject = null;
+            }
+
+            // clear current photo
+            appState.photo.currPhoto = null;
+
+            // clear any annotations
+            appState.photo.programCorners = [];
+            appState.photo.codelCorners = [];
+            appState.photo.codelColour = null;
+
+            // stop rendering
+            clearInterval(appState.photo.camera);
+            appState.photo.camera = null;
+        }.bind(undefined),
+
         // import a photo and draw on canvas
-        importPhotoFromFile: function (file, canvas) {
-            var reader = new FileReader();
+        importPhotoFromFile: function (file) {
+            var canvas = document.getElementById('photo-canvas'),
+                reader = new FileReader();
 
             reader.onload = function (event) {
                 Jimp.read(Buffer.from(event.target.result), function (readErr, img) {
@@ -1284,19 +1332,20 @@ var appState = {
                         var ctx = canvas.getContext('2d'),
                             imgElem = new Image();
 
-                        clearInterval(appState.photo.camera); // stop rendering
-
                         imgElem.src = url;
                         imgElem.onload = function () {
+                            appState.photo.resetPhoto();
+
                             // resize the canvas
                             canvas.height = img.bitmap.height;
                             canvas.width = img.bitmap.width;
 
-                            ctx.resetTransform();
                             ctx.drawImage(imgElem, 0, 0);
+                            // save the image
+                            appState.photo.currPhoto = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
                             // switch photo mode
-                            appState.photo.photoMode = 'EDIT';
+                            appState.photo.photoMode = 'ANNOTATE-1';
 
                             appState.notify();
                         };
@@ -1307,9 +1356,14 @@ var appState = {
         }.bind(undefined),
 
         // render video from camera on canvas
-        renderCamera: function (video, canvas) {
+        renderCamera: function () {
+            var video = document.getElementById('hidden-video'),
+                canvas = document.getElementById('photo-canvas');
+
             // switch photo mode
             appState.photo.photoMode = 'CAMERA';
+
+            appState.photo.resetPhoto();
 
             navigator.mediaDevices.getUserMedia({ video: true }).then(function (mediaStream) {
                 video.srcObject = mediaStream;
@@ -1341,17 +1395,9 @@ var appState = {
                 };
             }).catch(function (err) {
                 console.log(err.name + ': ' + err.message);
+                appState.photo.resetPhoto();
 
-                // close the stream if it has been opened
-                if (video.srcObject) {
-                    video.srcObject.getTracks().forEach(function (track) {
-                        return track.stop();
-                    });
-                    video.srcObject = null;
-                }
-
-                // clear the interval if it was started
-                clearInterval(appState.photo.camera);
+                appState.notify();
             });
 
             appState.notify();
@@ -1361,8 +1407,175 @@ var appState = {
         takePhoto: function () {
             clearInterval(appState.photo.camera); // stop rendering
 
+            var canvas = document.getElementById('photo-canvas'),
+                ctx = canvas.getContext('2d');
+
+            // save the image
+            appState.photo.currPhoto = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            // unflip future drawing
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+
             // switch photo mode
-            appState.photo.photoMode = 'EDIT';
+            appState.photo.photoMode = 'ANNOTATE-1';
+
+            appState.notify();
+        }.bind(undefined),
+
+        // draw the current photo with annotations
+        drawPhoto: function () {
+            var canvas = document.getElementById('photo-canvas'),
+                ctx = canvas.getContext('2d');
+
+            ctx.putImageData(appState.photo.currPhoto, 0, 0); // draw underlying saved image
+
+            // draw marked program corners
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+                for (var _iterator = appState.photo.programCorners[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var _ref2 = _step.value;
+
+                    var _ref3 = _slicedToArray(_ref2, 2);
+
+                    var x = _ref3[0];
+                    var y = _ref3[1];
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.fillStyle = 'black';
+                    ctx.fill();
+                }
+                // if there are four corners marked, draw a bounding polygon
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
+            }
+
+            if (appState.photo.programCorners.length == 4) {
+                ctx.beginPath();
+                ctx.moveTo();
+
+                ctx.setLineDash([5, 10]);
+                ctx.stroke();
+            }
+
+            // draw marked codel corners
+            var _iteratorNormalCompletion2 = true;
+            var _didIteratorError2 = false;
+            var _iteratorError2 = undefined;
+
+            try {
+                for (var _iterator2 = appState.photo.codelCorners[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                    var _ref4 = _step2.value;
+
+                    var _ref5 = _slicedToArray(_ref4, 2);
+
+                    var x = _ref5[0];
+                    var y = _ref5[1];
+
+                    ctx.arc(x, y, 2, 0, 2 * Math.PI);
+                    ctx.stroke();
+                }
+                // if there are four corners marked, draw a bounding polygon
+            } catch (err) {
+                _didIteratorError2 = true;
+                _iteratorError2 = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                        _iterator2.return();
+                    }
+                } finally {
+                    if (_didIteratorError2) {
+                        throw _iteratorError2;
+                    }
+                }
+            }
+
+            if (appState.photo.programCorners.length == 4) {
+                ctx.beginPath();
+                ctx.moveTo();
+
+                ctx.setLineDash([2, 5]);
+                ctx.stroke();
+            }
+        }.bind(undefined),
+
+        // show a moving cursor on the canvas when annotating corners
+        showCursor: function (cursorX, cursorY) {
+            if (['ANNOTATE-1', 'ANNOTATE-2'].includes(appState.photo.photoMode)) {
+                appState.photo.drawPhoto(); // redraw current photo
+
+                // calculate the mouse coordinates relative to the canvas
+                var canvas = document.getElementById('photo-canvas'),
+                    _canvas$getBoundingCl = canvas.getBoundingClientRect(),
+                    left = _canvas$getBoundingCl.left,
+                    top = _canvas$getBoundingCl.top,
+                    x = cursorX - left,
+                    y = cursorY - top,
+                    ctx = canvas.getContext('2d');
+
+                // draw cursor
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.fillStyle = 'black';
+                ctx.fill();
+            }
+        }.bind(undefined),
+
+        // mark a corner (program or codel, depending on the mode)
+        markCorner: function (cursorX, cursorY) {
+            if (!['ANNOTATE-1', 'ANNOTATE-2'].includes(appState.photo.photoMode)) {
+                return;
+            }
+
+            var canvas = document.getElementById('photo-canvas'),
+                _canvas$getBoundingCl2 = canvas.getBoundingClientRect(),
+                left = _canvas$getBoundingCl2.left,
+                top = _canvas$getBoundingCl2.top,
+                x = cursorX - left,
+                y = cursorY - top;
+
+
+            switch (appState.photo.photoMode) {
+                case 'ANNOTATE-1':
+                    appState.photo.programCorners.push([x, y]);
+
+                    // if four corners have been marked, change annotation mode
+                    if (appState.photo.programCorners.length == 4) {
+                        appState.photo.photoMode = 'ANNOTATE-2';
+                    }
+                    break;
+
+                case 'ANNOTATE-2':
+                    appState.photo.codelCorners.push([x, y]);
+
+                    // if four corners have been marked, change annotation mode
+                    if (appState.photo.codelCorners.length == 4) {
+                        appState.photo.photoMode = 'ANNOTATE-3';
+                    }
+                    break;
+            }
+
+            appState.photo.drawPhoto(); // redraw current photo
 
             appState.notify();
         }.bind(undefined)
@@ -2440,29 +2653,17 @@ var MediaModal = function (_React$Component) {
     }
 
     _createClass(MediaModal, [{
-        key: 'closeMediaStream',
-        value: function closeMediaStream() {
-            if (this.video.srcObject) {
-                this.video.srcObject.getTracks().forEach(function (track) {
-                    return track.stop();
-                });
-                this.video.srcObject = null;
-            }
-        }
-
-        // when the component is mounted, add event listeners for modal show/hide events, to trigger
-        // video stream opening/closing
-
-    }, {
         key: 'componentDidMount',
+
+        // when the component is mounted, add event listeners for modal show/hide events
         value: function componentDidMount() {
             var _this2 = this;
 
             $('#media-modal').on('show.bs.modal', function () {
-                return _this2.props.renderCamera(_this2.video, _this2.canvas);
+                return _this2.props.renderCamera();
             });
             $('#media-modal').on('hidden.bs.modal', function () {
-                return _this2.closeMediaStream();
+                return _this2.props.resetPhoto();
             });
         }
     }, {
@@ -2510,12 +2711,14 @@ var MediaModal = function (_React$Component) {
                             'div',
                             { className: 'modal-body' },
                             _react2.default.createElement('input', {
-                                id: 'photoChooser',
                                 type: 'file',
                                 accept: 'image/png, image/bmp, image/jpeg',
                                 style: { display: 'none' },
+                                ref: function ref(fileChooser) {
+                                    return _this3.fileChooser = fileChooser;
+                                },
                                 onChange: function onChange(event) {
-                                    _this3.props.importPhotoFromFile(event.target.files[0], _this3.canvas);
+                                    _this3.props.importPhotoFromFile(event.target.files[0]);
                                     event.target.value = '';
                                 }
                             }),
@@ -2526,6 +2729,26 @@ var MediaModal = function (_React$Component) {
                                     return _this3.video = video;
                                 }
                             }),
+                            this.props.photoMode.startsWith('ANNOTATE') && _react2.default.createElement(
+                                'div',
+                                {
+                                    className: 'alert alert-info',
+                                    role: 'alert',
+                                    style: { marginBottom: '5px' } },
+                                _react2.default.createElement(
+                                    'b',
+                                    null,
+                                    'Step ',
+                                    this.props.photoMode.slice(-1),
+                                    '.'
+                                ),
+                                '\u2002',
+                                {
+                                    'ANNOTATE-1': 'Mark the four corners of the program',
+                                    'ANNOTATE-2': 'Mark the four corners of a single codel',
+                                    'ANNOTATE-3': 'Pick the correct colour of the codel'
+                                }[this.props.photoMode]
+                            ),
                             _react2.default.createElement(
                                 'center',
                                 null,
@@ -2535,6 +2758,12 @@ var MediaModal = function (_React$Component) {
                                     height: '0',
                                     ref: function ref(canvas) {
                                         return _this3.canvas = canvas;
+                                    },
+                                    onMouseMove: function onMouseMove(e) {
+                                        return _this3.props.showCursor(e.clientX, e.clientY);
+                                    },
+                                    onClick: function onClick(e) {
+                                        return _this3.props.markCorner(e.clientX, e.clientY);
                                     }
                                 }),
                                 this.props.photoMode == 'CAMERA' && _react2.default.createElement('div', {
@@ -2568,18 +2797,18 @@ var MediaModal = function (_React$Component) {
                                     className: 'btn btn-default',
                                     title: 'Select a new photo file and clear annotations',
                                     onClick: function onClick() {
-                                        return document.getElementById('photoChooser').click();
+                                        return _this3.fileChooser.click();
                                     } },
                                 'Select photo from file'
                             ),
-                            this.props.photoMode == 'EDIT' && _react2.default.createElement(
+                            this.props.photoMode.startsWith('ANNOTATE') && _react2.default.createElement(
                                 'button',
                                 {
                                     type: 'button',
                                     className: 'btn btn-default',
                                     title: 'Return to the camera and clear annotations',
                                     onClick: function onClick() {
-                                        return _this3.props.renderCamera(_this3.video, _this3.canvas);
+                                        return _this3.props.renderCamera();
                                     } },
                                 _react2.default.createElement('i', { className: 'glyphicon glyphicon-camera' })
                             ),

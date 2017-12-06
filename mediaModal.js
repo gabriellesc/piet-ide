@@ -1,20 +1,10 @@
 import React from 'react';
 
 class MediaModal extends React.Component {
-    closeMediaStream() {
-        if (this.video.srcObject) {
-            this.video.srcObject.getTracks().forEach(track => track.stop());
-            this.video.srcObject = null;
-        }
-    }
-
-    // when the component is mounted, add event listeners for modal show/hide events, to trigger
-    // video stream opening/closing
+    // when the component is mounted, add event listeners for modal show/hide events
     componentDidMount() {
-        $('#media-modal').on('show.bs.modal', () =>
-            this.props.renderCamera(this.video, this.canvas)
-        );
-        $('#media-modal').on('hidden.bs.modal', () => this.closeMediaStream());
+        $('#media-modal').on('show.bs.modal', () => this.props.renderCamera());
+        $('#media-modal').on('hidden.bs.modal', () => this.props.resetPhoto());
     }
 
     render() {
@@ -39,15 +29,12 @@ class MediaModal extends React.Component {
                         </div>
                         <div className="modal-body">
                             <input
-                                id="photoChooser"
                                 type="file"
                                 accept="image/png, image/bmp, image/jpeg"
                                 style={{ display: 'none' }}
+                                ref={fileChooser => (this.fileChooser = fileChooser)}
                                 onChange={event => {
-                                    this.props.importPhotoFromFile(
-                                        event.target.files[0],
-                                        this.canvas
-                                    );
+                                    this.props.importPhotoFromFile(event.target.files[0]);
                                     event.target.value = '';
                                 }}
                             />
@@ -56,12 +43,31 @@ class MediaModal extends React.Component {
                                 style={{ display: 'none' }}
                                 ref={video => (this.video = video)}
                             />
+
+                            {this.props.photoMode.startsWith('ANNOTATE') && (
+                                <div
+                                    className="alert alert-info"
+                                    role="alert"
+                                    style={{ marginBottom: '5px' }}>
+                                    <b>Step {this.props.photoMode.slice(-1)}.</b>&ensp;
+                                    {
+                                        {
+                                            'ANNOTATE-1': 'Mark the four corners of the program',
+                                            'ANNOTATE-2': 'Mark the four corners of a single codel',
+                                            'ANNOTATE-3': 'Pick the correct colour of the codel',
+                                        }[this.props.photoMode]
+                                    }
+                                </div>
+                            )}
+
                             <center>
                                 <canvas
                                     id="photo-canvas"
                                     width="0"
                                     height="0"
                                     ref={canvas => (this.canvas = canvas)}
+                                    onMouseMove={e => this.props.showCursor(e.clientX, e.clientY)}
+                                    onClick={e => this.props.markCorner(e.clientX, e.clientY)}
                                 />
                                 {this.props.photoMode == 'CAMERA' && (
                                     <div
@@ -87,16 +93,15 @@ class MediaModal extends React.Component {
                                 type="button"
                                 className="btn btn-default"
                                 title="Select a new photo file and clear annotations"
-                                onClick={() => document.getElementById('photoChooser').click()}>
+                                onClick={() => this.fileChooser.click()}>
                                 Select photo from file
                             </button>
-                            {this.props.photoMode == 'EDIT' && (
+                            {this.props.photoMode.startsWith('ANNOTATE') && (
                                 <button
                                     type="button"
                                     className="btn btn-default"
                                     title="Return to the camera and clear annotations"
-                                    onClick={() =>
-                                        this.props.renderCamera(this.video, this.canvas)}>
+                                    onClick={() => this.props.renderCamera()}>
                                     <i className="glyphicon glyphicon-camera" />
                                 </button>
                             )}
