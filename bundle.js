@@ -983,6 +983,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
 var HEIGHT = 10,
     // initial height
 WIDTH = 10; // initial width
@@ -1315,6 +1317,19 @@ var appState = {
             appState.photo.camera = null;
         }.bind(undefined),
 
+        // clear any annotations
+        clearAnnotations: function () {
+            appState.photo.programCorners = [];
+            appState.photo.codelCorners = [];
+            appState.photo.codelColour = null;
+
+            appState.photo.drawPhoto(); // redraw current photo
+
+            appState.photo.photoMode = 'ANNOTATE-1'; // switch photo mode
+
+            appState.notify();
+        }.bind(undefined),
+
         // import a photo and draw on canvas
         importPhotoFromFile: function (file) {
             var canvas = document.getElementById('photo-canvas'),
@@ -1428,6 +1443,10 @@ var appState = {
 
             ctx.putImageData(appState.photo.currPhoto, 0, 0); // draw underlying saved image
 
+            ctx.setLineDash([]);
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.fillStyle = 'black';
             // draw marked program corners
             var _iteratorNormalCompletion = true;
             var _didIteratorError = false;
@@ -1444,13 +1463,10 @@ var appState = {
 
                     ctx.beginPath();
                     ctx.arc(x, y, 3, 0, 2 * Math.PI);
-                    ctx.strokeStyle = 'white';
-                    ctx.lineWidth = 2;
                     ctx.stroke();
-                    ctx.fillStyle = 'black';
                     ctx.fill();
                 }
-                // if there are four corners marked, draw a bounding polygon
+                // draw marked codel corners
             } catch (err) {
                 _didIteratorError = true;
                 _iteratorError = err;
@@ -1466,15 +1482,6 @@ var appState = {
                 }
             }
 
-            if (appState.photo.programCorners.length == 4) {
-                ctx.beginPath();
-                ctx.moveTo();
-
-                ctx.setLineDash([5, 10]);
-                ctx.stroke();
-            }
-
-            // draw marked codel corners
             var _iteratorNormalCompletion2 = true;
             var _didIteratorError2 = false;
             var _iteratorError2 = undefined;
@@ -1488,10 +1495,13 @@ var appState = {
                     var x = _ref5[0];
                     var y = _ref5[1];
 
+                    ctx.beginPath();
                     ctx.arc(x, y, 2, 0, 2 * Math.PI);
                     ctx.stroke();
+                    ctx.fill();
                 }
-                // if there are four corners marked, draw a bounding polygon
+
+                // draw lines between adjacent program corners
             } catch (err) {
                 _didIteratorError2 = true;
                 _iteratorError2 = err;
@@ -1507,13 +1517,38 @@ var appState = {
                 }
             }
 
-            if (appState.photo.programCorners.length == 4) {
-                ctx.beginPath();
-                ctx.moveTo();
+            ctx.setLineDash([5, 10]);
+            ctx.beginPath();
+            for (var i = 0; appState.photo.programCorners[i]; i++) {
+                if (i == 0) {
+                    ctx.moveTo.apply(ctx, _toConsumableArray(appState.photo.programCorners[i]));
+                } else {
+                    ctx.lineTo.apply(ctx, _toConsumableArray(appState.photo.programCorners[i]));
+                }
 
-                ctx.setLineDash([2, 5]);
-                ctx.stroke();
+                if (i == 3) {
+                    // if there are four corners marked, complete the bounding polygon
+                    ctx.lineTo.apply(ctx, _toConsumableArray(appState.photo.programCorners[0]));
+                }
             }
+            ctx.stroke();
+
+            // draw lines between adjacent codel corners
+            ctx.setLineDash([2, 5]);
+            ctx.beginPath();
+            for (var i = 0; appState.photo.codelCorners[i]; i++) {
+                if (i == 0) {
+                    ctx.moveTo.apply(ctx, _toConsumableArray(appState.photo.codelCorners[i]));
+                } else {
+                    ctx.lineTo.apply(ctx, _toConsumableArray(appState.photo.codelCorners[i]));
+                }
+
+                if (i == 3) {
+                    // if there are four corners marked, complete the bounding polygon
+                    ctx.lineTo.apply(ctx, _toConsumableArray(appState.photo.codelCorners[0]));
+                }
+            }
+            ctx.stroke();
         }.bind(undefined),
 
         // show a moving cursor on the canvas when annotating corners
@@ -1538,6 +1573,8 @@ var appState = {
                 ctx.stroke();
                 ctx.fillStyle = 'black';
                 ctx.fill();
+
+                // connect the cursor to the last marked corner by a line
             }
         }.bind(undefined),
 
@@ -2811,6 +2848,16 @@ var MediaModal = function (_React$Component) {
                                         return _this3.props.renderCamera();
                                     } },
                                 _react2.default.createElement('i', { className: 'glyphicon glyphicon-camera' })
+                            ),
+                            ['ANNOTATE-1', 'ANNOTATE-2', 'ANNOTATE-3', 'READY'].includes(this.props.photoMode) && _react2.default.createElement(
+                                'button',
+                                {
+                                    type: 'button',
+                                    className: 'btn btn-warning',
+                                    onClick: function onClick() {
+                                        return _this3.props.clearAnnotations();
+                                    } },
+                                'Clear annotations'
                             ),
                             this.props.photoMode == 'READY' && _react2.default.createElement(
                                 'button',

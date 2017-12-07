@@ -105,6 +105,16 @@ class MediaModal extends React.Component {
                                     <i className="glyphicon glyphicon-camera" />
                                 </button>
                             )}
+                            {['ANNOTATE-1', 'ANNOTATE-2', 'ANNOTATE-3', 'READY'].includes(
+                                this.props.photoMode
+                            ) && (
+                                <button
+                                    type="button"
+                                    className="btn btn-warning"
+                                    onClick={() => this.props.clearAnnotations()}>
+                                    Clear annotations
+                                </button>
+                            )}
                             {this.props.photoMode == 'READY' && (
                                 <button type="button" className="btn btn-primary">
                                     Complete {'import'}

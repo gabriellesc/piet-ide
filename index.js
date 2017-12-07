@@ -330,6 +330,19 @@ const appState = {
             appState.photo.camera = null;
         }).bind(this),
 
+        // clear any annotations
+        clearAnnotations: (() => {
+            appState.photo.programCorners = [];
+            appState.photo.codelCorners = [];
+            appState.photo.codelColour = null;
+
+            appState.photo.drawPhoto(); // redraw current photo
+
+            appState.photo.photoMode = 'ANNOTATE-1'; // switch photo mode
+
+            appState.notify();
+        }).bind(this),
+
         // import a photo and draw on canvas
         importPhotoFromFile: (file => {
             let canvas = document.getElementById('photo-canvas'),
@@ -447,38 +460,58 @@ const appState = {
 
             ctx.putImageData(appState.photo.currPhoto, 0, 0); // draw underlying saved image
 
+            ctx.setLineDash([]);
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.fillStyle = 'black';
             // draw marked program corners
             for (var [x, y] of appState.photo.programCorners) {
                 ctx.beginPath();
                 ctx.arc(x, y, 3, 0, 2 * Math.PI);
-                ctx.strokeStyle = 'white';
-                ctx.lineWidth = 2;
                 ctx.stroke();
-                ctx.fillStyle = 'black';
                 ctx.fill();
             }
-            // if there are four corners marked, draw a bounding polygon
-            if (appState.photo.programCorners.length == 4) {
-                ctx.beginPath();
-                ctx.moveTo();
-
-                ctx.setLineDash([5, 10]);
-                ctx.stroke();
-            }
-
             // draw marked codel corners
             for (var [x, y] of appState.photo.codelCorners) {
+                ctx.beginPath();
                 ctx.arc(x, y, 2, 0, 2 * Math.PI);
                 ctx.stroke();
+                ctx.fill();
             }
-            // if there are four corners marked, draw a bounding polygon
-            if (appState.photo.programCorners.length == 4) {
-                ctx.beginPath();
-                ctx.moveTo();
 
-                ctx.setLineDash([2, 5]);
-                ctx.stroke();
+            // draw lines between adjacent program corners
+            ctx.setLineDash([5, 10]);
+            ctx.beginPath();
+            for (var i = 0; appState.photo.programCorners[i]; i++) {
+                if (i == 0) {
+                    ctx.moveTo(...appState.photo.programCorners[i]);
+                } else {
+                    ctx.lineTo(...appState.photo.programCorners[i]);
+                }
+
+                if (i == 3) {
+                    // if there are four corners marked, complete the bounding polygon
+                    ctx.lineTo(...appState.photo.programCorners[0]);
+                }
             }
+            ctx.stroke();
+
+            // draw lines between adjacent codel corners
+            ctx.setLineDash([2, 5]);
+            ctx.beginPath();
+            for (var i = 0; appState.photo.codelCorners[i]; i++) {
+                if (i == 0) {
+                    ctx.moveTo(...appState.photo.codelCorners[i]);
+                } else {
+                    ctx.lineTo(...appState.photo.codelCorners[i]);
+                }
+
+                if (i == 3) {
+                    // if there are four corners marked, complete the bounding polygon
+                    ctx.lineTo(...appState.photo.codelCorners[0]);
+                }
+            }
+            ctx.stroke();
         }).bind(this),
 
         // show a moving cursor on the canvas when annotating corners
@@ -501,6 +534,8 @@ const appState = {
                 ctx.stroke();
                 ctx.fillStyle = 'black';
                 ctx.fill();
+
+                // connect the cursor to the last marked corner by a line
             }
         }).bind(this),
 
