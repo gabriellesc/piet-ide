@@ -1549,6 +1549,16 @@ var appState = {
                 }
             }
             ctx.stroke();
+
+            // colour in the selected codel
+        }.bind(undefined),
+
+        // draw preview of program based on current user annotations
+        previewProgram: function () {
+            var canvas = document.getElementById('photo-canvas'),
+                ctx = canvas.getContext('2d');
+
+            ctx.putImageData(appState.photo.currPhoto, 0, 0); // draw underlying saved image
         }.bind(undefined),
 
         // show a moving cursor on the canvas when annotating corners
@@ -1576,11 +1586,12 @@ var appState = {
 
                 // connect the cursor to the last marked corner by a line
                 var last = void 0;
-                if (appState.photo.photoMode == 'ANNOTATE-1' && appState.photo.programCorners) {
+                if (appState.photo.photoMode == 'ANNOTATE-1' && appState.photo.programCorners.length) {
                     ctx.setLineDash([5, 10]);
                     ctx.lineTo.apply(ctx, _toConsumableArray(appState.photo.programCorners[appState.photo.programCorners.length - 1]));
                     ctx.stroke();
-                } else if (appState.photo.photoMode == 'ANNOTATE-2' && appState.photo.codelCorners) {
+                }
+                if (appState.photo.photoMode == 'ANNOTATE-2' && appState.photo.codelCorners.length) {
                     ctx.setLineDash([2, 5]);
                     ctx.lineTo.apply(ctx, _toConsumableArray(appState.photo.codelCorners[appState.photo.codelCorners.length - 1]));
                     ctx.stroke();
@@ -1625,6 +1636,18 @@ var appState = {
             appState.photo.drawPhoto(); // redraw current photo
 
             appState.notify();
+        }.bind(undefined),
+
+        // select the colour of the marked codel
+        selectCodelColour: function (colour) {
+            if (appState.photo.photoMode == 'ANNOTATE-3') {
+                appState.photo.codelColour == colour;
+                appState.photo.photoMode = 'READY';
+
+                appState.photo.previewProgram(); // draw preview of program
+
+                appState.notify();
+            }
         }.bind(undefined)
     },
 
@@ -2676,11 +2699,15 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
+
+var _colours = require('./colours.js');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -2793,7 +2820,9 @@ var MediaModal = function (_React$Component) {
                                 {
                                     'ANNOTATE-1': 'Mark the four corners of the program',
                                     'ANNOTATE-2': 'Mark the four corners of a single codel',
-                                    'ANNOTATE-3': 'Pick the correct colour of the codel'
+                                    'ANNOTATE-3': ['Pick the correct colour of the codel', _react2.default.createElement(ColourChooser, _extends({
+                                        key: 'codel-colour-chooser'
+                                    }, this.props))]
                                 }[this.props.photoMode]
                             ),
                             _react2.default.createElement(
@@ -2885,9 +2914,42 @@ var MediaModal = function (_React$Component) {
     return MediaModal;
 }(_react2.default.Component);
 
+var ColourChooser = function ColourChooser(_ref) {
+    var codelColour = _ref.codelColour,
+        selectCodelColour = _ref.selectCodelColour;
+    return _react2.default.createElement(
+        'table',
+        null,
+        _react2.default.createElement(
+            'tbody',
+            null,
+            _react2.default.createElement(
+                'tr',
+                null,
+                _colours.colours.map(function (colour, i) {
+                    return _react2.default.createElement('td', {
+                        key: 'codel-colour-' + i,
+                        style: {
+                            width: '24px',
+                            height: '24px',
+                            backgroundColor: colour,
+                            border: '1px solid black',
+                            textAlign: 'center',
+                            cursor: 'pointer'
+                        },
+                        onClick: function onClick() {
+                            return selectCodelColour(i);
+                        }
+                    });
+                })
+            )
+        )
+    );
+};
+
 exports.default = MediaModal;
 
-},{"react":363}],10:[function(require,module,exports){
+},{"./colours.js":2,"react":363}],10:[function(require,module,exports){
 (function (global){
 "use strict";
 

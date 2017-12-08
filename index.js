@@ -512,6 +512,16 @@ const appState = {
                 }
             }
             ctx.stroke();
+
+            // colour in the selected codel
+        }).bind(this),
+
+        // draw preview of program based on current user annotations
+        previewProgram: (() => {
+            let canvas = document.getElementById('photo-canvas'),
+                ctx = canvas.getContext('2d');
+
+            ctx.putImageData(appState.photo.currPhoto, 0, 0); // draw underlying saved image
         }).bind(this),
 
         // show a moving cursor on the canvas when annotating corners
@@ -537,15 +547,19 @@ const appState = {
 
                 // connect the cursor to the last marked corner by a line
                 let last;
-                if (appState.photo.photoMode == 'ANNOTATE-1' && appState.photo.programCorners) {
+                if (
+                    appState.photo.photoMode == 'ANNOTATE-1' &&
+                    appState.photo.programCorners.length
+                ) {
                     ctx.setLineDash([5, 10]);
                     ctx.lineTo(
                         ...appState.photo.programCorners[appState.photo.programCorners.length - 1]
                     );
                     ctx.stroke();
-                } else if (
+                }
+                if (
                     appState.photo.photoMode == 'ANNOTATE-2' &&
-                    appState.photo.codelCorners
+                    appState.photo.codelCorners.length
                 ) {
                     ctx.setLineDash([2, 5]);
                     ctx.lineTo(
@@ -590,6 +604,18 @@ const appState = {
             appState.photo.drawPhoto(); // redraw current photo
 
             appState.notify();
+        }).bind(this),
+
+        // select the colour of the marked codel
+        selectCodelColour: (colour => {
+            if (appState.photo.photoMode == 'ANNOTATE-3') {
+                appState.photo.codelColour == colour;
+                appState.photo.photoMode = 'READY';
+
+                appState.photo.previewProgram(); // draw preview of program
+
+                appState.notify();
+            }
         }).bind(this),
     },
 

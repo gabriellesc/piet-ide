@@ -1,4 +1,5 @@
 import React from 'react';
+import { colours } from './colours.js';
 
 class MediaModal extends React.Component {
     // when the component is mounted, add event listeners for modal show/hide events
@@ -54,7 +55,13 @@ class MediaModal extends React.Component {
                                         {
                                             'ANNOTATE-1': 'Mark the four corners of the program',
                                             'ANNOTATE-2': 'Mark the four corners of a single codel',
-                                            'ANNOTATE-3': 'Pick the correct colour of the codel',
+                                            'ANNOTATE-3': [
+                                                'Pick the correct colour of the codel',
+                                                <ColourChooser
+                                                    key="codel-colour-chooser"
+                                                    {...this.props}
+                                                />,
+                                            ],
                                         }[this.props.photoMode]
                                     }
                                 </div>
@@ -127,5 +134,28 @@ class MediaModal extends React.Component {
         );
     }
 }
+
+const ColourChooser = ({ codelColour, selectCodelColour }) => (
+    <table>
+        <tbody>
+            <tr>
+                {colours.map((colour, i) => (
+                    <td
+                        key={'codel-colour-' + i}
+                        style={{
+                            width: '24px',
+                            height: '24px',
+                            backgroundColor: colour,
+                            border: '1px solid black',
+                            textAlign: 'center',
+                            cursor: 'pointer',
+                        }}
+                        onClick={() => selectCodelColour(i)}
+                    />
+                ))}
+            </tr>
+        </tbody>
+    </table>
+);
 
 export default MediaModal;
