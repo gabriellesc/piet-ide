@@ -1575,6 +1575,16 @@ var appState = {
                 ctx.fill();
 
                 // connect the cursor to the last marked corner by a line
+                var last = void 0;
+                if (appState.photo.photoMode == 'ANNOTATE-1' && appState.photo.programCorners) {
+                    ctx.setLineDash([5, 10]);
+                    ctx.lineTo.apply(ctx, _toConsumableArray(appState.photo.programCorners[appState.photo.programCorners.length - 1]));
+                    ctx.stroke();
+                } else if (appState.photo.photoMode == 'ANNOTATE-2' && appState.photo.codelCorners) {
+                    ctx.setLineDash([2, 5]);
+                    ctx.lineTo.apply(ctx, _toConsumableArray(appState.photo.codelCorners[appState.photo.codelCorners.length - 1]));
+                    ctx.stroke();
+                }
             }
         }.bind(undefined),
 

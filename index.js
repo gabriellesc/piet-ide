@@ -536,6 +536,23 @@ const appState = {
                 ctx.fill();
 
                 // connect the cursor to the last marked corner by a line
+                let last;
+                if (appState.photo.photoMode == 'ANNOTATE-1' && appState.photo.programCorners) {
+                    ctx.setLineDash([5, 10]);
+                    ctx.lineTo(
+                        ...appState.photo.programCorners[appState.photo.programCorners.length - 1]
+                    );
+                    ctx.stroke();
+                } else if (
+                    appState.photo.photoMode == 'ANNOTATE-2' &&
+                    appState.photo.codelCorners
+                ) {
+                    ctx.setLineDash([2, 5]);
+                    ctx.lineTo(
+                        ...appState.photo.codelCorners[appState.photo.codelCorners.length - 1]
+                    );
+                    ctx.stroke();
+                }
             }
         }).bind(this),
 
