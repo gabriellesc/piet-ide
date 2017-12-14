@@ -1148,7 +1148,7 @@ var appState = {
         });
 
         // scale the image
-        image.scale(scale);
+        image.resize(scale * appState.width, scale * appState.height, Jimp.RESIZE_NEAREST_NEIGHBOR);
 
         image.getBase64(Jimp.MIME_PNG, function (_, uri) {
             window.open(uri);
