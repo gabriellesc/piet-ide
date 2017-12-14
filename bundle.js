@@ -1378,9 +1378,9 @@ var appState = {
             // switch photo mode
             appState.photo.photoMode = 'CAMERA';
 
-            appState.photo.resetPhoto();
-
             navigator.mediaDevices.getUserMedia({ video: true }).then(function (mediaStream) {
+                appState.photo.resetPhoto();
+
                 video.srcObject = mediaStream;
 
                 // function to display a frame from the video source on a canvas
@@ -1410,7 +1410,9 @@ var appState = {
                 };
             }).catch(function (err) {
                 console.log(err.name + ': ' + err.message);
-                appState.photo.resetPhoto();
+
+                clearInterval(appState.photo.camera);
+                appState.photo.camera = null;
 
                 appState.notify();
             });
@@ -2785,56 +2787,24 @@ var MediaModal = function (_React$Component) {
                             'div',
                             { className: 'modal-body' },
                             _react2.default.createElement('input', {
+                                id: 'hidden-photo-input',
                                 type: 'file',
                                 accept: 'image/png, image/bmp, image/jpeg',
                                 style: { display: 'none' },
-                                ref: function ref(fileChooser) {
-                                    return _this3.fileChooser = fileChooser;
-                                },
                                 onChange: function onChange(event) {
                                     _this3.props.importPhotoFromFile(event.target.files[0]);
                                     event.target.value = '';
                                 }
                             }),
-                            _react2.default.createElement('video', {
-                                id: 'hidden-video',
-                                style: { display: 'none' },
-                                ref: function ref(video) {
-                                    return _this3.video = video;
-                                }
-                            }),
-                            this.props.photoMode.startsWith('ANNOTATE') && _react2.default.createElement(
-                                'div',
-                                {
-                                    className: 'alert alert-info',
-                                    role: 'alert',
-                                    style: { marginBottom: '5px' } },
-                                _react2.default.createElement(
-                                    'b',
-                                    null,
-                                    'Step ',
-                                    this.props.photoMode.slice(-1),
-                                    '.'
-                                ),
-                                '\u2002',
-                                {
-                                    'ANNOTATE-1': 'Mark the four corners of the program',
-                                    'ANNOTATE-2': 'Mark the four corners of a single codel',
-                                    'ANNOTATE-3': ['Pick the correct colour of the codel', _react2.default.createElement(ColourChooser, _extends({
-                                        key: 'codel-colour-chooser'
-                                    }, this.props))]
-                                }[this.props.photoMode]
-                            ),
+                            _react2.default.createElement('video', { id: 'hidden-video', style: { display: 'none' } }),
                             _react2.default.createElement(
                                 'center',
                                 null,
+                                _react2.default.createElement(InfoAlert, this.props),
                                 _react2.default.createElement('canvas', {
                                     id: 'photo-canvas',
                                     width: '0',
                                     height: '0',
-                                    ref: function ref(canvas) {
-                                        return _this3.canvas = canvas;
-                                    },
                                     onMouseMove: function onMouseMove(e) {
                                         return _this3.props.showCursor(e.clientX, e.clientY);
                                     },
@@ -2842,68 +2812,13 @@ var MediaModal = function (_React$Component) {
                                         return _this3.props.markCorner(e.clientX, e.clientY);
                                     }
                                 }),
-                                this.props.photoMode == 'CAMERA' && _react2.default.createElement('div', {
-                                    style: {
-                                        width: '40px',
-                                        height: '40px',
-                                        background: 'red',
-                                        borderRadius: '20px',
-                                        border: '6px double white',
-                                        marginBottom: '-35px',
-                                        cursor: 'pointer'
-                                    },
-                                    onClick: function onClick() {
-                                        return _this3.props.takePhoto();
-                                    }
-                                })
+                                this.props.photoMode == 'CAMERA' && _react2.default.createElement(ShutterButton, this.props)
                             )
                         ),
                         _react2.default.createElement(
                             'div',
                             { className: 'modal-footer' },
-                            _react2.default.createElement(
-                                'button',
-                                { type: 'button', className: 'btn btn-default', 'data-dismiss': 'modal' },
-                                'Close'
-                            ),
-                            _react2.default.createElement(
-                                'button',
-                                {
-                                    type: 'button',
-                                    className: 'btn btn-default',
-                                    title: 'Select a new photo file and clear annotations',
-                                    onClick: function onClick() {
-                                        return _this3.fileChooser.click();
-                                    } },
-                                'Select photo from file'
-                            ),
-                            this.props.photoMode.startsWith('ANNOTATE') && _react2.default.createElement(
-                                'button',
-                                {
-                                    type: 'button',
-                                    className: 'btn btn-default',
-                                    title: 'Return to the camera and clear annotations',
-                                    onClick: function onClick() {
-                                        return _this3.props.renderCamera();
-                                    } },
-                                _react2.default.createElement('i', { className: 'glyphicon glyphicon-camera' })
-                            ),
-                            ['ANNOTATE-1', 'ANNOTATE-2', 'ANNOTATE-3', 'READY'].includes(this.props.photoMode) && _react2.default.createElement(
-                                'button',
-                                {
-                                    type: 'button',
-                                    className: 'btn btn-warning',
-                                    onClick: function onClick() {
-                                        return _this3.props.clearAnnotations();
-                                    } },
-                                'Clear annotations'
-                            ),
-                            this.props.photoMode == 'READY' && _react2.default.createElement(
-                                'button',
-                                { type: 'button', className: 'btn btn-primary' },
-                                'Complete ',
-                                'import'
-                            )
+                            _react2.default.createElement(ModalMenu, this.props)
                         )
                     )
                 )
@@ -2914,9 +2829,51 @@ var MediaModal = function (_React$Component) {
     return MediaModal;
 }(_react2.default.Component);
 
-var ColourChooser = function ColourChooser(_ref) {
-    var codelColour = _ref.codelColour,
-        selectCodelColour = _ref.selectCodelColour;
+var ShutterButton = function ShutterButton(_ref) {
+    var takePhoto = _ref.takePhoto;
+    return _react2.default.createElement('div', {
+        style: {
+            width: '40px',
+            height: '40px',
+            background: 'red',
+            borderRadius: '20px',
+            border: '6px double white',
+            marginBottom: '-35px',
+            cursor: 'pointer'
+        },
+        onClick: function onClick() {
+            return takePhoto();
+        }
+    });
+};
+
+var InfoAlert = function InfoAlert(props) {
+    return props.photoMode.startsWith('ANNOTATE') && _react2.default.createElement(
+        'div',
+        { className: 'alert alert-info', role: 'alert', style: { marginBottom: '5px' } },
+        {
+            'ANNOTATE-1': [_react2.default.createElement(
+                'b',
+                { key: 'step' },
+                'Step 1.'
+            ), ' Mark the four corners of the program'],
+            'ANNOTATE-2': [_react2.default.createElement(
+                'b',
+                { key: 'step' },
+                'Step 2.'
+            ), ' Mark the four corners of a single codel'],
+            'ANNOTATE-3': [_react2.default.createElement(
+                'b',
+                { key: 'step' },
+                'Step 3.'
+            ), ' Pick the correct colour of the codel', _react2.default.createElement(ColourChooser, _extends({ key: 'codel-colour-chooser' }, props))]
+        }[props.photoMode]
+    );
+};
+
+var ColourChooser = function ColourChooser(_ref2) {
+    var codelColour = _ref2.codelColour,
+        selectCodelColour = _ref2.selectCodelColour;
     return _react2.default.createElement(
         'table',
         null,
@@ -2945,6 +2902,54 @@ var ColourChooser = function ColourChooser(_ref) {
             )
         )
     );
+};
+
+var ModalMenu = function ModalMenu(_ref3) {
+    var photoMode = _ref3.photoMode,
+        renderCamera = _ref3.renderCamera,
+        clearAnnotations = _ref3.clearAnnotations;
+    return [_react2.default.createElement(
+        'button',
+        { key: 'close', type: 'button', className: 'btn btn-default', 'data-dismiss': 'modal' },
+        'Close'
+    ), _react2.default.createElement(
+        'button',
+        {
+            key: 'select',
+            type: 'button',
+            className: 'btn btn-default',
+            title: 'Select a new photo file and clear annotations',
+            onClick: function onClick() {
+                return document.getElementById('hidden-photo-input').click();
+            } },
+        'Select photo from file'
+    ), ['ANNOTATE-1', 'ANNOTATE-2', 'ANNOTATE-3'].includes(photoMode) && _react2.default.createElement(
+        'button',
+        {
+            key: 'camera',
+            type: 'button',
+            className: 'btn btn-default',
+            title: 'Return to the camera and clear annotations',
+            onClick: function onClick() {
+                return renderCamera();
+            } },
+        _react2.default.createElement('i', { className: 'glyphicon glyphicon-camera' })
+    ), ['ANNOTATE-1', 'ANNOTATE-2', 'ANNOTATE-3', 'READY'].includes(photoMode) && _react2.default.createElement(
+        'button',
+        {
+            key: 'clear',
+            type: 'button',
+            className: 'btn btn-warning',
+            onClick: function onClick() {
+                return clearAnnotations();
+            } },
+        'Clear annotations'
+    ), photoMode == 'READY' && _react2.default.createElement(
+        'button',
+        { key: 'complete', type: 'button', className: 'btn btn-primary' },
+        'Complete ',
+        'import'
+    )];
 };
 
 exports.default = MediaModal;

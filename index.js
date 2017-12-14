@@ -396,11 +396,11 @@ const appState = {
             // switch photo mode
             appState.photo.photoMode = 'CAMERA';
 
-            appState.photo.resetPhoto();
-
             navigator.mediaDevices
                 .getUserMedia({ video: true })
                 .then(function(mediaStream) {
+                    appState.photo.resetPhoto();
+
                     video.srcObject = mediaStream;
 
                     // function to display a frame from the video source on a canvas
@@ -427,7 +427,9 @@ const appState = {
                 })
                 .catch(function(err) {
                     console.log(err.name + ': ' + err.message);
-                    appState.photo.resetPhoto();
+
+                    clearInterval(appState.photo.camera);
+                    appState.photo.camera = null;
 
                     appState.notify();
                 });

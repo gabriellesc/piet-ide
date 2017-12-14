@@ -30,103 +30,33 @@ class MediaModal extends React.Component {
                         </div>
                         <div className="modal-body">
                             <input
+                                id="hidden-photo-input"
                                 type="file"
                                 accept="image/png, image/bmp, image/jpeg"
                                 style={{ display: 'none' }}
-                                ref={fileChooser => (this.fileChooser = fileChooser)}
                                 onChange={event => {
                                     this.props.importPhotoFromFile(event.target.files[0]);
                                     event.target.value = '';
                                 }}
                             />
-                            <video
-                                id="hidden-video"
-                                style={{ display: 'none' }}
-                                ref={video => (this.video = video)}
-                            />
-
-                            {this.props.photoMode.startsWith('ANNOTATE') && (
-                                <div
-                                    className="alert alert-info"
-                                    role="alert"
-                                    style={{ marginBottom: '5px' }}>
-                                    <b>Step {this.props.photoMode.slice(-1)}.</b>&ensp;
-                                    {
-                                        {
-                                            'ANNOTATE-1': 'Mark the four corners of the program',
-                                            'ANNOTATE-2': 'Mark the four corners of a single codel',
-                                            'ANNOTATE-3': [
-                                                'Pick the correct colour of the codel',
-                                                <ColourChooser
-                                                    key="codel-colour-chooser"
-                                                    {...this.props}
-                                                />,
-                                            ],
-                                        }[this.props.photoMode]
-                                    }
-                                </div>
-                            )}
+                            <video id="hidden-video" style={{ display: 'none' }} />
 
                             <center>
+                                <InfoAlert {...this.props} />
                                 <canvas
                                     id="photo-canvas"
                                     width="0"
                                     height="0"
-                                    ref={canvas => (this.canvas = canvas)}
                                     onMouseMove={e => this.props.showCursor(e.clientX, e.clientY)}
                                     onClick={e => this.props.markCorner(e.clientX, e.clientY)}
                                 />
                                 {this.props.photoMode == 'CAMERA' && (
-                                    <div
-                                        style={{
-                                            width: '40px',
-                                            height: '40px',
-                                            background: 'red',
-                                            borderRadius: '20px',
-                                            border: '6px double white',
-                                            marginBottom: '-35px',
-                                            cursor: 'pointer',
-                                        }}
-                                        onClick={() => this.props.takePhoto()}
-                                    />
+                                    <ShutterButton {...this.props} />
                                 )}
                             </center>
                         </div>
                         <div className="modal-footer">
-                            <button type="button" className="btn btn-default" data-dismiss="modal">
-                                Close
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-default"
-                                title="Select a new photo file and clear annotations"
-                                onClick={() => this.fileChooser.click()}>
-                                Select photo from file
-                            </button>
-                            {this.props.photoMode.startsWith('ANNOTATE') && (
-                                <button
-                                    type="button"
-                                    className="btn btn-default"
-                                    title="Return to the camera and clear annotations"
-                                    onClick={() => this.props.renderCamera()}>
-                                    <i className="glyphicon glyphicon-camera" />
-                                </button>
-                            )}
-                            {['ANNOTATE-1', 'ANNOTATE-2', 'ANNOTATE-3', 'READY'].includes(
-                                this.props.photoMode
-                            ) && (
-                                <button
-                                    type="button"
-                                    className="btn btn-warning"
-                                    onClick={() => this.props.clearAnnotations()}>
-                                    Clear annotations
-                                </button>
-                            )}
-                            {this.props.photoMode == 'READY' && (
-                                <button type="button" className="btn btn-primary">
-                                    Complete {'import'}
-                                </button>
-                            )}
+                            <ModalMenu {...this.props} />
                         </div>
                     </div>
                 </div>
@@ -134,6 +64,44 @@ class MediaModal extends React.Component {
         );
     }
 }
+
+const ShutterButton = ({ takePhoto }) => (
+    <div
+        style={{
+            width: '40px',
+            height: '40px',
+            background: 'red',
+            borderRadius: '20px',
+            border: '6px double white',
+            marginBottom: '-35px',
+            cursor: 'pointer',
+        }}
+        onClick={() => takePhoto()}
+    />
+);
+
+const InfoAlert = props =>
+    props.photoMode.startsWith('ANNOTATE') && (
+        <div className="alert alert-info" role="alert" style={{ marginBottom: '5px' }}>
+            {
+                {
+                    'ANNOTATE-1': [
+                        <b key="step">Step 1.</b>,
+                        ' Mark the four corners of the program',
+                    ],
+                    'ANNOTATE-2': [
+                        <b key="step">Step 2.</b>,
+                        ' Mark the four corners of a single codel',
+                    ],
+                    'ANNOTATE-3': [
+                        <b key="step">Step 3.</b>,
+                        ' Pick the correct colour of the codel',
+                        <ColourChooser key="codel-colour-chooser" {...props} />,
+                    ],
+                }[props.photoMode]
+            }
+        </div>
+    );
 
 const ColourChooser = ({ codelColour, selectCodelColour }) => (
     <table>
@@ -157,5 +125,43 @@ const ColourChooser = ({ codelColour, selectCodelColour }) => (
         </tbody>
     </table>
 );
+
+const ModalMenu = ({ photoMode, renderCamera, clearAnnotations }) => [
+    <button key="close" type="button" className="btn btn-default" data-dismiss="modal">
+        Close
+    </button>,
+    <button
+        key="select"
+        type="button"
+        className="btn btn-default"
+        title="Select a new photo file and clear annotations"
+        onClick={() => document.getElementById('hidden-photo-input').click()}>
+        Select photo from file
+    </button>,
+    ['ANNOTATE-1', 'ANNOTATE-2', 'ANNOTATE-3'].includes(photoMode) && (
+        <button
+            key="camera"
+            type="button"
+            className="btn btn-default"
+            title="Return to the camera and clear annotations"
+            onClick={() => renderCamera()}>
+            <i className="glyphicon glyphicon-camera" />
+        </button>
+    ),
+    ['ANNOTATE-1', 'ANNOTATE-2', 'ANNOTATE-3', 'READY'].includes(photoMode) && (
+        <button
+            key="clear"
+            type="button"
+            className="btn btn-warning"
+            onClick={() => clearAnnotations()}>
+            Clear annotations
+        </button>
+    ),
+    photoMode == 'READY' && (
+        <button key="complete" type="button" className="btn btn-primary">
+            Complete {'import'}
+        </button>
+    ),
+];
 
 export default MediaModal;
