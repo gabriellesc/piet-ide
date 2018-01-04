@@ -4,7 +4,7 @@ An in-browser platform for developing in the esoteric programming language [Piet
 ## Features
 #### Import / export
 - Import a PNG, JPG, or BMP file containing a Piet program
-- Import a Piet program from a photo of a physical representation of the program (eg. a painting or print-out)
+- **[In progress]** Import a Piet program from a photo of a physical representation of the program (eg. a painting or print-out)
 - Export a Piet program from the IDE to a PNG file
   - Export a Piet program at a larger scale so that the details are easily visible
   
