@@ -1,4 +1,4 @@
-# Piet IDE
+# MasterPiets
 An in-browser platform for developing in the esoteric programming language [Piet](http://www.dangermouse.net/esoteric/piet.html).
 
 ## Features
