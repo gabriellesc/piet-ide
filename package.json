@@ -19,8 +19,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "browserify js/index.js -o ./bundle.js -t babelify",
-    "watch": "watchify js/index.js -o ./bundle.js -t babelify -v"
+    "build": "browserify index.js -o ./bundle.js -t babelify",
+    "watch": "watchify index.js -o ./bundle.js -t babelify -v"
   },
   "keywords": [],
   "author": "gabriellesc <gabriellesinghcadieux@gmail.com>",
