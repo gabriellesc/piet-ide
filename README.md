@@ -31,3 +31,6 @@ An in-browser platform for developing in the esoteric programming language [Piet
 The IDE is built entirely using JavaScript and React.js, including the Piet interpreter.
 
 Image file import/export and processing is done using [Jimp](https://github.com/oliver-moran/jimp) in the browser.
+
+## License
+Licensed under the MIT License. See [LICENSE](LICENSE) for more information.
