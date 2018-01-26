@@ -1,5 +1,5 @@
 {
-  "name": "piet",
+  "name": "masterpiets",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -22,7 +22,11 @@
     "build": "browserify index.js -o ./bundle.js -t babelify",
     "watch": "watchify index.js -o ./bundle.js -t babelify -v"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gabriellesc/piet-ide.git"
+  },
   "keywords": [],
   "author": "gabriellesc <gabriellesinghcadieux@gmail.com>",
-  "license": "ISC"
+  "license": "MIT"
 }
